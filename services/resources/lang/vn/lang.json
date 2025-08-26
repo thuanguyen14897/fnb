@@ -1,0 +1,415 @@
+{
+    "page_not_found": "Không tìm thấy trang 404",
+
+    "not_found": {
+        "title": "SMB - Road-map",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Road-map",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "home": {
+        "title": "SMB - SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Thương hiệu hàng đầu trong lĩnh vực cung cấp gói nghỉ dưỡng cao cấp",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "whitepaper": {
+        "title": "SMB - Whitepaper",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Whitepaper",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "endow": {
+        "title": "SMB - Ưu đãi khuyến mãi",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Ưu đãi khuyến mãi",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "endow_detail": {
+        "title": "SMB - Chi tiết ưu đãi khuyến mãi",
+        "description": "SMB - Chi tiết ưu đãi khuyến mãi",
+        "ogTitle": "SMB - Chi tiết ưu đãi khuyến mãi",
+        "ogDescription": "SMB - Chi tiết ưu đãi khuyến mãi",
+        "siteName": "SMB"
+    },
+
+    "benefits": {
+        "title": "SMB - Thành viên",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Thành viên",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "contact": {
+        "title": "SMB - Liên hệ",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Liên hệ",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "auth_information_profile": {
+        "title": "SMB - Tài khoản của tôi",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Tài khoản của tôi",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+    "auth_information_certificate": {
+        "title": "SMB - Certificate",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Certificate",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "auth_information_notification": {
+        "title": "SMB - Thông báo của tôi",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Thông báo của tôi",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "auth_information_change_password": {
+        "title": "SMB - Đổi mật khẩu",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Đổi mật khẩu",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "auth_member_affiliate": {
+        "title": "SMB - Affiliate",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Affiliate",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "auth_member_reward": {
+        "title": "SMB - Quản lý Rewards",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Quản lý Rewards",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "auth_member_action": {
+        "title": "SMB - Tác vụ gói",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Tác vụ gói",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "auth_member_transaction_historys": {
+        "title": "SMB - Lịch sử giao dịch",
+        "description": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "ogTitle": "SMB - Lịch sử giao dịch",
+        "ogDescription": "SMB là thương hiệu hàng đầu trong lĩnh vực agency cung cấp các gói nghỉ dưỡng cao cấp, mang đến những trải nghiệm độc đáo và dịch vụ chuyên nghiệp cho khách hàng",
+        "siteName": "SMB"
+    },
+
+    "header_home": "Trang chủ",
+    "header_promotion": "Ưu đãi khuyến mãi",
+    "header_membership": "Thành viên",
+    "header_contact": "Liên hệ",
+    "header_register": "Đăng ký",
+    "header_login": "Đăng nhập",
+    "header_whitepaper": "Whitepaper",
+
+    "footer_policy": "Chính sách",
+    "footer_our_location": "Our Location",
+    "footer_terms_conditions": "Terms & Conditions",
+    "footer_privacy_policy": "Privacy Policy",
+
+    "footer_policy_about_us": "About us",
+    "footer_policy_news": "News",
+    "footer_policy_pricing": "Pricing",
+    "footer_policy_new_property": "New Property",
+
+    "home_table_crypto": "Thông tin thị trường",
+    "home_table_forex_header": "Ngoại tệ",
+    "home_title_section_one": "EXPLORE",
+
+    "endow_promotion": "Ưu đãi khuyến mãi",
+    "endow_update": "Cập nhật những ưu đãi mới nhất, hot nhất tại hệ thống SMB",
+    "endow_featured": "Ưu đãi nổi bật",
+    "endow_by_destination": "Ưu đãi theo điểm đến",
+    "endow_expiration": "Hạn áp dụng",
+    "endow_member_privilege": "Ưu đãi đặc quyền của thành viên",
+    "endow_details": "Chi tiết",
+    "endow_slug_in": "trong",
+    "endow_slug_promotion": "Khuyến mãi",
+
+    "benefits_about": "Giới thiệu",
+    "benefits_card_use": "Cách sử dụng thẻ thành viên",
+
+    "contact_info": "Thông tin liên hệ",
+    "contact_headoffice": "Headoffice",
+    "contact_branch_office": "Branch Office",
+    "contact_support": "Vui lòng liên hệ để SMB và hỗ trợ có cơ hội nhận được những ưu đãi mới nhất, hot nhất tại hệ thống SMB",
+    "contact_form_message": "Vui lòng để lại lời nhắn để được hỗ trợ",
+
+    "contact_form_name_label": "Họ và Tên",
+    "contact_form_name_validate": "Vui lòng nhập họ và tên",
+    "contact_form_name_placeholder": "Nhập họ và tên...",
+    "contact_form_email_label": "Email",
+    "contact_form_email_validate": "Email không hợp lệ",
+    "contact_form_email_placeholder": "Nhập email...",
+    "contact_form_phone_label": "Số điện thoại",
+    "contact_form_phone_validate_empty": "Vui lòng nhập số điện thoại",
+    "contact_form_phone_validate_length": "Số điện thoại yêu cầu 10 số",
+    "contact_form_phone_validate_invalid": "Số điện thoại không hợp lệ",
+    "contact_form_phone_placeholder": "Nhập số điện thoại...",
+    "contact_form_subject_label": "Tiêu đề",
+    "contact_form_subject_validate": "Vui lòng nhập tiêu đề",
+    "contact_form_subject_placeholder": "Nhập tiêu đề...",
+    "contact_form_details_label": "Chi tiết",
+    "contact_form_details_placeholder": "Nhập chi tiết...",
+
+    "dialog_auth_enter_email": "Vui lòng nhập email",
+    "dialog_auth_invalid_email": "Email không hợp lệ",
+    "dialog_auth_email_placeholder": "Email",
+
+    "username_enter_use_name": "Vui lòng nhập tên đăng nhập",
+    "username_use_name_placeholder": "Nhập tên đăng nhập",
+    "username_use_name_label": "Tên đăng nhập",
+
+    "userName_minLength": "Tên đăng nhập phải có ít nhất 6 ký tự",
+    "userName_maxLength": "Tên đăng nhập phải không vượt quá 15 ký tự",
+    "userName_noSpaces": "Tên đăng nhập không được chứa khoảng trắng",
+
+    "dialog_auth_enter_phone": "Vui lòng nhập số điện thoại",
+    "dialog_auth_phone_required_10_digits": "Số điện thoại yêu cầu 10 số",
+    "dialog_auth_invalid_phone": "Số điện thoại không hợp lệ",
+    "dialog_auth_phone_placeholder": "Số điện thoại",
+
+    "dialog_auth_enter_password": "Vui lòng nhập mật khẩu",
+    "dialog_auth_password_min_length": "Mật khẩu phải có ít nhất 6 ký tự",
+    "dialog_auth_password_placeholder": "Mật khẩu",
+    "dialog_auth_new_password": "Mật khẩu mới",
+    "dialog_auth_password_mismatch": "Mật khẩu không khớp!",
+    "dialog_auth_confirm_new_password": "Xác nhận mật khẩu mới",
+    "dialog_auth_confirm_password": "Xác nhận mật khẩu",
+
+    "dialog_auth_referral_code_optional": "Mã giới thiệu",
+    "dialog_auth_agree_terms_required": "Vui lòng đồng ý điều khoản",
+    "dialog_auth_agree_terms": "Tôi đồng ý với điều khoản và chính sách",
+
+    "dialog_auth_remember_me": "Lưu đăng nhập",
+    "dialog_auth_forgot_password": "Quên mật khẩu",
+    "dialog_auth_login": "Đăng nhập",
+    "dialog_auth_or": "Hoặc",
+    "dialog_auth_login_with_google": "Đăng nhập với Google",
+    "dialog_auth_login_with_facebook": "Đăng nhập với Facebook",
+    "dialog_auth_no_account": "Chưa có tài khoản?",
+    "dialog_auth_register": "Đăng Ký",
+
+    "dialog_auth_enter_otp": "Vui lòng nhập mã OTP",
+    "dialog_auth_otp_must_be_4_digits": "Mã OTP phải có 4 số",
+    "dialog_auth_otp_only_4_digits": "Mã OTP chỉ được 4 số",
+    "dialog_auth_resend_otp": "Gửi lại mã OTP",
+
+    "dialog_auth_close": "Đóng",
+    "dialog_auth_enter_verification_code": "Please enter 4 digit verification code that have been sent to your email",
+    "dialog_auth_send_code_to_email": "Chúng tôi sẽ gửi mã đến EMAIL của bạn đăng ký tài khoản. Vui lòng nhập email đăng ký",
+    "dialog_auth_enter_new_password": "Nhập mật khẩu mới để cập nhật mật khẩu của bạn.",
+    "dialog_auth_confirm_password_change": "Xác nhận đổi mật khẩu",
+    "dialog_auth_enter_otp_title": "Nhập mã OTP",
+
+    "auth_general_info": "Thông tin chung",
+    "auth_my_account": "Tài khoản của tôi",
+    "auth_my_certificate": "Certificate",
+    "auth_my_notifications": "Thông báo của tôi",
+    "auth_change_password": "Đổi mật khẩu",
+    "auth_smb_member": "Thành viên SMB",
+    "auth_affiliate": "Affiliate",
+    "auth_manage_rewards": "Rewards",
+    "auth_package_tasks": "Tác vụ gói",
+    "auth_transaction_history": "Lịch sử giao dịch",
+
+    "auth_profile_enjoy_privileges": "Tận hưởng đặc quyền và ưu đãi bất tận",
+    "auth_profile_membership_info": "SMB membership là chương trình khách hàng thân thiết đẳng cấp của Tập đoàn SMB, mang đến những đặc quyền ưu việt dành riêng cho thành viên khi trải nghiệm các sản phẩm và dịch vụ của các công ty thành viên trong hệ sinh thái toàn diện",
+    "auth_profile_balance": "Số dư",
+    "auth_profile_rank": "Hạng",
+    "auth_profile_account_info": "Thông tin tài khoản",
+    "auth_profile_change_photo": "Đổi ảnh",
+    "auth_profile_enter_name": "Vui lòng nhập tên của bạn",
+    "auth_profile_your_name": "Tên của bạn",
+
+    "auth_profile_offer_5_percent_room": "Ưu đãi 5% trên giá phòng tốt nhất",
+    "auth_profile_accumulate_3_percent": "Tích điểm 3% trên tất cả các dịch vụ chi tiêu trong hệ sinh thái SMB",
+    "auth_profile_offer_50_percent": "Ưu đãi tới 50% phí sân cỏ, ẩm thực",
+
+    "auth_information_notification_all": "Tất cả",
+    "auth_information_notification_package_tasks": "Tác vụ gói",
+    "auth_information_notification_rewards": "Thông báo của SMB",
+    "auth_information_notification_promotions": "Ưu đãi khuyến mãi",
+    "auth_information_notification_my_notifications": "Thông báo của tôi",
+    "auth_information_notification_read": "Thông báo đã được đọc",
+    "auth_information_notification_mark_as_read": "Đánh dấu đã đọc",
+
+    "auth_information_certificate_title": "Certificate",
+    "auth_information_certificate_download": "Tải xuống",
+
+    "auth_information_change_password_title": "Đổi mật khẩu",
+    "auth_information_change_password_logged_in_with": "Bạn đang đăng nhập bằng",
+    "auth_information_change_password_phone": "số điện thoại",
+    "auth_information_change_password_prompt": "Vui lòng nhập mật khẩu cũ của bạn để thực hiện thay đổi mật khẩu",
+    "auth_information_change_password_unable": "Không thể đổi mật khẩu",
+    "auth_information_change_password_enter_old": "Vui lòng nhập mật khẩu cũ",
+    "auth_information_change_password_min_length": "Mật khẩu phải có ít nhất 6 ký tự",
+    "auth_information_change_password_old": "Mật khẩu cũ",
+    "auth_information_change_password_enter_new": "Vui lòng nhập mật khẩu mới",
+    "auth_information_change_password_new": "Mật khẩu mới",
+    "auth_information_change_password_confirm_new": "Xác nhận mật khẩu mới",
+
+    "auth_member_affiliate_get_share_link": "Lấy link chia sẻ",
+    "auth_member_affiliate_share": "Chia sẻ",
+    "auth_member_affiliate_program": "Chương trình",
+    "auth_member_affiliate_introduction": "Giới thiệu",
+    "auth_member_affiliate_friends": "Bạn bè",
+    "auth_member_affiliate_multi_level_branch_diagram": "Sơ đồ nhánh các cấp",
+    "auth_member_affiliate_rank": "Hạng",
+    "auth_member_affiliate_total_sale": "Total sale",
+    "auth_member_affiliate_total_members": "Tổng thành viên",
+    "auth_member_affiliate_total_levels": "Tổng số cấp",
+    "auth_member_affiliate_out": "OUT",
+
+    "auth_member_rewards": "Quản lý Rewards",
+    "auth_member_rewards_total": "Total profit",
+    "auth_member_rewards_total_invest": "Total invest",
+    "auth_member_rewards_daily": "TODAY",
+    "auth_member_rewards_today": "Today",
+    "auth_member_rewards_enjoy": "Hưởng",
+    "auth_member_rewards_package": "Gói",
+    "auth_member_rewards_my_package": "Gói của tôi",
+    "auth_member_rewards_profit_invest": "Profit Invest",
+    "auth_member_rewards_direct_commission": "DIRECT COMMISSION",
+    "auth_member_rewards_ranking_bonus": "RANKING BONUS",
+    "auth_member_rewards_total_sale": "Total sale",
+    "auth_member_rewards_reward": "Thưởng",
+    "auth_member_rewards_my_level": "Mức của tôi",
+    "auth_member_rewards_leadership_reward": "LEADERSHIP REWARD",
+    "auth_member_rewards_requirement": "Yêu cầu",
+    "auth_member_rewards_my_rank": "Hạng của tôi",
+    "auth_member_rewards_total_daily": "Total daily",
+    "auth_member_rewards_life_of_investment": "LIEF OF INVESTMENT",
+    "auth_member_rewards_bonus": "Hoa hồng % mỗi ngày",
+
+    "auth_member_action_package_tasks": "Tác vụ gói",
+    "auth_member_action_buy_package": "Mua gói",
+    "auth_member_action_transfer_package": "Chuyển gói",
+    "auth_member_action_withdraw": "Rút tiền",
+
+    "auth_member_action_select_vacation_package": "Chọn gói nghỉ dưỡng",
+    "auth_member_action_balance": "Số dư",
+    "auth_member_action_network": "Chọn tùy chọn nạp tiền",
+    "auth_member_action_export_network": "Chọn tùy chọn rút tiền",
+    "auth_member_action_usdt_transfer_address": "Địa chỉ nhận USDT (BEP20)",
+    "auth_member_action_than_usdt": "Phải lớn hơn",
+    "auth_member_action_enter_address": "Nhập địa chỉ chuyển USDT (BEP20)",
+    "auth_member_action_usdt_transfer_address_package": "Địa chỉ chuyển tiền USDT",
+
+    "auth_member_action_copy_usdt_address_success": "Copy địa chỉ chuyển tiền USDT thành công",
+    "auth_member_action_enter_hash_ixid": "Vui lòng nhập Hash/ Tx ID",
+    "auth_member_action_hash_ixid": "Hash/ Tx ID",
+    "auth_member_action_input_hash_ixid": "Nhập Hash/ Tx ID",
+
+    "auth_member_action_enter_username": "Vui lòng nhập username",
+    "auth_member_action_username": "Username",
+    "auth_member_action_input_username": "Nhập username",
+    "auth_member_action_enter_password": "Vui lòng nhập mật khẩu",
+    "auth_member_action_password_min_length": "Mật khẩu phải có ít nhất 6 ký tự",
+    "auth_member_action_password": "Mật khẩu",
+    "auth_member_action_input_password": "Nhập mật khẩu",
+    "auth_member_action_enter_amount": "Vui lòng nhập số tiền",
+    "auth_member_action_amount": "Số tiền",
+    "auth_member_action_fee": "Phí",
+    "auth_member_action_total_amount": "Tổng tiền",
+    "auth_member_action_convert": "Chuyển đổi",
+    "auth_member_action_enter_transfer_address": "Vui lòng nhập địa chỉ nhận USDT (BEP20)",
+
+    "auth_member_transaction_history": "Lịch sử giao dịch",
+    "auth_member_transaction_history_search": "Tìm kiếm",
+    "auth_member_transaction_history_all": "Tất cả",
+    "auth_member_transaction_history_buy_package": "Mua gói",
+    "auth_member_transaction_history_transfer_package": "Chuyển gói",
+    "auth_member_transaction_history_withdraw": "Rút tiền",
+    "auth_member_transaction_history_transaction_code": "Mã giao dịch",
+    "auth_member_transaction_history_type": "Loại",
+    "auth_member_transaction_history_network": "Network",
+    "auth_member_transaction_history_username": "Username",
+    "auth_member_transaction_history_address": "Địa chỉ",
+    "auth_member_transaction_history_total_amount": "Tổng tiền",
+    "auth_member_transaction_history_time": "Thời gian",
+    "auth_member_transaction_history_status": "Trạng thái",
+    "auth_member_transaction_history_rows_per_page": "Rows per page",
+    "auth_member_transaction_history_of": "of",
+    "auth_member_transaction_history_page": "Page",
+    "auth_member_transaction_history_hash_ixid": "Hash/ Tx ID",
+    "auth_member_transaction_history_no_data": "No data",
+
+    "button_learmore": "Learn more",
+    "button_detail": "Xem chi tiết",
+    "button_all": "Tất cả",
+    "button_contact_now": "Liên hệ ngay",
+    "button_view_more": "Xem thêm",
+    "button_view_more_offers": "Xem thêm ưu đãi",
+    "button_cancel": "Huỷ",
+    "button_logout": "Đăng xuất",
+    "button_submit": "Gửi",
+    "button_update": "Cập nhật",
+
+    "keyword": "Ngôn ngữ",
+
+    "input_offer_or_program_name": "Nhập ưu đãi hoặc tên chương trình",
+
+    "popup_notification": "Thông báo",
+    "read_all": "Đọc tất cả",
+    "scroll_to_continue": "Cuộn qua để xem tiếp",
+    "offers": "Các ưu đãi",
+    "night": "Đêm",
+    "daily": "hàng ngày",
+    "monthly": "mỗi tháng",
+    "no_data": "Không có dữ liệu",
+    "no_history": "Không có lịch sử",
+    "no_notifications": "Không có thông báo",
+    "no_rewards": "Không có Rewards",
+    "no_certificate": "Không có Certificate",
+
+    "alert_logout_confirmation": "Bạn có muốn đăng xuất không",
+    "alert_logout_confirm": "Xác nhận đăng xuất",
+
+    "toast_all_notifications_read": "Bạn đã đọc hết thông báo",
+    "toast_no_changes": "Không có thay đổi nào. Vui lòng cập nhật thông tin trước khi gửi",
+    "toast_please_wait": "Vui lòng chờ sau",
+    "toast_seconds_to_resend_otp": "giây để gửi lại OTP",
+
+    "feature_in_development": "Tính năng đang phát triển",
+    "page_feature_in_development": "The page feature in development",
+    "usdt": "USDT",
+    "ts": "TS",
+    "sales": "Sales",
+    "h_chg_percent": "24h chg %",
+    "profit_invest": "Profit Invest",
+
+    "account_lock_warning": "Tài khoản của bạn đã bị khóa",
+    "account_locked_contact_support": "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ với bộ phận hỗ trợ để được trợ giúp và biết thêm thông tin chi tiết.",
+    "please_enter_data": "Vui lòng nhập dữ liệu",
+    "transfer_address": "transfer address",
+    "enter": "Nhập",
+    "yesterday_at": "Hôm qua lúc",
+    "detail_new_notification": "Chi tiết thông báo"
+}

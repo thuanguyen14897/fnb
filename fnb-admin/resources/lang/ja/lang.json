@@ -1,0 +1,416 @@
+{
+    "page_not_found": "ページが見つかりません 404",
+
+    "not_found": {
+        "title": "SMB - ロードマップ",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - ロードマップ",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "home": {
+        "title": "SMB - SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - 高級リゾートパッケージ提供分野のトップブランド",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "whitepaper": {
+        "title": "SMB - ホワイトペーパー",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - ホワイトペーパー",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "endow": {
+        "title": "SMB - プロモーション特典",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - プロモーション特典",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "endow_detail": {
+        "title": "SMB - プロモーション特典の詳細",
+        "description": "SMB - プロモーション特典の詳細",
+        "ogTitle": "SMB - プロモーション特典の詳細",
+        "ogDescription": "SMB - プロモーション特典の詳細",
+        "siteName": "SMB"
+    },
+
+    "benefits": {
+        "title": "SMB - 会員",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - 会員",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "contact": {
+        "title": "SMB - 連絡先",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - 連絡先",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "auth_information_profile": {
+        "title": "SMB - マイアカウント",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - マイアカウント",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "auth_information_certificate": {
+        "title": "SMB - 資格証明書",
+        "description": "SMBは高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、ユニークな体験とプロフェッショナルなサービスをお客様に提供しています。",
+        "ogTitle": "SMB - 資格証明書",
+        "ogDescription": "SMBは高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、ユニークな体験とプロフェッショナルなサービスをお客様に提供しています。",
+        "siteName": "SMB"
+    },
+
+    "auth_information_notification": {
+        "title": "SMB - マイ通知",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - マイ通知",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "auth_information_change_password": {
+        "title": "SMB - パスワード変更",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - パスワード変更",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "auth_member_affiliate": {
+        "title": "SMB - アフィリエイト",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - アフィリエイト",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "auth_member_reward": {
+        "title": "SMB - リワード管理",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - リワード管理",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "auth_member_action": {
+        "title": "SMB - パッケージタスク",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - パッケージタスク",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "auth_member_transaction_historys": {
+        "title": "SMB - 取引履歴",
+        "description": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "ogTitle": "SMB - 取引履歴",
+        "ogDescription": "SMBは、高級リゾートパッケージを提供するエージェンシー分野のトップブランドであり、顧客にユニークな体験とプロフェッショナルなサービスを提供します",
+        "siteName": "SMB"
+    },
+
+    "header_home": "ホーム",
+    "header_promotion": "プロモーション特典",
+    "header_membership": "会員",
+    "header_contact": "連絡先",
+    "header_register": "登録",
+    "header_login": "ログイン",
+    "header_whitepaper": "ホワイトペーパー",
+
+    "footer_policy": "ポリシー",
+    "footer_our_location": "所在地",
+    "footer_terms_conditions": "利用規約",
+    "footer_privacy_policy": "プライバシーポリシー",
+
+    "footer_policy_about_us": "会社概要",
+    "footer_policy_news": "ニュース",
+    "footer_policy_pricing": "価格",
+    "footer_policy_new_property": "新規物件",
+
+    "home_table_crypto": "市場情報",
+    "home_table_forex_header": "外貨",
+    "home_title_section_one": "探検",
+
+    "endow_promotion": "プロモーション特典",
+    "endow_update": "SMBシステムで最新かつ最も人気のある特典を更新",
+    "endow_featured": "注目の特典",
+    "endow_by_destination": "目的地ごとの特典",
+    "endow_expiration": "適用期限",
+    "endow_member_privilege": "会員専用の特典",
+    "endow_details": "詳細",
+    "endow_slug_in": "内",
+    "endow_slug_promotion": "プロモーション",
+
+    "benefits_about": "紹介",
+    "benefits_card_use": "会員カードの使用方法",
+
+    "contact_info": "連絡先情報",
+    "contact_headoffice": "本社",
+    "contact_branch_office": "支社",
+    "contact_support": "SMBシステムで最新かつ最も人気のある特典を受け取るために、問い合わせとサポートのためにご連絡ください",
+    "contact_form_message": "サポートを受けるためにメッセージを残してください",
+
+    "contact_form_name_label": "名前",
+    "contact_form_name_validate": "名前を入力してください",
+    "contact_form_name_placeholder": "名前を入力してください...",
+    "contact_form_email_label": "メール",
+    "contact_form_email_validate": "無効なメールアドレスです",
+    "contact_form_email_placeholder": "メールを入力してください...",
+    "contact_form_phone_label": "電話番号",
+    "contact_form_phone_validate_empty": "電話番号を入力してください",
+    "contact_form_phone_validate_length": "電話番号は10桁である必要があります",
+    "contact_form_phone_validate_invalid": "無効な電話番号です",
+    "contact_form_phone_placeholder": "電話番号を入力してください...",
+    "contact_form_subject_label": "件名",
+    "contact_form_subject_validate": "件名を入力してください",
+    "contact_form_subject_placeholder": "件名を入力してください...",
+    "contact_form_details_label": "詳細",
+    "contact_form_details_placeholder": "詳細を入力してください...",
+
+    "dialog_auth_enter_email": "メールアドレスを入力してください",
+    "dialog_auth_invalid_email": "無効なメールアドレスです",
+    "dialog_auth_email_placeholder": "メール",
+
+    "username_enter_use_name": "ユーザー名を入力してください",
+    "username_use_name_placeholder": "ユーザー名を入力してください",
+    "username_use_name_label": "ユーザー名",
+
+    "userName_minLength": "ユーザー名は6文字以上である必要があります",
+    "userName_maxLength": "ユーザー名は15文字を超えてはいけません",
+    "userName_noSpaces": "ユーザー名にスペースを含めることはできません",
+
+    "dialog_auth_enter_phone": "電話番号を入力してください",
+    "dialog_auth_phone_required_10_digits": "電話番号は10桁である必要があります",
+    "dialog_auth_invalid_phone": "無効な電話番号です",
+    "dialog_auth_phone_placeholder": "電話番号",
+
+    "dialog_auth_enter_password": "パスワードを入力してください",
+    "dialog_auth_password_min_length": "パスワードは6文字以上である必要があります",
+    "dialog_auth_password_placeholder": "パスワード",
+    "dialog_auth_new_password": "新しいパスワード",
+    "dialog_auth_password_mismatch": "パスワードが一致しません！",
+    "dialog_auth_confirm_new_password": "新しいパスワードの確認",
+    "dialog_auth_confirm_password": "パスワードの確認",
+
+    "dialog_auth_referral_code_optional": "紹介コード",
+    "dialog_auth_agree_terms_required": "利用規約に同意してください",
+    "dialog_auth_agree_terms": "利用規約とポリシーに同意します",
+
+    "dialog_auth_remember_me": "ログイン情報を保存",
+    "dialog_auth_forgot_password": "パスワードをお忘れですか？",
+    "dialog_auth_login": "ログイン",
+    "dialog_auth_or": "または",
+    "dialog_auth_login_with_google": "Googleでログイン",
+    "dialog_auth_login_with_facebook": "Facebookでログイン",
+    "dialog_auth_no_account": "アカウントをお持ちではありませんか？",
+    "dialog_auth_register": "登録",
+
+    "dialog_auth_enter_otp": "OTPコードを入力してください",
+    "dialog_auth_otp_must_be_4_digits": "OTPコードは4桁である必要があります",
+    "dialog_auth_otp_only_4_digits": "OTPコードは4桁のみです",
+    "dialog_auth_resend_otp": "OTPコードを再送信",
+
+    "dialog_auth_close": "閉じる",
+    "dialog_auth_enter_verification_code": "メールに送信された4桁の認証コードを入力してください",
+    "dialog_auth_send_code_to_email": "アカウント登録に使用されたメールにコードを送信します。登録メールを入力してください",
+    "dialog_auth_enter_new_password": "パスワードを更新するために新しいパスワードを入力してください。",
+    "dialog_auth_confirm_password_change": "パスワード変更の確認",
+    "dialog_auth_enter_otp_title": "OTPコード入力",
+
+    "auth_general_info": "一般情報",
+    "auth_my_account": "マイアカウント",
+    "auth_my_certificate": "資格証",
+    "auth_my_notifications": "マイ通知",
+    "auth_change_password": "パスワード変更",
+    "auth_smb_member": "SMB会員",
+    "auth_affiliate": "アフィリエイト",
+    "auth_manage_rewards": "リワード",
+    "auth_package_tasks": "パッケージタスク",
+    "auth_transaction_history": "取引履歴",
+
+    "auth_profile_enjoy_privileges": "無制限の特権と特典を享受",
+    "auth_profile_membership_info": "SMBメンバーシップは、SMBグループの最高級ロイヤルティプログラムであり、エコシステム内のメンバー企業の製品やサービスを利用する際に会員に特別な特権を提供します",
+    "auth_profile_balance": "残高",
+    "auth_profile_rank": "ランク",
+    "auth_profile_account_info": "アカウント情報",
+    "auth_profile_change_photo": "写真変更",
+    "auth_profile_enter_name": "名前を入力してください",
+    "auth_profile_your_name": "あなたの名前",
+
+    "auth_profile_offer_5_percent_room": "最低客室料金から5%割引",
+    "auth_profile_accumulate_3_percent": "SMBエコシステム内のすべてのサービス支出に対して3%ポイント貯蓄",
+    "auth_profile_offer_50_percent": "ゴルフ場や飲食料金最大50%割引",
+
+    "auth_information_notification_all": "すべて",
+    "auth_information_notification_package_tasks": "パッケージタスク",
+    "auth_information_notification_rewards": "SMBの通知",
+    "auth_information_notification_promotions": "プロモーション特典",
+    "auth_information_notification_my_notifications": "マイ通知",
+    "auth_information_notification_read": "既読通知",
+    "auth_information_notification_mark_as_read": "既読としてマーク",
+
+    "auth_information_certificate_title": "証明書",
+    "auth_information_certificate_download": "ダウンロード",
+
+    "auth_information_change_password_title": "パスワード変更",
+    "auth_information_change_password_logged_in_with": "次の方法でログイン中です",
+    "auth_information_change_password_phone": "電話番号",
+    "auth_information_change_password_prompt": "パスワード変更を行うために現在のパスワードを入力してください",
+    "auth_information_change_password_unable": "パスワードを変更できません",
+    "auth_information_change_password_enter_old": "現在のパスワードを入力してください",
+    "auth_information_change_password_min_length": "パスワードは6文字以上である必要があります",
+    "auth_information_change_password_old": "現在のパスワード",
+    "auth_information_change_password_enter_new": "新しいパスワードを入力してください",
+    "auth_information_change_password_new": "新しいパスワード",
+    "auth_information_change_password_confirm_new": "新しいパスワードの確認",
+
+    "auth_member_affiliate_get_share_link": "共有リンクを取得",
+    "auth_member_affiliate_share": "共有",
+    "auth_member_affiliate_program": "プログラム",
+    "auth_member_affiliate_introduction": "紹介",
+    "auth_member_affiliate_friends": "友達",
+    "auth_member_affiliate_multi_level_branch_diagram": "マルチレベルブランチ図",
+    "auth_member_affiliate_rank": "ランク",
+    "auth_member_affiliate_total_sale": "総売上",
+    "auth_member_affiliate_total_members": "総会員数",
+    "auth_member_affiliate_total_levels": "総レベル数",
+    "auth_member_affiliate_out": "アウト",
+
+    "auth_member_rewards": "リワード管理",
+    "auth_member_rewards_total": "総利益",
+    "auth_member_rewards_total_invest": "総投資",
+    "auth_member_rewards_daily": "今日",
+    "auth_member_rewards_today": "今日",
+    "auth_member_rewards_enjoy": "享受",
+    "auth_member_rewards_package": "パッケージ",
+    "auth_member_rewards_my_package": "マイパッケージ",
+    "auth_member_rewards_profit_invest": "投資利益",
+    "auth_member_rewards_direct_commission": "直接コミッション",
+    "auth_member_rewards_ranking_bonus": "ランクボーナス",
+    "auth_member_rewards_total_sale": "総売上",
+    "auth_member_rewards_reward": "報酬",
+    "auth_member_rewards_my_level": "マイレベル",
+    "auth_member_rewards_leadership_reward": "リーダーシップ報酬",
+    "auth_member_rewards_requirement": "要件",
+    "auth_member_rewards_my_rank": "マイランク",
+    "auth_member_rewards_total_daily": "日次合計",
+    "auth_member_rewards_life_of_investment": "投資期間",
+    "auth_member_rewards_bonus": "日次%コミッション",
+
+    "auth_member_action_package_tasks": "パッケージタスク",
+    "auth_member_action_buy_package": "パッケージ購入",
+    "auth_member_action_transfer_package": "パッケージ転送",
+    "auth_member_action_withdraw": "出金",
+
+    "auth_member_action_select_vacation_package": "リゾートパッケージ選択",
+    "auth_member_action_balance": "残高",
+    "auth_member_action_network": "チャージオプションを選択",
+    "auth_member_action_export_network": "出金オプションを選択",
+    "auth_member_action_usdt_transfer_address": "USDT受取アドレス (BEP20)",
+    "auth_member_action_than_usdt": "より大きい必要があります",
+    "auth_member_action_enter_address": "USDT転送アドレスを入力 (BEP20)",
+    "auth_member_action_usdt_transfer_address_package": "USDT転送アドレス",
+
+    "auth_member_action_copy_usdt_address_success": "USDT転送アドレスのコピーに成功しました",
+    "auth_member_action_enter_hash_ixid": "Hash/Tx IDを入力してください",
+    "auth_member_action_hash_ixid": "Hash/Tx ID",
+    "auth_member_action_input_hash_ixid": "Hash/Tx IDを入力",
+
+    "auth_member_action_enter_username": "ユーザー名を入力してください",
+    "auth_member_action_username": "ユーザー名",
+    "auth_member_action_input_username": "ユーザー名を入力",
+    "auth_member_action_enter_password": "パスワードを入力してください",
+    "auth_member_action_password_min_length": "パスワードは6文字以上である必要があります",
+    "auth_member_action_password": "パスワード",
+    "auth_member_action_input_password": "パスワードを入力",
+    "auth_member_action_enter_amount": "金額を入力してください",
+    "auth_member_action_amount": "金額",
+    "auth_member_action_fee": "手数料",
+    "auth_member_action_total_amount": "総額",
+    "auth_member_action_convert": "変換",
+    "auth_member_action_enter_transfer_address": "USDT受取アドレスを入力してください (BEP20)",
+
+    "auth_member_transaction_history": "取引履歴",
+    "auth_member_transaction_history_search": "検索",
+    "auth_member_transaction_history_all": "すべて",
+    "auth_member_transaction_history_buy_package": "パッケージ購入",
+    "auth_member_transaction_history_transfer_package": "パッケージ転送",
+    "auth_member_transaction_history_withdraw": "出金",
+    "auth_member_transaction_history_transaction_code": "取引コード",
+    "auth_member_transaction_history_type": "タイプ",
+    "auth_member_transaction_history_network": "ネットワーク",
+    "auth_member_transaction_history_username": "ユーザー名",
+    "auth_member_transaction_history_address": "アドレス",
+    "auth_member_transaction_history_total_amount": "総額",
+    "auth_member_transaction_history_time": "時間",
+    "auth_member_transaction_history_status": "ステータス",
+    "auth_member_transaction_history_rows_per_page": "ページごとの行数",
+    "auth_member_transaction_history_of": "の",
+    "auth_member_transaction_history_page": "ページ",
+    "auth_member_transaction_history_hash_ixid": "Hash/Tx ID",
+    "auth_member_transaction_history_no_data": "データなし",
+
+    "button_learmore": "詳細を見る",
+    "button_detail": "詳細を見る",
+    "button_all": "すべて",
+    "button_contact_now": "今すぐ連絡",
+    "button_view_more": "さらに見る",
+    "button_view_more_offers": "さらに特典を見る",
+    "button_cancel": "キャンセル",
+    "button_logout": "ログアウト",
+    "button_submit": "送信",
+    "button_update": "更新",
+
+    "keyword": "言語",
+
+    "input_offer_or_program_name": "特典またはプログラム名を入力",
+
+    "popup_notification": "通知",
+    "read_all": "すべて読む",
+    "scroll_to_continue": "続けて見るにはスクロールしてください",
+    "offers": "特典",
+    "night": "泊",
+    "daily": "毎日",
+    "monthly": "毎月",
+    "no_data": "データなし",
+    "no_history": "履歴なし",
+    "no_notifications": "通知なし",
+    "no_rewards": "リワードなし",
+    "no_certificate": "証明書なし",
+
+    "alert_logout_confirmation": "ログアウトしますか？",
+    "alert_logout_confirm": "ログアウト確認",
+
+    "toast_all_notifications_read": "すべての通知を読みました",
+    "toast_no_changes": "変更はありません。送信前に情報を更新してください",
+    "toast_please_wait": "しばらくお待ちください",
+    "toast_seconds_to_resend_otp": "OTPを再送信するまでの秒数",
+
+    "feature_in_development": "開発中の機能",
+    "page_feature_in_development": "ページ機能開発中",
+    "usdt": "USDT",
+    "ts": "TS",
+    "sales": "売上",
+    "h_chg_percent": "24時間変動率 %",
+    "profit_invest": "投資利益",
+
+    "account_lock_warning": "アカウントがロックされています",
+    "account_locked_contact_support": "アカウントがロックされています。サポート部門にご連絡いただき、詳細情報をご確認ください。",
+    "please_enter_data": "データを入力してください",
+    "transfer_address": "転送アドレス",
+    "enter": "入力",
+    "yesterday_at": "昨日",
+    "detail_new_notification": "通知詳細"
+}

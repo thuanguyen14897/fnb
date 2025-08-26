@@ -1,0 +1,414 @@
+{
+    "page_not_found": "无法找到页面 404",
+
+    "not_found": {
+        "title": "SMB - 路线图",
+        "description": "SMB 是代理领域的领先品牌，提供高端投资方案，为客户带来独特体验和专业服务。",
+        "ogTitle": "SMB - 路线图",
+        "ogDescription": "SMB 是代理领域的领先品牌，提供高端投资方案，为客户带来独特体验和专业服务。",
+        "siteName": "SMB"
+    },
+    "home": {
+        "title": "SMB - SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 高端度假套餐领域的领先品牌",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "whitepaper": {
+        "title": "SMB - 白皮书",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 白皮书",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "endow": {
+        "title": "SMB - 优惠促销",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 优惠促销",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "endow_detail": {
+        "title": "SMB - 优惠详情",
+        "description": "SMB - 优惠详情",
+        "ogTitle": "SMB - 优惠详情",
+        "ogDescription": "SMB - 优惠详情",
+        "siteName": "SMB"
+    },
+
+    "benefits": {
+        "title": "SMB - 会员",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 会员",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "contact": {
+        "title": "SMB - 联系我们",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 联系我们",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "auth_information_profile": {
+        "title": "SMB - 我的账户",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 我的账户",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "auth_information_certificate": {
+        "title": "SMB - 证书",
+        "description": "SMB是提供高端度假套餐的领先代理品牌，为客户带来独特的体验和专业的服务。",
+        "ogTitle": "SMB - 证书",
+        "ogDescription": "SMB是提供高端度假套餐的领先代理品牌，为客户带来独特的体验和专业的服务。",
+        "siteName": "SMB"
+    },
+
+    "auth_information_notification": {
+        "title": "SMB - 我的通知",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 我的通知",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "auth_information_change_password": {
+        "title": "SMB - 更改密码",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 更改密码",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "auth_member_affiliate": {
+        "title": "SMB - 联盟计划",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 联盟计划",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "auth_member_reward": {
+        "title": "SMB - 奖励管理",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 奖励管理",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "auth_member_action": {
+        "title": "SMB - 套餐操作",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 套餐操作",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "auth_member_transaction_historys": {
+        "title": "SMB - 交易历史",
+        "description": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "ogTitle": "SMB - 交易历史",
+        "ogDescription": "SMB 是高端度假套餐领域的领先品牌，为客户提供独特体验和专业服务",
+        "siteName": "SMB"
+    },
+
+    "header_home": "主页",
+    "header_promotion": "优惠促销",
+    "header_membership": "会员",
+    "header_contact": "联系我们",
+    "header_register": "注册",
+    "header_login": "登录",
+    "header_whitepaper": "白皮书",
+
+    "footer_policy": "政策",
+    "footer_our_location": "我们的地址",
+    "footer_terms_conditions": "条款和条件",
+    "footer_privacy_policy": "隐私政策",
+
+    "footer_policy_about_us": "关于我们",
+    "footer_policy_news": "新闻",
+    "footer_policy_pricing": "定价",
+    "footer_policy_new_property": "新房产",
+
+    "home_table_crypto": "市场信息",
+    "home_table_forex_header": "外汇",
+    "home_title_section_one": "探索",
+
+    "endow_promotion": "优惠促销",
+    "endow_update": "更新 SMB 系统中的最新、最热门的优惠",
+    "endow_featured": "精选优惠",
+    "endow_by_destination": "按目的地筛选优惠",
+    "endow_expiration": "有效期限",
+    "endow_member_privilege": "会员专属优惠",
+    "endow_details": "详情",
+    "endow_slug_in": "在",
+    "endow_slug_promotion": "促销",
+
+    "benefits_about": "介绍",
+    "benefits_card_use": "如何使用会员卡",
+
+    "contact_info": "联系信息",
+    "contact_headoffice": "总部",
+    "contact_branch_office": "分公司",
+    "contact_support": "请联系我们，以便 SMB 和支持团队有机会获取 SMB 系统中的最新、最热门的优惠",
+    "contact_form_message": "请留下您的留言以获取支持",
+
+    "contact_form_name_label": "姓名",
+    "contact_form_name_validate": "请输入您的姓名",
+    "contact_form_name_placeholder": "输入您的姓名...",
+    "contact_form_email_label": "电子邮件",
+    "contact_form_email_validate": "电子邮件无效",
+    "contact_form_email_placeholder": "输入电子邮件...",
+    "contact_form_phone_label": "电话号码",
+    "contact_form_phone_validate_empty": "请输入电话号码",
+    "contact_form_phone_validate_length": "电话号码必须为 10 位数字",
+    "contact_form_phone_validate_invalid": "电话号码无效",
+    "contact_form_phone_placeholder": "输入电话号码...",
+    "contact_form_subject_label": "主题",
+    "contact_form_subject_validate": "请输入主题",
+    "contact_form_subject_placeholder": "输入主题...",
+    "contact_form_details_label": "详情",
+    "contact_form_details_placeholder": "输入详情...",
+
+    "dialog_auth_enter_email": "请输入电子邮件",
+    "dialog_auth_invalid_email": "电子邮件无效",
+    "dialog_auth_email_placeholder": "电子邮件",
+
+    "username_enter_use_name": "请输入用户名",
+    "username_use_name_placeholder": "输入用户名",
+    "username_use_name_label": "用户名",
+
+    "userName_minLength": "用户名至少包含 6 个字符",
+    "userName_maxLength": "用户名不得超过 15 个字符",
+    "userName_noSpaces": "用户名不能包含空格",
+
+    "dialog_auth_enter_phone": "请输入电话号码",
+    "dialog_auth_phone_required_10_digits": "电话号码必须为 10 位数字",
+    "dialog_auth_invalid_phone": "电话号码无效",
+    "dialog_auth_phone_placeholder": "电话号码",
+
+    "dialog_auth_enter_password": "请输入密码",
+    "dialog_auth_password_min_length": "密码至少包含 6 个字符",
+    "dialog_auth_password_placeholder": "密码",
+    "dialog_auth_new_password": "新密码",
+    "dialog_auth_password_mismatch": "密码不匹配！",
+    "dialog_auth_confirm_new_password": "确认新密码",
+    "dialog_auth_confirm_password": "确认密码",
+
+    "dialog_auth_referral_code_optional": "推荐码",
+    "dialog_auth_agree_terms_required": "请同意条款",
+    "dialog_auth_agree_terms": "我同意条款和政策",
+
+    "dialog_auth_remember_me": "记住登录",
+    "dialog_auth_forgot_password": "忘记密码",
+    "dialog_auth_login": "登录",
+    "dialog_auth_or": "或者",
+    "dialog_auth_login_with_google": "使用 Google 登录",
+    "dialog_auth_login_with_facebook": "使用 Facebook 登录",
+    "dialog_auth_no_account": "没有账户？",
+    "dialog_auth_register": "注册",
+
+    "dialog_auth_enter_otp": "请输入 OTP 代码",
+    "dialog_auth_otp_must_be_4_digits": "OTP 必须为 4 位数字",
+    "dialog_auth_otp_only_4_digits": "OTP 只能是 4 位数字",
+    "dialog_auth_resend_otp": "重新发送 OTP",
+
+    "dialog_auth_close": "关闭",
+    "dialog_auth_enter_verification_code": "请输入发送到您电子邮件的 4 位验证码",
+    "dialog_auth_send_code_to_email": "我们将发送验证码到您注册账户的电子邮件。请输入注册电子邮件",
+    "dialog_auth_enter_new_password": "请输入新密码以更新您的密码。",
+    "dialog_auth_confirm_password_change": "确认密码更改",
+    "dialog_auth_enter_otp_title": "输入 OTP 代码",
+
+    "auth_general_info": "一般信息",
+    "auth_my_account": "我的账户",
+    "auth_my_certificate": "证书",
+    "auth_my_notifications": "我的通知",
+    "auth_change_password": "更改密码",
+    "auth_smb_member": "SMB 会员",
+    "auth_affiliate": "联盟计划",
+    "auth_manage_rewards": "奖励管理",
+    "auth_package_tasks": "套餐任务",
+    "auth_transaction_history": "交易历史",
+
+    "auth_profile_enjoy_privileges": "享受无限特权和优惠",
+    "auth_profile_membership_info": "SMB 会员计划是 SMB 集团的高端忠诚客户计划，专门为会员提供独特的权益，在完整生态系统内体验其公司产品和服务。",
+    "auth_profile_balance": "余额",
+    "auth_profile_rank": "等级",
+    "auth_profile_account_info": "账户信息",
+    "auth_profile_change_photo": "更换头像",
+    "auth_profile_enter_name": "请输入您的姓名",
+    "auth_profile_your_name": "您的姓名",
+
+    "auth_profile_offer_5_percent_room": "享受最优房价 5% 折扣",
+    "auth_profile_accumulate_3_percent": "在 SMB 生态系统内消费可累积 3% 积分",
+    "auth_profile_offer_50_percent": "享受高达 50% 运动场和餐饮折扣",
+
+    "auth_information_notification_all": "全部",
+    "auth_information_notification_package_tasks": "套餐任务",
+    "auth_information_notification_rewards": "SMB 奖励通知",
+    "auth_information_notification_promotions": "促销优惠",
+    "auth_information_notification_my_notifications": "我的通知",
+    "auth_information_notification_read": "已读通知",
+    "auth_information_notification_mark_as_read": "标记为已读",
+
+    "auth_information_certificate_title": "证书",
+    "auth_information_certificate_download": "下载",
+
+    "auth_information_change_password_title": "更改密码",
+    "auth_information_change_password_logged_in_with": "您当前使用以下方式登录",
+    "auth_information_change_password_phone": "电话号码",
+    "auth_information_change_password_prompt": "请输入您的旧密码以更改密码",
+    "auth_information_change_password_unable": "无法更改密码",
+    "auth_information_change_password_enter_old": "请输入旧密码",
+    "auth_information_change_password_min_length": "密码至少包含 6 个字符",
+    "auth_information_change_password_old": "旧密码",
+    "auth_information_change_password_enter_new": "请输入新密码",
+    "auth_information_change_password_new": "新密码",
+    "auth_information_change_password_confirm_new": "确认新密码",
+
+    "auth_member_affiliate_get_share_link": "获取分享链接",
+    "auth_member_affiliate_share": "分享",
+    "auth_member_affiliate_program": "联盟计划",
+    "auth_member_affiliate_introduction": "介绍",
+    "auth_member_affiliate_friends": "朋友",
+    "auth_member_affiliate_multi_level_branch_diagram": "多层级分支图",
+    "auth_member_affiliate_rank": "等级",
+    "auth_member_affiliate_total_sale": "总销售额",
+    "auth_member_affiliate_total_members": "总会员数",
+    "auth_member_affiliate_total_levels": "总层级",
+    "auth_member_affiliate_out": "退出",
+
+    "auth_member_rewards": "奖励管理",
+    "auth_member_rewards_total": "总利润",
+    "auth_member_rewards_total_invest": "总投资",
+    "auth_member_rewards_daily": "今日",
+    "auth_member_rewards_today": "今天",
+    "auth_member_rewards_enjoy": "享受",
+    "auth_member_rewards_package": "套餐",
+    "auth_member_rewards_my_package": "我的套餐",
+    "auth_member_rewards_profit_invest": "投资收益",
+    "auth_member_rewards_direct_commission": "直接佣金",
+    "auth_member_rewards_ranking_bonus": "等级奖励",
+    "auth_member_rewards_total_sale": "总销售额",
+    "auth_member_rewards_reward": "奖励",
+    "auth_member_rewards_my_level": "我的级别",
+    "auth_member_rewards_leadership_reward": "领导奖励",
+    "auth_member_rewards_requirement": "要求",
+    "auth_member_rewards_my_rank": "我的等级",
+    "auth_member_rewards_total_daily": "每日总计",
+    "auth_member_rewards_life_of_investment": "投资期限",
+    "auth_member_rewards_bonus": "每日佣金 %",
+
+    "auth_member_action_package_tasks": "套餐任务",
+    "auth_member_action_buy_package": "购买套餐",
+    "auth_member_action_transfer_package": "转让套餐",
+    "auth_member_action_withdraw": "提现",
+
+    "auth_member_action_select_vacation_package": "选择度假套餐",
+    "auth_member_action_balance": "余额",
+    "auth_member_action_network": "选择充值方式",
+    "auth_member_action_export_network": "选择提现方式",
+    "auth_member_action_usdt_transfer_address": "USDT（BEP20）收款地址",
+    "auth_member_action_than_usdt": "必须大于",
+    "auth_member_action_enter_address": "输入 USDT（BEP20）转账地址",
+    "auth_member_action_usdt_transfer_address_package": "USDT 转账地址",
+
+    "auth_member_action_copy_usdt_address_success": "成功复制 USDT 转账地址",
+    "auth_member_action_enter_hash_ixid": "请输入交易哈希/Tx ID",
+    "auth_member_action_hash_ixid": "交易哈希/Tx ID",
+    "auth_member_action_input_hash_ixid": "输入交易哈希/Tx ID",
+
+    "auth_member_action_enter_username": "请输入用户名",
+    "auth_member_action_username": "用户名",
+    "auth_member_action_input_username": "输入用户名",
+    "auth_member_action_enter_password": "请输入密码",
+    "auth_member_action_password_min_length": "密码至少包含 6 个字符",
+    "auth_member_action_password": "密码",
+    "auth_member_action_input_password": "输入密码",
+    "auth_member_action_enter_amount": "请输入金额",
+    "auth_member_action_amount": "金额",
+    "auth_member_action_fee": "手续费",
+    "auth_member_action_total_amount": "总金额",
+    "auth_member_action_convert": "兑换",
+    "auth_member_action_enter_transfer_address": "请输入 USDT（BEP20）收款地址",
+
+    "auth_member_transaction_history": "交易历史",
+    "auth_member_transaction_history_search": "搜索",
+    "auth_member_transaction_history_all": "全部",
+    "auth_member_transaction_history_buy_package": "购买套餐",
+    "auth_member_transaction_history_transfer_package": "转让套餐",
+    "auth_member_transaction_history_withdraw": "提现",
+    "auth_member_transaction_history_transaction_code": "交易代码",
+    "auth_member_transaction_history_type": "类型",
+    "auth_member_transaction_history_network": "网络",
+    "auth_member_transaction_history_username": "用户名",
+    "auth_member_transaction_history_address": "地址",
+    "auth_member_transaction_history_total_amount": "总金额",
+    "auth_member_transaction_history_time": "时间",
+    "auth_member_transaction_history_status": "状态",
+    "auth_member_transaction_history_rows_per_page": "每页行数",
+    "auth_member_transaction_history_of": "的",
+    "auth_member_transaction_history_page": "页",
+    "auth_member_transaction_history_hash_ixid": "交易哈希/Tx ID",
+    "auth_member_transaction_history_no_data": "暂无数据",
+
+    "button_learmore": "了解更多",
+    "button_detail": "查看详情",
+    "button_all": "全部",
+    "button_contact_now": "立即联系",
+    "button_view_more": "查看更多",
+    "button_view_more_offers": "查看更多优惠",
+    "button_cancel": "取消",
+    "button_logout": "退出",
+    "button_submit": "提交",
+    "button_update": "更新",
+
+    "keyword": "语言",
+    "popup_notification": "通知",
+    "read_all": "全部已读",
+    "scroll_to_continue": "滚动继续查看",
+    "offers": "优惠",
+    "night": "夜",
+    "daily": "每日",
+    "monthly": "每月",
+    "no_data": "暂无数据",
+    "no_history": "暂无历史记录",
+    "no_notifications": "暂无通知",
+    "no_rewards": "暂无奖励",
+    "no_certificate": "无证书",
+
+    "input_offer_or_program_name": "输入优惠或计划名称",
+
+    "alert_logout_confirmation": "您确定要退出吗？",
+    "alert_logout_confirm": "确认退出",
+
+    "toast_all_notifications_read": "您已阅读所有通知",
+    "toast_no_changes": "没有任何更改。请在提交前更新信息",
+    "toast_please_wait": "请稍等",
+    "toast_seconds_to_resend_otp": "秒后重新发送 OTP",
+
+    "feature_in_development": "功能开发中",
+    "page_feature_in_development": "页面功能开发中",
+    "usdt": "USDT",
+    "ts": "TS",
+    "sales": "销售",
+    "h_chg_percent": "24小时变动 %",
+    "profit_invest": "投资利润",
+
+    "account_lock_warning": "您的账户已被锁定",
+    "account_locked_contact_support": "您的账户已被锁定。请联系支持团队以获得帮助和更多信息。",
+    "please_enter_data": "请输入数据",
+    "transfer_address": "转账地址",
+    "enter": "输入",
+    "yesterday_at": "昨天",
+    "detail_new_notification": "通知详情"
+}

@@ -1,0 +1,415 @@
+{
+    "page_not_found": "The page could not be found 404",
+
+    "not_found": {
+        "title": "SMB -  Road-map",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB -  Road-map",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "home": {
+        "title": "SMB - SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - Leading brand in luxury investment packages",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "whitepaper": {
+        "title": "SMB - Whitepaper",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - Whitepaper",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "endow": {
+        "title": "SMB - Promotional Offers",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - Promotional Offers",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "endow_detail": {
+        "title": "SMB - Promotional Offer Details",
+        "description": "SMB - Detailed promotional offers",
+        "ogTitle": "SMB - Promotional Offer Details",
+        "ogDescription": "SMB - Detailed promotional offers",
+        "siteName": "SMB"
+    },
+
+    "benefits": {
+        "title": "SMB - Membership",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - Membership",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "contact": {
+        "title": "SMB - Contact",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - Contact",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "auth_information_profile": {
+        "title": "SMB - My Account",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - My Account",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "auth_information_certificate": {
+        "title": "SMB - Certificate",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - Certificate",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "auth_information_notification": {
+        "title": "SMB - My Notifications",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - My Notifications",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "auth_information_change_password": {
+        "title": "SMB - Change Password",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - Change Password",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "auth_member_affiliate": {
+        "title": "SMB - Affiliate",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - Affiliate",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "auth_member_reward": {
+        "title": "SMB - Rewards Management",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - Rewards Management",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "auth_member_action": {
+        "title": "SMB - Package Actions",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - Package Actions",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "auth_member_transaction_historys": {
+        "title": "SMB - Transaction History",
+        "description": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "ogTitle": "SMB - Transaction History",
+        "ogDescription": "SMB is a leading brand in the agency field, providing premium investment packages, offering unique experiences and professional services to customers",
+        "siteName": "SMB"
+    },
+
+    "header_home": "Home",
+    "header_promotion": "Promotion",
+    "header_membership": "Membership",
+    "header_contact": "Contact",
+    "header_register": "Register",
+    "header_login": "Login",
+    "header_whitepaper": "Whitepaper",
+
+    "footer_policy": "Policy",
+    "footer_our_location": "Our Location",
+    "footer_terms_conditions": "Terms & Conditions",
+    "footer_privacy_policy": "Privacy Policy",
+
+    "footer_policy_about_us": "About Us",
+    "footer_policy_news": "News",
+    "footer_policy_pricing": "Pricing",
+    "footer_policy_new_property": "New Property",
+
+    "home_table_crypto": "Market Information",
+    "home_table_forex_header": "Foreign Currency",
+    "home_title_section_one": "EXPLORE",
+
+    "endow_promotion": "Promotional Offers",
+    "endow_update": "Update the latest and hottest offers in the SMB system",
+    "endow_featured": "Featured Offers",
+    "endow_by_destination": "Offers by Destination",
+    "endow_expiration": "Expiration Date",
+    "endow_member_privilege": "Exclusive Member Privileges",
+    "endow_details": "Details",
+    "endow_slug_in": "in",
+    "endow_slug_promotion": "Promotion",
+
+    "benefits_about": "About",
+    "benefits_card_use": "How to Use Member Card",
+
+    "contact_info": "Contact Information",
+    "contact_headoffice": "Headoffice",
+    "contact_branch_office": "Branch Office",
+    "contact_support": "Please contact SMB support for the latest and hottest offers in the SMB system.",
+    "contact_form_message": "Please leave a message for support",
+
+    "contact_form_name_label": "Full Name",
+    "contact_form_name_validate": "Please enter your full name",
+    "contact_form_name_placeholder": "Enter your full name...",
+    "contact_form_email_label": "Email",
+    "contact_form_email_validate": "Invalid email",
+    "contact_form_email_placeholder": "Enter your email...",
+    "contact_form_phone_label": "Phone Number",
+    "contact_form_phone_validate_empty": "Please enter your phone number",
+    "contact_form_phone_validate_length": "Phone number must be 10 digits",
+    "contact_form_phone_validate_invalid": "Invalid phone number",
+    "contact_form_phone_placeholder": "Enter your phone number...",
+    "contact_form_subject_label": "Subject",
+    "contact_form_subject_validate": "Please enter a subject",
+    "contact_form_subject_placeholder": "Enter the subject...",
+    "contact_form_details_label": "Details",
+    "contact_form_details_placeholder": "Enter details...",
+
+    "dialog_auth_enter_email": "Please enter your email",
+    "dialog_auth_invalid_email": "Invalid email",
+    "dialog_auth_email_placeholder": "Enter your email",
+
+    "username_enter_use_name": "Please enter your username",
+    "username_use_name_placeholder": "Enter your username",
+    "username_use_name_label": "Username",
+
+    "userName_minLength": "Username must be at least 6 characters long",
+    "userName_maxLength": "Username must be at most 15 characters long",
+    "userName_noSpaces": "Username must not contain spaces",
+
+    "dialog_auth_enter_phone": "Please enter your phone number",
+    "dialog_auth_phone_required_10_digits": "Phone number must be 10 digits",
+    "dialog_auth_invalid_phone": "Invalid phone number",
+    "dialog_auth_phone_placeholder": "Phone number",
+
+    "dialog_auth_enter_password": "Please enter your password",
+    "dialog_auth_password_min_length": "Password must be at least 6 characters",
+    "dialog_auth_password_placeholder": "Password",
+    "dialog_auth_new_password": "New Password",
+    "dialog_auth_password_mismatch": "Passwords do not match!",
+    "dialog_auth_confirm_new_password": "Confirm New Password",
+    "dialog_auth_confirm_password": "Confirm Password",
+
+    "dialog_auth_referral_code_optional": "Referral Code",
+    "dialog_auth_agree_terms_required": "Please agree to the terms",
+    "dialog_auth_agree_terms": "I agree to the terms and policies",
+
+    "dialog_auth_remember_me": "Remember Me",
+    "dialog_auth_forgot_password": "Forgot Password",
+    "dialog_auth_login": "Login",
+    "dialog_auth_or": "Or",
+    "dialog_auth_login_with_google": "Login with Google",
+    "dialog_auth_login_with_facebook": "Login with Facebook",
+    "dialog_auth_no_account": "Don't have an account?",
+    "dialog_auth_register": "Register",
+
+    "dialog_auth_enter_otp": "Please enter the OTP code",
+    "dialog_auth_otp_must_be_4_digits": "OTP must be 4 digits",
+    "dialog_auth_otp_only_4_digits": "OTP can only be 4 digits",
+    "dialog_auth_resend_otp": "Resend OTP",
+
+    "dialog_auth_close": "Close",
+    "dialog_auth_enter_verification_code": "Please enter the 4-digit verification code that has been sent to your email",
+    "dialog_auth_send_code_to_email": "We will send a code to the EMAIL you registered with your account. Please enter your registered email.",
+    "dialog_auth_enter_new_password": "Enter a new password to update your current password.",
+    "dialog_auth_enter_otp_title": "Enter OTP",
+    "dialog_auth_confirm_password_change": "Confirm password change",
+
+    "auth_general_info": "General Information",
+    "auth_my_account": "My Account",
+    "auth_my_certificate": "Certificate",
+    "auth_my_notifications": "My Notifications",
+    "auth_change_password": "Change Password",
+    "auth_smb_member": "SMB Member",
+    "auth_affiliate": "Affiliate",
+    "auth_manage_rewards": "Rewards",
+    "auth_package_tasks": "Service Actions",
+    "auth_transaction_history": "Transaction History",
+
+    "auth_profile_enjoy_privileges": "Enjoy endless privileges and offers",
+    "auth_profile_membership_info": "SMB membership is the premium loyalty program of the SMB Group, offering superior privileges exclusively for members when experiencing products and services from member companies within its comprehensive ecosystem",
+    "auth_profile_balance": "Balance",
+    "auth_profile_rank": "Rank",
+    "auth_profile_account_info": "Account Information",
+    "auth_profile_change_photo": "Change Photo",
+    "auth_profile_enter_name": "Please enter your name",
+    "auth_profile_your_name": "Your Name",
+
+    "auth_profile_offer_5_percent_room": "5% discount on the best room rates",
+    "auth_profile_accumulate_3_percent": "Earn 3% points on all spending within the SMB ecosystem",
+    "auth_profile_offer_50_percent": "Up to 50% discount on grass field and dining fees",
+
+    "auth_information_notification_all": "All",
+    "auth_information_notification_package_tasks": "Package Tasks",
+    "auth_information_notification_rewards": "SMB News",
+    "auth_information_notification_promotions": "Promotional Offers",
+    "auth_information_notification_my_notifications": "My Notifications",
+    "auth_information_notification_read": "Notifications Read",
+    "auth_information_notification_mark_as_read": "Mark as Read",
+
+    "auth_information_certificate_title": "Certificate",
+    "auth_information_certificate_download": "Download",
+
+    "auth_information_change_password_title": "Change Password",
+    "auth_information_change_password_logged_in_with": "You are logged in with",
+    "auth_information_change_password_phone": "phone number",
+    "auth_information_change_password_prompt": "Please enter your old password to change your password",
+    "auth_information_change_password_unable": "Unable to change password",
+    "auth_information_change_password_enter_old": "Please enter your old password",
+    "auth_information_change_password_min_length": "Password must be at least 6 characters",
+    "auth_information_change_password_old": "Old Password",
+    "auth_information_change_password_enter_new": "Please enter your new password",
+    "auth_information_change_password_new": "New Password",
+    "auth_information_change_password_confirm_new": "Confirm New Password",
+
+    "auth_member_affiliate_get_share_link": "Get share link",
+    "auth_member_affiliate_share": "Share",
+    "auth_member_affiliate_program": "Program",
+    "auth_member_affiliate_introduction": "Introduction",
+    "auth_member_affiliate_friends": "Friends",
+    "auth_member_affiliate_multi_level_branch_diagram": "Multi-level branch diagram",
+    "auth_member_affiliate_rank": "Rank",
+    "auth_member_affiliate_total_sale": "Total sale",
+    "auth_member_affiliate_total_members": "Total members",
+    "auth_member_affiliate_total_levels": "Total levels",
+    "auth_member_affiliate_out": "OUT",
+
+    "auth_member_rewards": "Manage Rewards",
+    "auth_member_rewards_total": "Total profit",
+    "auth_member_rewards_total_invest": "Total invest",
+    "auth_member_rewards_daily": "TODAY",
+    "auth_member_rewards_today": "Today",
+    "auth_member_rewards_enjoy": "Enjoy",
+    "auth_member_rewards_package": "Package",
+    "auth_member_rewards_my_package": "My Package",
+    "auth_member_rewards_profit_invest": "Profit Invest",
+    "auth_member_rewards_direct_commission": "Direct Commission",
+    "auth_member_rewards_ranking_bonus": "Ranking Bonus",
+    "auth_member_rewards_total_sale": "Total Sale",
+    "auth_member_rewards_reward": "Reward",
+    "auth_member_rewards_my_level": "My Level",
+    "auth_member_rewards_leadership_reward": "Leadership Reward",
+    "auth_member_rewards_requirement": "Requirement",
+    "auth_member_rewards_my_rank": "My Rank",
+    "auth_member_rewards_total_daily": "Total Daily",
+    "auth_member_rewards_life_of_investment": "Life of Investment",
+    "auth_member_rewards_bonus": "Bonus % on Global Daily Sales",
+
+    "auth_member_action_package_tasks": "Package Tasks",
+    "auth_member_action_buy_package": "Buy Package",
+    "auth_member_action_transfer_package": "Transfer Package",
+    "auth_member_action_withdraw": "Withdraw",
+
+    "auth_member_action_select_vacation_package": "Select Vacation Package",
+    "auth_member_action_balance": "Balance",
+    "auth_member_action_network": "Select Deposit Options",
+    "auth_member_action_export_network": "Select withdrawal option",
+    "auth_member_action_usdt_transfer_address": "USDT (BEP20) receive address",
+    "auth_member_action_than_usdt": "Must be greater than",
+    "auth_member_action_usdt_transfer_address_package": "USDT Transfer Address",
+    "auth_member_action_enter_address": "Enter USDT (BEP20) transfer address",
+    "auth_member_action_copy_usdt_address_success": "Successfully Copied USDT Transfer Address",
+    "auth_member_action_enter_hash_ixid": "Please Enter Hash/ Tx ID",
+    "auth_member_action_hash_ixid": "Hash/ Tx ID",
+    "auth_member_action_input_hash_ixid": "Enter Hash/ Tx ID",
+
+    "auth_member_action_enter_username": "Please enter username",
+    "auth_member_action_username": "Username",
+    "auth_member_action_input_username": "Enter username",
+    "auth_member_action_enter_password": "Please enter password",
+    "auth_member_action_password_min_length": "Password must be at least 6 characters",
+    "auth_member_action_password": "Password",
+    "auth_member_action_input_password": "Enter password",
+    "auth_member_action_enter_amount": "Please enter the amount",
+    "auth_member_action_amount": "Amount",
+    "auth_member_action_fee": "Fee",
+    "auth_member_action_total_amount": "Total Amount",
+    "auth_member_action_convert": "Transfer",
+    "auth_member_action_enter_transfer_address": "Please enter USDT (BEP20) receive address",
+
+    "auth_member_transaction_history": "Transaction History",
+    "auth_member_transaction_history_search": "Search",
+    "auth_member_transaction_history_all": "All",
+    "auth_member_transaction_history_buy_package": "Buy Package",
+    "auth_member_transaction_history_transfer_package": "Transfer Package",
+    "auth_member_transaction_history_withdraw": "Withdraw",
+    "auth_member_transaction_history_transaction_code": "Transaction Code",
+    "auth_member_transaction_history_type": "Type",
+    "auth_member_transaction_history_network": "Network",
+    "auth_member_transaction_history_username": "Username",
+    "auth_member_transaction_history_address": "Address",
+    "auth_member_transaction_history_total_amount": "Total Amount",
+    "auth_member_transaction_history_time": "Time",
+    "auth_member_transaction_history_status": "Status",
+    "auth_member_transaction_history_rows_per_page": "Rows per page",
+    "auth_member_transaction_history_of": "of",
+    "auth_member_transaction_history_page": "Page",
+    "auth_member_transaction_history_hash_ixid": "Hash/ Tx ID",
+    "auth_member_transaction_history_no_data": "No data",
+
+    "button_learmore": "Learn more",
+    "button_detail": "View Details",
+    "button_all": "All",
+    "button_contact_now": "Contact Now",
+    "button_view_more": "View More",
+    "button_view_more_offers": "View More Offers",
+    "button_cancel": "Cancel",
+    "button_logout": "Logout",
+    "button_submit": "Submit",
+    "button_update": "Update",
+
+    "keyword": "Language",
+
+    "input_offer_or_program_name": "Enter offer or program name",
+
+    "popup_notification": "Notification",
+    "read_all": "Read All",
+    "scroll_to_continue": "Scroll to Continue",
+    "offers": "Offers",
+    "night": "Night",
+    "daily": "daily",
+    "monthly": "monthly",
+    "no_data": "No Data",
+    "no_history": "No History",
+    "no_notifications": "No Notifications",
+    "no_rewards": "No Rewards",
+    "no_certificate": "No Certificate",
+
+    "alert_logout_confirmation": "Do you want to log out?",
+    "alert_logout_confirm": "Confirm Logout",
+
+    "toast_all_notifications_read": "You have read all notifications",
+    "toast_no_changes": "No changes detected. Please update the information before submitting",
+    "toast_please_wait": "Please wait",
+    "toast_seconds_to_resend_otp": "seconds to resend OTP",
+
+    "feature_in_development": "Feature in development",
+    "page_feature_in_development": "The page feature in development",
+    "usdt": "USDT",
+    "ts": "TS",
+    "h_chg_percent": "24h chg %",
+    "profit_invest": "Profit Invest",
+
+    "account_lock_warning": "Your account has been locked",
+    "account_locked_contact_support": "Your account has been locked. Please contact support for assistance and more information.",
+    "please_enter_data": "Please enter data",
+    "transfer_address": "transfer address",
+    "enter": "Enter",
+    "yesterday_at": "Yesterday at",
+    "sales": "Sales",
+    "detail_new_notification": "Details of the Announcement"
+}

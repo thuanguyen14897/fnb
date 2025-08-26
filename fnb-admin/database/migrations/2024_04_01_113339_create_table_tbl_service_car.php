@@ -1,0 +1,31 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('tbl_service_car', function (Blueprint $table) {
+            $table->unsignedInteger('id',true);
+            $table->string('name');
+            $table->double('percent')->default(0);
+            $table->unsignedInteger('province_id')->default(0);
+            $table->tinyInteger('type')->comment('1 xe tự lái,2 xe có tài, 3 book tài xế');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('tbl_service_car');
+    }
+};

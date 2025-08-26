@@ -1,0 +1,153 @@
+@extends('admin.layouts.index')
+@section('content')
+    <!-- Page-Title -->
+    <div class="row">
+        <div class="col-sm-12">
+            <h4 class="page-title">{{lang('c_title_client')}}</h4>
+            <ol class="breadcrumb">
+                <li><a href="admin/dashboard">{{lang('dt_index')}}</a></li>
+                <li><a href="admin/clients/list">{{lang('c_title_client')}}</a></li>
+                <li class="active">{{lang('dt_list')}}</li>
+            </ol>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <ul class="nav nav-tabs">
+                <li class="H-search active"><a data-toggle="tab" data-id="0">Tất cả (<b class="count_all">0</b>)</a></li>
+                <li class="H-search"><a data-toggle="tab" data-id="1">Khách hàng (<b class="count_type_1">0</b>)</a></li>
+                <li class="H-search"><a data-toggle="tab" data-id="2">Đối tác (<b class="count_type_2">0</b>)</a></li>
+            </ul>
+            <span class="group_search">
+                <input type="hidden" name="type_client_search" id="type_client_search" value="0">
+            </span>
+            <div class="card-box table-responsive">
+                <div class="row m-b-10">
+                    <div class="col-md-2">
+                        <label for="active_search">{{lang('c_active_client')}}</label>
+                        <select class="active_search select2" id="active_search"
+                                data-placeholder="Chọn ..." name="active_search">
+                            <option></option>
+                            <option value="-1">Tất cả</option>
+                            <option value="0">Khóa</option>
+                            <option value="1">Hoạt động</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_search">{{lang('dt_date_created_customer')}}</label>
+                        <input class="form-control  date_search" type="text" id="date_search" name="date_search" value="">
+                    </div>
+                </div>
+                <table id="table_client" class="table table-bordered table_client">
+                    <thead>
+                    <tr>
+                        <th class="text-center">{{lang('c_avatar_client')}}</th>
+                        <th class="text-center">Mã KH</th>
+                        <th class="text-center">{{lang('c_fullname_client')}}</th>
+                        <th class="text-center">{{lang('c_phone_client')}}</th>
+                        <th class="text-center">{{lang('c_email_client')}}</th>
+                        <th class="text-center">{{lang('c_type_client')}}</th>
+                        <th class="text-center">{{lang('dt_date_created_customer')}}</th>
+                        <th class="text-center">{{lang('Mã giới thiệu')}}</th>
+                        <th class="text-center">{{lang('c_active_client')}}</th>
+                        <th class="text-center">{{lang('dt_actions')}}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+@endsection
+@section('script')
+    <script>
+        var oTable;
+        var fnserverparams = {
+            'type_client_search' : 'input[name="type_client_search"]',
+            'active_search' : '#active_search',
+            'date_search' : '#date_search',
+        };
+        $('.H-search').click(function() {
+            $('input[name="type_client_search"]').val($(this).find('a').attr('data-id')).trigger('change');
+        })
+
+        $(function() {
+            search_daterangepicker('date_search');
+            oTable = InitDataTable('#table_client', 'admin/clients/getListCustomer', {
+                'order': [
+                    [6, 'desc']
+                ],
+                'responsive': false,
+                "ajax": {
+                    "type": "POST",
+                    "url": "admin/clients/getListCustomer",
+                    "data": function (d) {
+                        for (var key in fnserverparams) {
+                            d[key] = $(fnserverparams[key]).val();
+                        }
+                    },
+                    "dataSrc": function (json) {
+                        if(json.result == false){
+                            alert_float('error',json.message);
+                        }
+                        return json.data;
+                    }
+                },
+                columnDefs: [
+                    {data: 'avatar', name: 'avatar',width: "90px",},
+                    {data: 'code', name: 'code',width: "110px",},
+                    {data: 'fullname', name: 'fullname'},
+                    {
+                        "render": function (data, type, row) {
+                            return `<div class="text-center">${data}</div>`;
+                        },
+                        data: 'phone', name: 'phone'
+                    },
+                    {data: 'email', name: 'email'},
+                    {
+                        "render": function (data, type, row) {
+                            return `<div class="text-center">${data}</div>`;
+                        },
+                        data: 'type_client', name: 'type_client'
+                    },
+                    {data: 'created_at', name: 'created_at'},
+                    {data: 'referral_code', name: 'referral_code',width: "110px",},
+                    {
+                        "render": function (data, type, row) {
+                            return `<div class="text-center">${data}</div>`;
+                        },
+                        data: 'active', name: 'active'
+                    },
+                    {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px" },
+
+                ]
+            })
+            $.each(fnserverparams, function(filterIndex, filterItem) {
+                $('' + filterItem).on('change', function() {
+                    oTable.draw('page')
+                });
+            });
+            $('#table_client').on('draw.dt', function () {
+                countAll();
+            });
+
+            function countAll() {
+                var data = {};
+                $.each(fnserverparams, function(filterIndex, filterItem) {
+                    data[filterIndex] = $(filterItem).val();
+                });
+                $.post('admin/clients/countAll', data, function(response) {
+                    var total = 0;
+                    if(response.arrType.length > 0){
+                        $.each(response.arrType, function(index, value) {
+                            $(`.count_type_${value.id}`).text(formatNumber(value.total));
+                            total += parseFloat(value.total);
+                        })
+                    }
+                    $(`.count_all`).text(formatNumber(total));
+                })
+            }
+        })
+    </script>
+@endsection
