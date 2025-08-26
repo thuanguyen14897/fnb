@@ -7,11 +7,11 @@
     </style>
     <div class="row">
         <div class="col-sm-12">
-            <h4 class="page-title text-capitalize">{{lang('c_title_client')}}</h4>
+            <h4 class="page-title text-capitalize">{{lang('c_title_partner')}}</h4>
             <ol class="breadcrumb">
                 <li><a href="admin/dashboard">{{lang('dt_index')}}</a></li>
-                <li><a href="admin/clients/list">{{lang('c_title_client')}}</a></li>
-                <li class="active">{{ lang('dt_view_client') }}</li>
+                <li><a href="admin/partner/list">{{lang('c_title_partner')}}</a></li>
+                <li class="active">{{ lang('dt_view_partner') }}</li>
             </ol>
         </div>
     </div>

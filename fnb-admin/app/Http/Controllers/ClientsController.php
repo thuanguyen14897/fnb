@@ -60,6 +60,7 @@ class ClientsController extends Controller
 
     public function getListCustomer()
     {
+        $this->request->merge(['type_client' => 1]);
         $response = $this->fnbAccount->getListCustomer($this->request);
         $data = $response->getData(true);
         if ($data['result'] == false){
@@ -98,6 +99,10 @@ class ClientsController extends Controller
                 $str = $client['phone'];
                 return $str;
             })
+            ->editColumn('referral_code', function ($client) {
+                $str = '<div class="label label-default">'.$client['referral_code'].'</div>';
+                return '<div class="text-center">'.$str.'</div>';
+            })
             ->editColumn('created_at', function ($client) {
                 $str = _dt($client['created_at']);
                 return $str;
@@ -107,16 +112,6 @@ class ClientsController extends Controller
                 $classes = $client['active'] == 1 ? "btn-info" : "btn-danger";
                 $content = $client['active'] == 1 ? "Hoạt động" : "Khoá";
                 $str = "<a class='dt-update text-center btn btn-xs $classes' href='admin/clients/active/$customer_id'>$content</a>";
-                return $str;
-            })
-            ->editColumn('type_client', function ($client) {
-                $classesT = 'btn-danger';
-                $contentT = 'Khách hàng';
-                if ($client['type_client'] == 2) {
-                    $classesT = 'btn-info';
-                    $contentT = 'Đối tác';
-                }
-                $str = "<a class='text-center btn btn-xs $classesT'>$contentT</a>";
                 return $str;
             })
             ->editColumn('avatar', function ($client) {
@@ -131,7 +126,7 @@ class ClientsController extends Controller
 
                 return $str;
             })
-            ->rawColumns(['options', 'active', 'avatar', 'type_client', 'phone', 'created_at', 'fullname'])
+            ->rawColumns(['options', 'active', 'avatar', 'phone', 'created_at', 'fullname','referral_code'])
             ->setTotalRecords($data['recordsTotal']) // tổng số bản ghi
             ->setFilteredRecords($data['recordsFiltered']) // sau khi lọc
             ->with([

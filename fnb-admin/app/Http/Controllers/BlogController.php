@@ -80,31 +80,10 @@ class BlogController extends Controller
                 $str = '<input type="checkbox" '.$checked.' name="homepage" class="homepage dt-active"  data-plugin="switchery" data-color="#5fbeaa" data-href="admin/blog/changeHomePage/'.$data->id.'" data-status="'.$data->homepage.'">';
                 return $str;
             })
-            ->editColumn('hot', function ($data) {
-                $checked = $data->hot == 1 ? 'checked' : '';
-                $str = '<input type="checkbox" '.$checked.' name="hot" class="hot dt-active"  data-plugin="switchery" data-color="#5fbeaa" data-href="admin/blog/changeHot/'.$data->id.'" data-status="'.$data->hot.'">';
-                return $str;
-            })
-            ->editColumn('type', function ($data) {
-                if ($data->type == 1){
-                    $htmlType = '<div class="label label-default">Tin khuyến mãi</div>';
-                } else {
-                    $htmlType = '<div class="label label-primary">Tin thường</div>';
-                }
-                return '<div>'.$htmlType.'</div>';
-            })
-            ->editColumn('type_blog', function ($data) {
-                if ($data->type_blog == 1){
-                    $htmlTypeBlog = '<div class="label label-default">Loại điểm đến</div>';
-                } else {
-                    $htmlTypeBlog = '<div class="label label-primary">Loại thành viên</div>';
-                }
-                return '<div>'.$htmlTypeBlog.'</div>';
-            })
             ->addIndexColumn()
             ->removeColumn('created_at')
             ->removeColumn('updated_at')
-            ->rawColumns(['options','image','active','descption','homepage','type','type_blog','hot'])
+            ->rawColumns(['options','image','active','descption','homepage'])
             ->make(true);
     }
 
@@ -168,14 +147,6 @@ class BlogController extends Controller
             'image.required' => 'Vui lòng chọn hình ảnh',
             'descption.required' => 'Vui lòng nhập mô tả',
 
-            'title_en.required' => 'Vui lòng nhập tên tiêu đề tiếng anh',
-            'descption_en.required' => 'Vui lòng nhập mô tả tiếng anh',
-            'title_zh.required' => 'Vui lòng nhập tên tiêu đề tiếng trung',
-            'descption_zh.required' => 'Vui lòng nhập mô tả tiếng trung',
-            'title_ko.required' => 'Vui lòng nhập tên tiêu đề tiếng hàn',
-            'descption_ko.required' => 'Vui lòng nhập mô tả tiếng hàn',
-            'title_ja.required' => 'Vui lòng nhập tên tiêu đề tiếng nhật',
-            'descption_ja.required' => 'Vui lòng nhập mô tả tiếng nhật',
         ];
         if (!empty($id)) {
             $blog = Blog::find($id);
@@ -183,14 +154,6 @@ class BlogController extends Controller
                 [
                     'title' => 'required',
                     'descption' => 'required',
-                    'title_en' => 'required',
-                    'descption_en' => 'required',
-                    'title_zh' => 'required',
-                    'descption_zh' => 'required',
-                    'title_ko' => 'required',
-                    'descption_ko' => 'required',
-                    'title_ja' => 'required',
-                    'descption_ja' => 'required',
                 ],$message);
         } else {
             $blog = new Blog();
@@ -199,14 +162,6 @@ class BlogController extends Controller
                     'image' => 'required',
                     'title' => 'required',
                     'descption' => 'required',
-                    'title_en' => 'required',
-                    'descption_en' => 'required',
-                    'title_zh' => 'required',
-                    'descption_zh' => 'required',
-                    'title_ko' => 'required',
-                    'descption_ko' => 'required',
-                    'title_ja' => 'required',
-                    'descption_ja' => 'required',
                 ],$message);
         }
 
@@ -220,20 +175,8 @@ class BlogController extends Controller
             $blog->title = $this->request->input('title');
             $blog->descption = $this->request->input('descption');
             $blog->content = $this->request->input('content');
-            $blog->type = $this->request->input('type');
-            $blog->type_blog = $this->request->input('type_blog');
-            $blog->title_en = $this->request->input('title_en');
-            $blog->descption_en = $this->request->input('descption_en');
-            $blog->content_en = $this->request->input('content_en');
-            $blog->title_zh = $this->request->input('title_zh');
-            $blog->descption_zh = $this->request->input('descption_zh');
-            $blog->content_zh = $this->request->input('content_zh');
-            $blog->title_ko = $this->request->input('title_ko');
-            $blog->descption_ko = $this->request->input('descption_ko');
-            $blog->content_ko = $this->request->input('content_ko');
-            $blog->title_ja = $this->request->input('title_ja');
-            $blog->descption_ja = $this->request->input('descption_ja');
-            $blog->content_ja = $this->request->input('content_ja');
+            $blog->type = $this->request->input('type') ?? 1;
+            $blog->type_blog = $this->request->input('type_blog') ?? 1;
             $blog->save();
             DB::commit();
             if ($blog) {
@@ -258,7 +201,7 @@ class BlogController extends Controller
         } catch (\Exception $exception) {
             DB::rollBack();
             $data['result'] = false;
-            $data['message'] = $exception;
+            $data['message'] = $exception->getMessage();
             return response()->json($data);
         }
     }

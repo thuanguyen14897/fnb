@@ -31,6 +31,7 @@ class Service extends JsonResource
                 'id' => $this->id,
                 'name' => $this->name,
                 'image' => $dtImage,
+                'price' => $this->price,
                 'star' => $star,
                 'total_review' => $total_review,
                 'distance' => [

@@ -48,8 +48,8 @@ File: Components
 .btn-default:focus,
 .btn-default:hover,
 .open > .dropdown-toggle.btn-default {
-  background-color: #46b0b9 !important;
-  border: 1px solid #46b0b9 !important;
+  background-color: #FF5A1F !important;
+  border: 1px solid #FF5A1F !important;
 }
 .btn-white,
 .btn-white:hover,
@@ -209,7 +209,7 @@ File: Components
   border-width: 2px !important;
 }
 .btn-custom.btn-default {
-  color: #46b0b9 !important;
+  color: #FF5A1F !important;
 }
 .btn-custom.btn-primary {
   color: #5d9cec !important;
@@ -438,8 +438,8 @@ File: Components
   height: 17px;
 }
 .checkbox-custom input[type="checkbox"]:checked + label::before {
-  background-color: #46b0b9;
-  border-color: #46b0b9;
+  background-color: #FF5A1F;
+  border-color: #FF5A1F;
 }
 .checkbox-custom input[type="checkbox"]:checked + label::after {
   color: #ffffff;
@@ -575,13 +575,13 @@ File: Components
   height: 17px;
 }
 .radio-custom input[type="radio"] + label::after {
-  background-color: #46b0b9;
+  background-color: #FF5A1F;
 }
 .radio-custom input[type="radio"]:checked + label::before {
-  border-color: #46b0b9;
+  border-color: #FF5A1F;
 }
 .radio-custom input[type="radio"]:checked + label::after {
-  background-color: #46b0b9;
+  background-color: #FF5A1F;
 }
 .radio-primary input[type="radio"] + label::after {
   background-color: #5d9cec;
@@ -687,7 +687,7 @@ File: Components
   color: #ffffff;
 }
 .panel-custom > .panel-heading {
-  background-color: #46b0b9;
+  background-color: #FF5A1F;
 }
 .panel-primary > .panel-heading {
   background-color: #5d9cec;
@@ -722,8 +722,8 @@ File: Components
   padding: 15px 20px 20px 20px;
 }
 .panel-border.panel-custom .panel-heading {
-  border-color: #46b0b9 !important;
-  color: #46b0b9 !important;
+  border-color: #FF5A1F !important;
+  color: #FF5A1F !important;
 }
 .panel-border.panel-primary .panel-heading {
   border-color: #5d9cec !important;
@@ -976,7 +976,7 @@ File: Components
   background-color: #fb6d9d;
 }
 .progress-bar-custom {
-  background-color: #46b0b9;
+  background-color: #FF5A1F;
 }
 .progress-animated {
   -webkit-animation-duration: 5s;
@@ -1095,11 +1095,11 @@ th {
   border: 1px solid #ebeff2;
 }
 table.focus-on tbody tr.focused th {
-  background-color: #46b0b9;
+  background-color: #FF5A1F;
   color: #ffffff;
 }
 table.focus-on tbody tr.focused td {
-  background-color: #46b0b9;
+  background-color: #FF5A1F;
   color: #ffffff;
 }
 .table-rep-plugin .table-responsive {
@@ -1168,8 +1168,8 @@ table.focus-on tbody tr.focused td {
   cursor: not-allowed;
 }
 .table-rep-plugin .checkbox-row input[type="checkbox"]:checked + label::before {
-  background-color: #46b0b9;
-  border-color: #46b0b9;
+  background-color: #FF5A1F;
+  border-color: #FF5A1F;
 }
 .table-rep-plugin .checkbox-row input[type="checkbox"]:checked + label::after {
   color: #ffffff;
@@ -1348,7 +1348,7 @@ table[data-toggle="table"] {
 .tablesaw-enhanced .tablesaw-bar .btn:hover,
 .tablesaw-enhanced .tablesaw-bar .btn:focus,
 .tablesaw-enhanced .tablesaw-bar .btn:active {
-  color: #46b0b9 !important;
+  color: #FF5A1F !important;
   background-color: #ebeff2;
   outline: none !important;
   box-shadow: none !important;
@@ -1361,7 +1361,7 @@ table[data-toggle="table"] {
 /* Key Table */
 table.dataTable th.focus,
 table.dataTable td.focus {
-  outline: 3px solid #46b0b9 !important;
+  outline: 3px solid #FF5A1F !important;
   outline-offset: -1px;
 }
 /* ColVid Tables */
@@ -1377,8 +1377,8 @@ button.ColVis_Button,
   background: none;
   box-shadow: none;
   color: #ffffff !important;
-  background-color: #46b0b9 !important;
-  border: 1px solid #46b0b9 !important;
+  background-color: #FF5A1F !important;
+  border: 1px solid #FF5A1F !important;
 }
 .dataTables_length {
   float: left;
@@ -1445,7 +1445,7 @@ ul.ColVis_collection li {
   color: #797979;
 }
 .jsgrid-pager-page.jsgrid-pager-current-page {
-  background-color: #46b0b9;
+  background-color: #FF5A1F;
   color: #ffffff;
 }
 .jsgrid-pager-nav-button a {
@@ -1453,7 +1453,7 @@ ul.ColVis_collection li {
   font-weight: 600;
 }
 .jsgrid-pager-nav-button a:hover {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 .jsgrid .jsgrid-button {
   width: 24px;
@@ -1536,7 +1536,7 @@ ul.ColVis_collection li {
 }
 .widget-bg-color-icon .bg-icon-custom {
   background-color: rgba(95, 190, 170, 0.2);
-  border: 1px solid #46b0b9;
+  border: 1px solid #FF5A1F;
 }
 .widget-bg-color-icon .bg-icon-warning {
   background-color: rgba(255, 189, 74, 0.2);
@@ -1807,8 +1807,8 @@ ul.ColVis_collection li {
   font-size: 20px;
 }
 .table-actions-bar .table-action-btn:hover {
-  color: #46b0b9;
-  border-color: #46b0b9;
+  color: #FF5A1F;
+  border-color: #FF5A1F;
 }
 /* Transaction */
 .transaction-list li {
@@ -2045,13 +2045,13 @@ ul.ColVis_collection li {
 .datepicker table tr td span.active:hover[disabled],
 .datepicker table tr td span.active.disabled[disabled],
 .datepicker table tr td span.active.disabled:hover[disabled] {
-  background-color: #46b0b9;
+  background-color: #FF5A1F;
 }
 .datepicker table tr td.active,
 .datepicker table tr td.active:hover,
 .datepicker table tr td.active.disabled,
 .datepicker table tr td.active.disabled:hover {
-  background-color: #46b0b9 !important;
+  background-color: #FF5A1F !important;
   background-image: none;
   box-shadow: none;
   text-shadow: none;
@@ -2213,16 +2213,16 @@ ul.ColVis_collection li {
   border: 1px solid #eaeaea;
 }
 .wizard > .steps .current a {
-  background: #46b0b9;
+  background: #FF5A1F;
 }
 .wizard > .steps .current a:hover {
-  background: #46b0b9;
+  background: #FF5A1F;
 }
 .wizard > .steps .current a:hover .number {
   color: #ffffff;
 }
 .wizard > .steps .current a:active {
-  background: #46b0b9;
+  background: #FF5A1F;
 }
 .wizard > .steps .current a:active .number {
   color: #ffffff;
@@ -2246,17 +2246,17 @@ ul.ColVis_collection li {
   border-radius: 2px;
 }
 .wizard > .actions a {
-  background: #46b0b9;
+  background: #FF5A1F;
   border-radius: 2px;
   color: #ffffff;
 }
 .wizard > .actions a:hover {
-  background: #46b0b9;
+  background: #FF5A1F;
   border-radius: 2px;
   color: #ffffff;
 }
 .wizard > .actions a:active {
-  background: #46b0b9;
+  background: #FF5A1F;
   border-radius: 2px;
   color: #ffffff;
 }

@@ -35,9 +35,7 @@ class AresController extends Controller
     public function getList()
     {
         $search = $this->request->input('search.value') ?? null;
-
         $response = $this->fnbAres->getList($this->request);
-
         $data = $response->getData(true);
         $customer_ids = [];
         if ($data['result'] == false){
@@ -71,17 +69,33 @@ class AresController extends Controller
             ->addColumn('id', function ($row) use (&$start) {
                 return '<div>'.(++$start).'</div>';
             })
+            ->editColumn('data_province', function ($dtData) {
+                $data_province = $dtData['data_province'];
+                $viewProvice = '';
+                foreach($data_province as $key => $value) {
+                    if($key > 0) {
+                        $viewProvice .= '<hr class="m-t-10 m-b-10"/>';
+                    }
+                    $viewProvice .= '<div class="city-name">'.$value['province']['Name'].'</div>';
+                    $viewProvice .= '<div class="districts">';
+                    foreach($value['data_ward'] as $k => $v) {
+                        $viewProvice .= '<span class="tag district">'.$v['ward']['Name'].'</span>';
+                    }
+                    $viewProvice .= '</div>';
+                }
+                return $viewProvice;
+            })
             ->editColumn('name', function ($dtData) {
                 $str = '<div>' . $dtData['name'] . '</div>';
                 return $str;
             })
-
             ->editColumn('active', function ($dtData) {
                 $checked = $dtData['active'] == 1 ? 'checked' : '';
-                $str = '<div><input type="checkbox" '.$checked.' name="active" class="active dt-active"  data-plugin="switchery" data-color="#5fbeaa" data-href="admin/service/active/'.$dtData['id'].'" data-status="'.$dtData['active'].'"></div>';
+                $status = $dtData['active'] == 1 ? '0' : '1';
+                $str = '<div><input type="checkbox" '.$checked.' name="active" class="active dt-active"  data-plugin="switchery" data-color="#5fbeaa" data-href="admin/ares/changeStatus/'.$dtData['id'].'" data-status="'.$status.'"></div>';
                 return $str;
             })
-            ->rawColumns(['options', 'active', 'name','id'])
+            ->rawColumns(['options', 'active', 'name', 'data_province', 'ward','id'])
             ->setTotalRecords($data['recordsTotal'])
             ->setFilteredRecords($data['recordsFiltered'])
             ->with([
@@ -128,47 +142,41 @@ class AresController extends Controller
     }
 
     public function delete($id){
-        if (!has_permission('department','delete')){
+        if (!has_permission('ares','delete')){
             $data['result'] = false;
             $data['message'] = lang('dt_access');
             return response()->json($data);
         }
-        $department = Department::find($id);
-        try {
-            if (count($department->user) > 0) {
-                $data['result'] = false;
-                $data['message'] = lang('dt_name_department_exist');
-            } else {
-                $department->delete();
-                $data['result'] = true;
-                $data['message'] = lang('dt_success');
-            }
-            return response()->json($data);
-        } catch (\Exception $exception){
-            $data['result'] = false;
-            $data['message'] = lang('dt_error');
-            return response()->json($data);
+
+        if(empty($id)) {
+            $id = $this->request->input('id');
         }
+        $this->request->merge([
+            'id' => $id,
+        ]);
+        $response = $this->fnbAres->delete($this->request);
+        $dataRes = $response->getData(true);
+        $data = $dataRes['data'];
+        return response()->json($data);
     }
 
     public function changeStatus($id){
-        if (!has_permission('department','edit')){
+        if (!has_permission('ares','edit')){
             $data['result'] = false;
             $data['message'] = lang('dt_access');
             return response()->json($data);
         }
-        $deparment = Department::find($id);
-        try {
-            $deparment->check_transaction = $this->request->status == 0 ? 1 : 0;
-            $deparment->save();
-            $data['result'] = true;
-            $data['message'] = lang('dt_success');
-            return response()->json($data);
-        } catch (\Exception $exception){
-            $data['result'] = false;
-            $data['message'] = $exception;
-            return response()->json($data);
+
+        if(empty($id)) {
+            $id = $this->request->input('id');
         }
+        $this->request->merge([
+            'id' => $id,
+        ]);
+        $response = $this->fnbAres->ChangeStatus($this->request);
+        $dataRes = $response->getData(true);
+        $data = $dataRes['data'];
+        return response()->json($data);
     }
 
     public function setup($id = '0')
@@ -190,10 +198,18 @@ class AresController extends Controller
         if(!empty($data->dtData)) {
             $ares = $data->dtData;
         }
+
         return view('admin.ares.setup', [
             'title' => $title,
             'id' => $id ?? 0,
             'ares' => $ares ?? NULL,
         ]);
+    }
+
+    public function updateSetup() {
+        $response = $this->fnbAres->updateSetup($this->request);
+        $dataRes = $response->getData(true);
+        $data = $dataRes['data'];
+        return response()->json($data);
     }
 }

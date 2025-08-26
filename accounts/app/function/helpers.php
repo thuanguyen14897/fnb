@@ -1575,10 +1575,20 @@ function getListDay()
     ];
 }
 
-function generateRandomString($id) {
-    $dtClient = Clients::find($id);
+function generateRandomString($id, $length) {
     $numberString = strval($id);
-    $randomString = str_replace(' ','',convert_vi_to_en($dtClient->fullname)).'_'.$numberString;
-    return $randomString;
+
+    $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $randomString = '';
+
+    for ($i = 0; $i < ($length - 1); $i++) {
+        if (isset($numberString[$i]) && is_numeric($numberString[$i])) {
+            $randomString .= $numberString[$i];
+        } else {
+            $randomString .= $characters[rand(0, strlen($characters) - 1)];
+        }
+    }
+
+    return $characters[rand(0, strlen($characters) - 1)] . $randomString;
 }
 

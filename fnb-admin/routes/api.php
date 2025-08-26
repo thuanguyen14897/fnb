@@ -4,6 +4,7 @@ use App\Http\Controllers\Api_app\Api_info;
 use App\Http\Controllers\Api_app\CategoryController;
 use App\Http\Controllers\Api_app\OrderRefController;
 use App\Http\Controllers\Api_app\AresController;
+use App\Http\Controllers\Api_app\HomepageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -35,4 +36,7 @@ Route::group(['prefix' => 'category'], function () {
     Route::get('getListAddress', [CategoryController::class, 'getListAddress']);
 });
 
+Route::group(['prefix' => 'homepage'], function () {
+    Route::get('getData', [HomepageController::class, 'getData']);
+});
 

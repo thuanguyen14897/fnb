@@ -1028,3 +1028,93 @@ $(".has-submenu").click(function (){
         }
     }
 })
+
+function searchAjaxSelect2Mutil(element, url = '', id = 0, paramsCus = {}, allowClear = true, enableSelectAll = true) {
+    const $el = $(element);
+    const isMultiple = $el.prop('multiple'); // phát hiện multiple
+    const SELECT_ALL_ID = '__select_all__';
+    let lastPageItems = []; // giữ lại các item của trang kết quả hiện tại
+
+    $el.select2({
+        allowClear: allowClear,
+        placeholder: 'Chọn ...',
+        ajax: {
+            url: url + '/' + id,
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    paramsCus: paramsCus,
+                    term: params.term,
+                    page: params.page || 1,
+                };
+            },
+            processResults: function (data, params) {
+                // data.items: [{id, text, ...}]
+                // Lưu lại items của trang hiện tại (không gồm nút "Chọn tất cả")
+                lastPageItems = Array.isArray(data.items) ? data.items.slice() : [];
+
+                let results = lastPageItems;
+
+                // Nếu là multiple và bật select-all → chèn option đặc biệt lên đầu
+                if (isMultiple && enableSelectAll) {
+                    results = [
+                        { id: SELECT_ALL_ID, text: 'Chọn tất cả' },
+                        ...lastPageItems
+                    ];
+                }
+
+                return {
+                    results: results,
+                    pagination: data.pagination || {} // nếu backend có phân trang
+                };
+            },
+            cache: true
+        },
+        templateResult: formatRepo,
+        templateSelection: function (item) {
+            // Ẩn nhãn select-all trong vùng đã chọn (nếu lỡ được set)
+            if (item && item.id === SELECT_ALL_ID) return '';
+            return formatRepoSelection ? formatRepoSelection(item) : (item.text || item.id);
+        },
+        // Giữ dropdown mở khi click "Chọn tất cả" (tuỳ bạn)
+        closeOnSelect: !isMultiple
+    });
+
+    // Xử lý khi chọn "Chọn tất cả"
+    $el.off('select2:select.selectAll').on('select2:select.selectAll', function (e) {
+        const data = e.params.data;
+        if (data && data.id === SELECT_ALL_ID) {
+            // 1) Thêm các option (nếu chưa có) cho từng item của trang hiện tại
+            lastPageItems.forEach(function (item) {
+                if (!$el.find('option[value="' + item.id + '"]').length) {
+                    const option = new Option(item.text, item.id, false, false);
+                    $el.append(option);
+                }
+            });
+
+            // 2) Tập hợp tất cả id của trang hiện tại + các id đang chọn sẵn trước đó
+            const currentSelected = $el.val() || [];
+            const pageIds = lastPageItems.map(i => String(i.id));
+            const merged = Array.from(new Set([].concat(currentSelected, pageIds)));
+
+            // 3) Set lại value và trigger change
+            $el.val(merged).trigger('change');
+
+            // 4) Bỏ “Chọn tất cả” khỏi selection nếu nó xuất hiện
+            // (do select2 có thể tạm add vào selection)
+            const cleaned = ( $el.val() || [] ).filter(v => v !== SELECT_ALL_ID);
+            $el.val(cleaned).trigger('change.select2');
+
+            // Giữ dropdown mở để người dùng tiếp tục chọn (tuỳ thích)
+            // Nếu muốn đóng dropdown thì gọi: $el.select2('close');
+        }
+    });
+
+    // Dọn “Chọn tất cả” khỏi value khi clear all
+    $el.off('select2:clear.removeSelectAll').on('select2:clear.removeSelectAll', function () {
+        const cleaned = ( $el.val() || [] ).filter(v => v !== SELECT_ALL_ID);
+        $el.val(cleaned).trigger('change.select2');
+    });
+}
+

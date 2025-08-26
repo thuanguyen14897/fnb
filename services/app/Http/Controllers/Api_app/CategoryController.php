@@ -24,10 +24,12 @@ class CategoryController extends AuthController
         $this->fnbAdmin = $adminService;
     }
 
-    public function getListProvince(){
+    public function getListProvince($id = 0){
         $search = $this->request->input('search') ?? null;
         $limit = $this->request->input('limit') ?? 50;
-        $id = $this->request->input('id') ?? 0;
+        if(empty($id)) {
+            $id = $this->request->input('id') ?? 0;
+        }
         $query = Province::where('Id','!=',0);
         if (!empty($search)) {
             $query->where(function($q) use ($search) {

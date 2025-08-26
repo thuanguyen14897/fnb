@@ -6,6 +6,8 @@ use App\Traits\UploadFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Ares;
+use App\Models\AresDetail;
+use App\Models\AresWard;
 use App\Models\Province;
 use App\Models\Ward;
 use Illuminate\Support\Facades\Http;
@@ -26,7 +28,9 @@ class AresController extends AuthController
         $search = $this->request->input('search.value');
         $start = $this->request->input('start', 0);
         $length = $this->request->input('length', 10);
-//
+        $province_search = $this->request->input('province_search');
+        $ward_search = $this->request->input('ward_search');
+
         $orderColumnIndex = $this->request->input('order.0.column');
         $orderBy = $this->request->input("columns.$orderColumnIndex.data",'id');
         if($orderBy == 'DT_RowIndex') {
@@ -38,16 +42,37 @@ class AresController extends AuthController
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%$search%");
             });
+            $query->orWhereHas('ares_ward',function ($q) use ($search){
+                $q->where('Name', 'like', "%$search%");
+            });
+            $query->orWhereHas('ares_province',function ($q) use ($search){
+                $q->where('Name', 'like', "%$search%");
+            });
+        }
+        if(!empty($province_search)) {
+            $query->WhereHas('ares_province',function ($q) use ($province_search){
+                $q->where('tbl_province.Id', '=', $province_search);
+            });
+        }
+        if(!empty($ward_search)) {
+            $query->WhereHas('ares_ward',function ($q) use ($ward_search){
+                $q->where('tbl_wards.Id', '=', $ward_search);
+            });
         }
         $filtered = $query->count();
         $query->orderBy($orderBy, $orderDir);
         $data = $query->skip($start)->take($length)->get();
         if (!empty($data)){
             foreach ($data as $key => $value){
-                $dtIcon = !empty($value->icon) ? env('STORAGE_URL').'/'.$value->icon : null;
-                $data[$key]['icon'] = $dtIcon;
-                $dtImage = !empty($value->image) ? env('STORAGE_URL').'/'.$value->image : null;
-                $data[$key]['image'] = $dtImage;
+                $data_province = AresDetail::select('id', 'id_ares', 'id_province')
+                    ->where('id_ares', $value->id)->with('province')->get();
+                foreach($data_province as $kItem => $vItem) {
+                    $data_province[$kItem]->data_ward = AresWard::select('id', 'id_ward')
+                        ->where('id_ares', $value->id)
+                        ->where('id_province', $vItem->id_province)
+                        ->with('ward')->get();
+                }
+                $data[$key]->data_province = $data_province;
             }
         }
         $total = Ares::count();
@@ -120,14 +145,114 @@ class AresController extends AuthController
     public function getSetup(){
         $id = $this->request->input('id') ?? 0;
         $dtData = Ares::find($id);
+        $data_detail = DB::table('tbl_ares_detail')
+            ->select('tbl_ares_detail.*', 'tbl_province.Name as name_province')
+            ->join('tbl_province', 'tbl_province.Id', '=', 'tbl_ares_detail.id_province')
+            ->where('tbl_ares_detail.id_ares', '=', $id)->get();
+        foreach($data_detail as $key => $value) {
+            $data_detail[$key]->item = DB::table('tbl_ares_ward')
+                ->select('tbl_ares_ward.*', 'tbl_wards.Name as name_ward')
+                ->join('tbl_wards', 'tbl_wards.Id', '=', 'tbl_ares_ward.id_ward')
+                ->where('tbl_ares_ward.id_ares', '=', $value->id_ares)
+                ->where('tbl_ares_ward.id_province', '=', $value->id_province)
+                ->get();
+        }
+        $dtData->detail = $data_detail;
         $data['result'] = true;
         $data['dtData'] = $dtData;
         $data['message'] = lang('Lấy thông tin thành công');
         return response()->json($data);
     }
 
-    public function updateSetup(){
-        $id = $this->request->input('id') ?? 0;
+    public function updateSetup() {
+        try {
+            $id = $this->request->input('id') ?? 0;
+            $items = $this->request->input('item');
+            $ares_detail = [];
+            $ares_ward = [];
+            DB::beginTransaction();
+            foreach ($items as $key => $value) {
+                $id_province = $value['province_id'] ?? [];
+                $id_ward = $value['ward_id'] ?? [];
+                if(!empty($id_province) && !empty($id_ward)) {
+                    $ares_detail[] = [
+                        'id_ares' => $id,
+                        'id_province' => $id_province,
+                        'list_wards' => implode(',', $id_ward),
+                    ];
+                    foreach ($id_ward as $k => $v) {
+                        if(!empty($v)) {
+                            $ares_ward[] = [
+                                'id_ares' => $id,
+                                'id_province' => $id_province,
+                                'id_ward' => $v,
+                            ];
+                        }
+                    }
+                }
+            }
+            AresDetail::where('id_ares', $id)->delete();
+            AresWard::where('id_ares', $id)->delete();
+            if(!empty($ares_detail)) {
+                $insertDetail = AresDetail::insert($ares_detail);
+            }
+            if(!empty($ares_ward)) {
+                $insertWard = AresWard::insert($ares_ward);
+            }
+            DB::commit();
+            if (!empty($insertDetail) && !empty($insertWard)) {
+                $data['result'] = true;
+                $data['message'] = lang('Cập nhật dữ liệu thành công');
+                return response()->json($data);
+            }
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            $data['result'] = false;
+            $data['message'] = lang('Cập nhật dữ liệu không thành công');
+            return response()->json($data);
+        }
+    }
+
+    public function delete() {
+        try {
+            $id = $this->request->input('id') ?? 0;
+            DB::beginTransaction();
+            $success = Ares::find($id)->delete();
+            if(!empty($success)) {
+                AresDetail::where('id_ares', $id)->delete();
+                AresWard::where('id_ares', $id)->delete();
+                DB::commit();
+                if (!empty($success)) {
+                    $data['result'] = true;
+                    $data['message'] = lang('Xóa dữ liệu thành công');
+                    return response()->json($data);
+                }
+            }
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            $data['result'] = false;
+            $data['message'] = lang('Xóa dữ liệu không thành công');
+            return response()->json($data);
+        }
+    }
+    public function ChangeStatus() {
+        try {
+            $id = $this->request->input('id') ?? 0;
+            $status = $this->request->input('status') ?? 0;
+            $ares = Ares::find($id);
+            $ares->active = $status;
+            $success = $ares->save();
+            if(!empty($success)) {
+                $data['result'] = true;
+                $data['message'] = lang('Đổi trạng thái thành công');
+                return response()->json($data);
+            }
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            $data['result'] = false;
+            $data['message'] = lang('Đổi trạng thái không thành công');
+            return response()->json($data);
+        }
     }
 
 }

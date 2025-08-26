@@ -160,7 +160,7 @@ class LoginApi extends AuthController
 
                 //update mã giới thiệu
                 $dtClient = Clients::find($id);
-                $dtClient->referral_code = generateRandomString($id);
+                $dtClient->referral_code = generateRandomString($id,6);
                 $dtClient->save();
                 //end
 

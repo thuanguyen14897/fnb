@@ -3,10 +3,10 @@
     <!-- Page-Title -->
     <div class="row">
         <div class="col-sm-12">
-            <h4 class="page-title">{{lang('c_title_client')}}</h4>
+            <h4 class="page-title">{{lang('c_title_partner')}}</h4>
             <ol class="breadcrumb">
                 <li><a href="admin/dashboard">{{lang('dt_index')}}</a></li>
-                <li><a href="admin/clients/list">{{lang('c_title_client')}}</a></li>
+                <li><a href="admin/partner/list">{{lang('c_title_partner')}}</a></li>
                 <li class="active">{{lang('dt_list')}}</li>
             </ol>
         </div>
@@ -36,9 +36,9 @@
                 <table id="table_client" class="table table-bordered table_client">
                     <thead>
                     <tr>
-                        <th class="text-center">{{lang('c_avatar_client')}}</th>
+                        <th class="text-center">{{lang('c_avatar_partner')}}</th>
                         <th class="text-center">Mã KH</th>
-                        <th class="text-center">{{lang('c_fullname_client')}}</th>
+                        <th class="text-center">{{lang('c_fullname_partner')}}</th>
                         <th class="text-center">{{lang('c_phone_client')}}</th>
                         <th class="text-center">{{lang('c_email_client')}}</th>
                         <th class="text-center">{{lang('dt_date_created_customer')}}</th>
@@ -68,14 +68,14 @@
 
         $(function() {
             search_daterangepicker('date_search');
-            oTable = InitDataTable('#table_client', 'admin/clients/getListCustomer', {
+            oTable = InitDataTable('#table_client', 'admin/partner/getListCustomer', {
                 'order': [
                     [6, 'desc']
                 ],
                 'responsive': false,
                 "ajax": {
                     "type": "POST",
-                    "url": "admin/clients/getListCustomer",
+                    "url": "admin/partner/getListCustomer",
                     "data": function (d) {
                         for (var key in fnserverparams) {
                             d[key] = $(fnserverparams[key]).val();
@@ -125,7 +125,7 @@
                 $.each(fnserverparams, function(filterIndex, filterItem) {
                     data[filterIndex] = $(filterItem).val();
                 });
-                $.post('admin/clients/countAll', data, function(response) {
+                $.post('admin/partner/countAll', data, function(response) {
                     var total = 0;
                     if(response.arrType.length > 0){
                         $.each(response.arrType, function(index, value) {

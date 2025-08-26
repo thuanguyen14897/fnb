@@ -113,14 +113,12 @@ class UserController extends Controller
         $role = Role::all();
         $department = Department::all();
         $user = User::find($id);
-        $dtTypeCar = getListTypeCar();
         return view('admin.user.detail',[
             'id' => $id,
             'title' => $title,
             'role' => $role,
             'department' => $department,
             'user' => $user,
-            'dtTypeCar' => $dtTypeCar,
         ]);
     }
 
@@ -253,38 +251,6 @@ class UserController extends Controller
         try {
             $user->active = $user->active == 0 ? 1 : 0;
             $user->save();
-            $dtTransactionCheckDriver = TransactionDriver::select('id','date','created_at',DB::raw("1 as type"))->orderBy('created_at', 'desc')->limit(1);
-            $dtTransactionCheckVs1 = Transaction::select('id','date','created_at',DB::raw("2 as type"))->orderBy('created_at', 'desc')->limit(1)->unionall($dtTransactionCheckDriver);
-            $dtTransactionCheckNew = DB::query()
-                ->fromSub($dtTransactionCheckVs1, 'union_query')
-                ->select('id','type')
-                ->orderBy('id', 'desc')
-                ->first();
-            if (!empty($dtTransactionCheckNew)){
-                if ($dtTransactionCheckNew->type == 1){
-                    $dtTransactionCheck = TransactionDriver::select('id','date',DB::raw("3 as type"))->find($dtTransactionCheckNew->id);
-                } else {
-                    $dtTransactionCheck = Transaction::select('id','date','type')->find($dtTransactionCheckNew->id);
-                }
-                if (!empty($dtTransactionCheck->transaction_staff_new())){
-                    $service = $dtTransactionCheck->type;
-                    $priority = $dtTransactionCheck->transaction_staff_new()->priority;
-                    User::whereHas('department',function ($query){
-                            $query->where('check_transaction',1);
-                        })
-                        ->whereExists(function ($query) use ($service) {
-                            $query->select("tbl_user_service.user_id")
-                                ->from('tbl_user_service')
-                                ->whereRaw('tbl_user_service.user_id = tbl_users.id')
-                                ->where('tbl_user_service.service',$service);
-                        })->where('priority','<=',$priority)->update([
-                            'check_tran' => 1
-                        ]);
-                    User::where('id',$dtTransactionCheck->transaction_staff_new()->id)->update([
-                        'check_tran' => 1
-                    ]);
-                }
-            }
             $data['result'] = true;
             $data['message'] = lang('dt_success');
             return response()->json($data);

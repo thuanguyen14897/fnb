@@ -24,6 +24,7 @@ use App\Http\Controllers\OtherAmenitiesServiceController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AresController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\PartnerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -291,6 +292,19 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::post('detail/{id?}', [AresController::class, 'detail']);
         Route::get('delete/{id}', [AresController::class, 'delete']);
         Route::get('setup/{id}', [AresController::class, 'setup']);
+        Route::get('changeStatus/{id}', [AresController::class, 'changeStatus']);
+        Route::post('updateSetup', [AresController::class, 'updateSetup']);
+    });
+
+    Route::group(['prefix' => 'partner'], function () {
+        Route::get('list', [PartnerController::class, 'get_list']);
+        Route::get('detail/{id?}', [PartnerController::class, 'get_detail']);
+        Route::get('view/{id}', [PartnerController::class, 'view']);
+        Route::post('getListCustomer', [PartnerController::class, 'getListCustomer']);
+        Route::get('getDetailCustomer', [PartnerController::class, 'getDetailCustomer']);
+        Route::post('detail', [PartnerController::class, 'detail']);
+        Route::get('delete/{id}', [PartnerController::class, 'delete']);
+        Route::get('active/{id}', [PartnerController::class, 'active']);
     });
 
 });

@@ -12,57 +12,74 @@
         </div>
     </div>
     <div class="row">
-        <form action="admin/ares/updateSetup" method="post" id="formClient" data-parsley-validate
+        <form action="admin/ares/updateSetup" method="post" id="formSetupAres" data-parsley-validate
               novalidate
               enctype="multipart/form-data">
             {{csrf_field()}}
+
             <div class="col-lg-12">
                 <input type="hidden" name="id" value="{{$id ?? 0}}">
-                <div class="tab-pane active" id="profile1">
-                    <div class="card-box">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th></th>
-                                            <th>Thành phố/Tỉnh</th>
-                                            <th>Xã phường</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="item">
-                                            <td>
-                                                <div class="form-group">
-                                                    <label for="province_id-0">{{lang('dt_province')}}</label>
-                                                    <select class="province_id-0 select2" id="province_id-0"
-                                                            data-placeholder="Chọn ..." name="province_id[0]"
-                                                            onchange="changeProvince(this)">
-                                                        <option></option>
-                                                    </select>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="form-group">
-                                                    <label for="ward_id-0">{{lang('dt_ward')}}</label>
-                                                    <select class="ward_id-0 select2" id="ward_id-0"
-                                                            data-placeholder="Chọn ..." name="ward_id[0]"
-                                                            onchange="changeProvince(this)">
-                                                        <option></option>
-                                                    </select>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                <h4>Cài đặt khu vực: {{$ares->name ?? ''}}</h4>
+                <div class="card-box">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table" id="table-setup-ares">
+                                <thead>
+                                    <tr>
+                                        <th><a onclick="btnPlus()" class="btn btn-icon btn-primary"><i class="fa fa-plus"></i></a></th>
+                                        <th>{{lang('dt_province')}}</th>
+                                        <th>{{lang('dt_wards')}}</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $sttKey = 0;
+                                    @endphp
+                                    @if(!empty($ares->detail))
+                                        @foreach($ares->detail as $key => $value)
+                                            <tr class="item" data-class="{{$value->id_province}}">
+                                                <td class="SttITem" style="width: 5%">{{($sttKey + 1)}}</td>
+                                                <td style="width: 30%">
+                                                    <div class="form-group">
+                                                        <select class="select_province_id province_id-{{$sttKey}} select2" id="province_id-{{$sttKey}}" data-key="{{$sttKey}}"
+                                                                data-placeholder="Chọn ..." name="item[{{$sttKey}}][province_id]"
+                                                                onchange="changeProvince(this)">
+                                                            <option value="{{$value->id_province}}">{{$value->name_province ?? ''}}</option>
+                                                        </select>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="form-group">
+                                                        <select class="ward_id-{{$sttKey}} select2" id="ward_id-{{$sttKey}}" multiple
+                                                                data-placeholder="Chọn ..." name="item[{{$sttKey}}][ward_id][]">
+                                                            @if(!empty($value->item))
+                                                                @foreach($value->item as $key => $value)
+                                                                    <option value="{{$value->id_ward}}" selected>{{$value->name_ward}}</option>
+                                                                @endforeach
+                                                            @endif
+                                                        </select>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <a class="btn btn-danger btn-icon" onclick="removeTr(this)""><i class="fa fa-remove"></i></a>
+                                                </td>
+                                            </tr>
+                                            @php
+                                                $sttKey++;
+                                            @endphp
+                                        @endforeach
+                                    @endif
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
-                <div class="form-group text-right m-b-0">
-                    <button class="btn btn-primary waves-effect waves-light" type="submit">
-                        {{lang('dt_save')}}
-                    </button>
+                    <hr/>
+                    <div class="form-group text-right m-b-0">
+                        <button class="btn btn-primary waves-effect waves-light" type="submit">
+                            {{lang('dt_save')}}
+                        </button>
+                    </div>
                 </div>
             </div>
         </form>
@@ -72,49 +89,86 @@
 @section('script')
     <script>
         $(document).ready(function(){
-            searchAjaxSelect2('.province_id-0','api/category/getListProvince',0,{
-                'select2':true
+            $('select.select2').select2({'clear' : true});
+            var select_province_id = $('.select_province_id');
+
+            $.each(select_province_id, function(index, value) {
+                searchAjaxSelect2(value,'api/category/getListProvince', 0,{
+                    'select2':true
+                })
             })
         })
+        var countKey = {{$sttKey ?? 0}};
+        function changeProvince(_this) {
+            var key = $(_this).attr('data-key');
+            var tr = $(_this).parents('tr');
+            var province_id = $(_this).val();
 
-
-        function changeProvince() {
-
+            if($(`#table-setup-ares`).find(`tr[data-class="${province_id}"]`).length > 0) {
+                alert_float('error', 'Tỉnh/Thành phố đã có vui lòng chọn tỉnh/thành phố khác');
+                $(_this).val(0);
+                searchAjaxSelect2($(_this),'api/category/getListProvince', 0,{
+                    'select2':true
+                })
+                return false;
+            }
+            if($(tr).attr('data-class') != province_id) {
+                $(`#ward_id-${key}`).val([]);
+            }
+            $(tr).attr('data-class', province_id);
+            searchAjaxSelect2Mutil(`#ward_id-${key}`,'api/category/getListWard',0,{
+                'select2':true,
+                province_id :province_id
+            })
         }
 
-
-        $(document).ready(function(){
-            searchAjaxSelect2('.province_id-0','api/category/getListProvince',0,{
+        function btnPlus() {
+            $(`#table-setup-ares`).find('tbody').append(`<tr class="item">
+                                            <td class="SttITem" style="width: 5%"></td>
+                                            <td style="width: 30%">
+                                                <div class="form-group">
+                                                    <select class="province_id-${countKey} select2" id="province_id-${countKey}" data-key="${countKey}"
+                                                            data-placeholder="Chọn ..." name="item[${countKey}][province_id]"
+                                                            onchange="changeProvince(this)">
+                                                        <option></option>
+                                                    </select>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="form-group">
+                                                    <select class="ward_id-${countKey} select2" id="ward_id-${countKey}" multiple
+                                                            data-placeholder="Chọn ..." name="item[${countKey}][ward_id][]">
+                                                        <option></option>
+                                                    </select>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <a class="btn btn-danger btn-icon" onclick="removeTr(this)""><i class="fa fa-remove"></i></a>
+                                            </td>
+                                        </tr>`);
+            searchAjaxSelect2(`.province_id-${countKey}`,'api/category/getListProvince',0,{
                 'select2':true
             })
-            //searchAjaxSelect2('#wards_id','api/category/getListWard',0,{
-                //'select2':true,
-               // province_id: {{!empty($dtData['province_id']) ? $dtData['province_id'] : -1}},
-           // })
-            $(".form-group a").click(function(){
-                var $this=$(this);
-                if(!$this.hasClass('active')){
-                    $this.parents(".form-group").find('input').attr('type','text')
-                    $this.addClass('active');
-                }else{
-                    $this.parents(".form-group").find('input').attr('type','password')
-                    $this.removeClass('active')
-                }
-            });
+            $(`select.ward_id-${countKey}`).select2();
+            countKey++;
+            ChangeStt();
+        }
 
-            $("#formClient").submit(function(e){
-                if($('.form-group.error-or').length > 0) {
-                    e.preventDefault();
-                }
-            });
-        });
+        function removeTr(_this) {
+            if(confirm("Bạn có chắc muốn xóa Thành phố/Tỉnh?")) {
+                $(_this).parents('tr').remove();
+                ChangeStt();
+            }
+        }
 
-        $(".delete_image").click(function () {
-            $(".show_image").addClass('hide');
-            $(".image_old").val('');
-        });
+        function ChangeStt() {
+            var listSTT = $('.SttITem');
+            $.each(listSTT, function(index, value) {
+                $(value).text(index + 1);
+            })
+        }
 
-        $("#formClient").validate({
+        $("#formSetupAres").validate({
             rules: {
                 phone: {
                     required: true,
@@ -158,7 +212,7 @@
                     .done(function (data) {
                         if (data.result) {
                             alert_float('success',data.message);
-                            window.location.href='admin/clients/list';
+                            window.location.href = 'admin/ares/list';
                         } else {
                             alert_float('error',data.message);
                         }

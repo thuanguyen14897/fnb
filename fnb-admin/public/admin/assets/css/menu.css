@@ -30,13 +30,13 @@ File: Menu
   min-height: 62px;
 }
 #topnav .has-submenu.active a {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 #topnav .has-submenu.active a i {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 #topnav .has-submenu.active .submenu li.active > a {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 #topnav .topbar-main {
   background-color: #36404a;
@@ -55,7 +55,7 @@ File: Menu
   text-align: center;
 }
 #topnav .topbar-main .logo i {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 #topnav .topbar-main .badge {
   position: absolute;
@@ -163,8 +163,8 @@ File: Menu
   border: 2px solid #fb6d9d;
 }
 #topnav .topbar-main .noti-custom {
-  color: #46b0b9;
-  border: 2px solid #46b0b9;
+  color: #FF5A1F;
+  border: 2px solid #FF5A1F;
 }
 #topnav .topbar-main .noti-inverse {
   color: #4c5667;
@@ -213,13 +213,13 @@ File: Menu
   background-color: transparent;
 }
 #topnav .navbar-toggle:hover span {
-  background-color: #46b0b9;
+  background-color: #FF5A1F;
 }
 #topnav .navbar-toggle:focus {
   background-color: transparent;
 }
 #topnav .navbar-toggle:focus span {
-  background-color: #46b0b9;
+  background-color: #FF5A1F;
 }
 #topnav .navbar-toggle .lines {
   width: 25px;
@@ -276,22 +276,22 @@ File: Menu
   padding-right: 25px;
 }
 #topnav .navigation-menu > li > a:hover {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 #topnav .navigation-menu > li > a:hover i {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 #topnav .navigation-menu > li > a:focus {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 #topnav .navigation-menu > li > a:focus i {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 #topnav .navigation-menu > li > a:active {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 #topnav .navigation-menu > li > a:active i {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 #topnav .navigation-menu > li > a i {
   display: block;
@@ -328,10 +328,10 @@ File: Menu
     padding-left: 0px;
   }
   #topnav .navigation-menu > li:hover a {
-    color: #46b0b9;
+    color: #FF5A1F;
   }
   #topnav .navigation-menu > li:hover a i {
-    color: #46b0b9;
+    color: #FF5A1F;
   }
   #topnav .navigation-menu > li .submenu {
     position: absolute;
@@ -390,7 +390,7 @@ File: Menu
     color: #494e53;
   }
   #topnav .navigation-menu > li .submenu li a:hover {
-    color: #46b0b9;
+    color: #FF5A1F;
   }
   #topnav .navigation-menu > li .submenu li span {
     display: block;
@@ -451,7 +451,7 @@ File: Menu
     color: #36404a;
   }
   #topnav .navigation-menu > li .submenu li a:hover {
-    color: #46b0b9;
+    color: #FF5A1F;
   }
   #topnav .navigation-menu > li .submenu li.has-submenu > a:after {
     content: "\e64b";
@@ -483,7 +483,7 @@ File: Menu
     color: #79818a;
   }
   #topnav .navigation-menu > li.has-submenu.open > a {
-    color: #46b0b9;
+    color: #FF5A1F;
   }
   #topnav .navbar-header {
     float: left;
@@ -541,7 +541,7 @@ File: Menu
   color: #98a6ad;
 }
 .footer ul li a:hover {
-  color: #46b0b9;
+  color: #FF5A1F;
 }
 .img-icon-menu {
     width: 20px;

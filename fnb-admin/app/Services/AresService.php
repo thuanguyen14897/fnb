@@ -186,4 +186,54 @@ class AresService
         }
     }
 
+    public function updateSetup($request){
+        try {
+            $response = $this->sendRequestToService(
+                'POST',
+                "{$this->baseUrl}/api/ares/updateSetup",
+                $request,
+                [
+                    'has_file' => false
+                ]
+            );
+            $data = $response->json();
+            return response()->json([
+                'data' => $data,
+                'result' => $data['result'] ?? false,
+                'message' => $data['message']
+            ]);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function ChangeStatus($request){
+        try {
+            $response = $this->sendRequestToService(
+                'GET',
+                "{$this->baseUrl}/api/ares/ChangeStatus",
+                $request,
+                [
+                    'has_file' => false
+                ]
+            );
+            $data = $response->json();
+            return response()->json([
+                'data' => $data,
+                'result' => $data['result'] ?? false,
+                'message' => $data['message']
+            ]);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

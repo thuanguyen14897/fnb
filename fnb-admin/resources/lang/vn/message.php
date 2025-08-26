@@ -395,10 +395,10 @@ $arrayList = [
     'dt_compensation_people_motobike' => 'Đền bù về người xe máy',
     'dt_compensation_property_car' => 'Đền bù về tài sản ôtô',
     'dt_compensation_property_motobike' => 'Đền bù về tài sản xe máy',
-    'dt_blog' => 'Ưu đãi khuyến mãi',
-    'dt_add_blog' => 'Thêm ưu đãi khuyến mãi',
-    'dt_edit_blog' => 'Sửa ưu đãi khuyến mãi',
-    'dt_delete_blog' => 'Xóa ưu đãi khuyến mãi',
+    'dt_blog' => 'Bài viết',
+    'dt_add_blog' => 'Thêm bài viết',
+    'dt_edit_blog' => 'Sửa bài viết',
+    'dt_delete_blog' => 'Xóa bài viết',
     'dt_blog_new' => 'Ưu đãi trang chủ',
     'dt_add_blog_new' => 'Thêm ưu đãi trang chủ',
     'dt_edit_blog_new' => 'Sửa ưu đãi trang chủ',
@@ -575,6 +575,11 @@ $arrayList = [
     'dt_edit_service' => 'Sửa gian hàng',
     'dt_delete_service' => 'Xóa gian hàng',
     'dt_name_service' => 'Tên gian hàng',
+    'c_title_partner' => 'Đối tác',
+    'c_avatar_partner' => 'Ảnh đại diện đối tác',
+    'c_fullname_partner' => 'Họ và tên đối tác',
+    'dt_delete_partner' => 'Xóa đối tác',
+    'dt_view_partner' => 'Chi tiết đối tác',
 ];
 
 $array_c_message = include resource_path('lang/vn/c_message.php');

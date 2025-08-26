@@ -1552,10 +1552,37 @@ if (!function_exists('menuHelper')) {
             [
                 'id' => 'manager_clients',
                 'name' => 'Thành viên',
-                'link' => 'admin/clients/list',
+                'link' => '',
                 'class' => 'nguoi_dung_app',
                 'image' => 'admin/assets/images/icon_menu/nguoi_dung_app.png',
                 'child' => [
+                    [
+                        'id' => 'client',
+                        'name' => 'Thành viên',
+                        'link' => 'admin/clients/list',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'partner',
+                        'name' => 'Đối tác',
+                        'link' => 'admin/partner/list',
+                        'image' => '',
+                    ],
+                ],
+            ],
+            [
+                'id' => 'manager_app',
+                'name' => 'Quản lý App',
+                'link' => '',
+                'class' => 'danh_muc',
+                'image' => 'admin/assets/images/icon_menu/danh_muc.png',
+                'child' => [
+                    [
+                        'id' => 'homepage',
+                        'name' => 'Trang chủ',
+                        'link' => 'admin/admin_website/homepage',
+                        'image' => '',
+                    ],
                 ],
             ],
             [
@@ -1601,13 +1628,13 @@ if (!function_exists('menuHelper')) {
                 ],
             ],
             [
-                'id' => 'module_noti',
-                'name' => 'Thông báo',
-                'link' => 'admin/module_noti/list',
+                'id' => 'blog',
+                'name' => 'Bài viết',
+                'link' => 'admin/blog/list',
                 'class' => 'danh_muc',
                 'image' => 'admin/assets/images/icon_menu/danh_muc.png',
                 'child' => [
-                ]
+                ],
             ],
             [
                 'id' => 'settings',

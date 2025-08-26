@@ -25,9 +25,6 @@
                         <th class="text-center">{{lang('dt_image')}}</th>
                         <th class="text-center">{{lang('dt_title')}}</th>
                         <th class="text-center">{{lang('dt_descption')}}</th>
-                        <th class="text-center">Loại</th>
-                        <th class="text-center">Loại bài viết</th>
-                        <th class="text-center">Nổi bật</th>
                         <th class="text-center">Trang chủ</th>
                         <th class="text-center">{{lang('dt_status')}}</th>
                         <th class="text-center">{{lang('dt_actions')}}</th>
@@ -76,24 +73,6 @@
                     "render": function (data, type, row) {
                         return `<div class="text-center">${data}</div>`;
                     },
-                    data: 'type', name: 'type',width: "120px",'visible':false
-                },
-                {
-                    "render": function (data, type, row) {
-                        return `<div class="text-center">${data}</div>`;
-                    },
-                    data: 'type_blog', name: 'type_blog',width: "120px"
-                },
-                {
-                    "render": function (data, type, row) {
-                        return `<div class="text-center">${data}</div>`;
-                    },
-                    data: 'hot', name: 'hot',width: "80px"
-                },
-                {
-                    "render": function (data, type, row) {
-                        return `<div class="text-center">${data}</div>`;
-                    },
                     data: 'homepage', name: 'homepage',width: "80px"
                 },
                 {
@@ -106,15 +85,6 @@
 
             ]
         });
-        @if($type == 2)
-            oTable.column(5).visible(false);
-            oTable.column(6).visible(false);
-            oTable.column(7).visible(false);
-        @else
-            oTable.column(5).visible(true);
-            oTable.column(6).visible(false);
-            oTable.column(7).visible(true);
-        @endif
         $.each(fnserverparams, function(filterIndex, filterItem) {
             $('' + filterItem).on('change', function() {
                 oTable.draw('page')

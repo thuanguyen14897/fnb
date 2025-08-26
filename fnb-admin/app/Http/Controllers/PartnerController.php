@@ -1,42 +1,82 @@
 <?php
 
-namespace App\Http\Controllers\Api_app;
+namespace App\Http\Controllers;
 
-use App\Models\Clients;
+use App\Traits\UploadFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\AccountService;
-use Yajra\DataTables\DataTables;
 use Yajra\DataTables\CollectionDataTable;
 
-class ClientController extends AuthController
+class PartnerController extends Controller
 {
     protected $fnbAccount;
-
-    public function __construct(Request $request, AccountService $accountService)
+    use UploadFile;
+    public function __construct(Request $request,AccountService $accountService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
+        $this->per_page = 10;
         $this->fnbAccount = $accountService;
+    }
+
+    public function get_list(){
+        if (!has_permission('partner','view')) {
+            access_denied();
+        }
+        return view('admin.partner.list',[]);
+    }
+
+    public function get_detail($id = 0) {
+        if (!has_permission('partner', 'edit')){
+            access_denied();
+        }
+        $this->request->merge(['id' => $id]);
+        $response = $this->fnbAccount->getDetailCustomer($this->request);
+        $data = $response->getData(true);
+        $client = $data['client'] ?? [];
+        $title = lang('c_title_edit_client');
+        return view('admin.partner.detail',[
+            'id' => $id,
+            'title' => $title,
+            'client' => $client,
+        ]);
+    }
+
+    public function view($id = 0){
+        if (!has_permission('partner', 'view')){
+            access_denied();
+        }
+        $this->request->merge(['id' => $id]);
+        $response = $this->fnbAccount->getDetailCustomer($this->request);
+        $data = $response->getData(true);
+        $client = $data['client'] ?? [];
+        $title = lang('dt_view_client');
+        return view('admin.partner.view',[
+            'title' => $title,
+            'client' => $client,
+        ]);
     }
 
     public function getListCustomer()
     {
+        $this->request->merge(['type_client' => 2]);
         $response = $this->fnbAccount->getListCustomer($this->request);
         $data = $response->getData(true);
+        if ($data['result'] == false){
+            return response()->json($data);
+        }
+        $partner = collect($data['data']);
 
-        $clients = collect($data['data']);
-
-
-        return (new CollectionDataTable($clients))
+        return (new CollectionDataTable($partner))
             ->addColumn('options', function ($client) {
                 $customer_id = $client['id'];
-                $view = "<a href='admin/clients/view/$customer_id'><i class='fa fa-eye'></i> " . lang('dt_view') . "</a>";
-                $edit = "<a href='admin/clients/detail/$customer_id'><i class='fa fa-pencil'></i> " . lang('c_edit_client') . "</a>";
+                $view = "<a href='admin/partner/view/$customer_id'><i class='fa fa-eye'></i> " . lang('dt_view') . "</a>";
+                $edit = "<a href='admin/partner/detail/$customer_id'><i class='fa fa-pencil'></i> " . lang('c_edit_client') . "</a>";
                 $delete = '<a type="button" class="po-delete" data-container="body" data-html="true" data-toggle="popover" data-placement="left" data-content="
-                <button href=\'api/customer/delete/' . $customer_id. '\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
+                <button href=\'admin/partner/delete/' . $customer_id. '\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
                 <button class=\'btn btn-default po-close\'>' . lang('dt_close') . '</button>
-            "><i class="fa fa-remove width-icon-actions"></i> ' . lang('dt_delete_client') . '</a>';
+            "><i class="fa fa-remove width-icon-actions"></i> ' . lang('dt_delete_partner') . '</a>';
                 $options = ' <div class="dropdown text-center">
                             <button class="btn btn-default dropdown-toggle nav-link" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
                              Tác vụ
@@ -52,12 +92,16 @@ class ClientController extends AuthController
                 return $options;
             })
             ->editColumn('fullname', function ($client) {
-                $str = '<div><a href="admin/clients/view/' . $client['id'] . '">' . $client['fullname'] . '</a></div>';
+                $str = '<div><a href="admin/partner/view/' . $client['id'] . '">' . $client['fullname'] . '</a></div>';
                 return $str;
             })
             ->editColumn('phone', function ($client) {
                 $str = $client['phone'];
                 return $str;
+            })
+            ->editColumn('referral_code', function ($client) {
+                $str = '<div class="label label-default">'.$client['referral_code'].'</div>';
+                return '<div class="text-center">'.$str.'</div>';
             })
             ->editColumn('created_at', function ($client) {
                 $str = _dt($client['created_at']);
@@ -67,17 +111,7 @@ class ClientController extends AuthController
                 $customer_id = $client['id'];
                 $classes = $client['active'] == 1 ? "btn-info" : "btn-danger";
                 $content = $client['active'] == 1 ? "Hoạt động" : "Khoá";
-                $str = "<a class='dt-update text-center btn btn-xs $classes' href='api/customer/active/$customer_id'>$content</a>";
-                return $str;
-            })
-            ->editColumn('type_client', function ($client) {
-                $classesT = 'btn-danger';
-                $contentT = 'Khách hàng';
-                if ($client['type_client'] == 2) {
-                    $classesT = 'btn-info';
-                    $contentT = 'Đối tác';
-                }
-                $str = "<a class='text-center btn btn-xs $classesT'>$contentT</a>";
+                $str = "<a class='dt-update text-center btn btn-xs $classes' href='admin/partner/active/$customer_id'>$content</a>";
                 return $str;
             })
             ->editColumn('avatar', function ($client) {
@@ -92,7 +126,7 @@ class ClientController extends AuthController
 
                 return $str;
             })
-            ->rawColumns(['options', 'active', 'avatar', 'type_client', 'phone', 'created_at', 'fullname','referral_code'])
+            ->rawColumns(['options', 'active', 'avatar', 'phone', 'created_at', 'fullname','referral_code'])
             ->setTotalRecords($data['recordsTotal']) // tổng số bản ghi
             ->setFilteredRecords($data['recordsFiltered']) // sau khi lọc
             ->with([

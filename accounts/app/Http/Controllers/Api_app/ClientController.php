@@ -28,6 +28,7 @@ class ClientController extends AuthController
         $type_client_search = $this->request->input('type_client_search') ?? 0;
         $active_search = $this->request->input('active_search') ?? -1;
         $date_search = $this->request->input('date_search') ?? null;
+        $type_client = $this->request->input('type_client') ?? 1;
 
         $query = Clients::where('id','!=',0);
         if (!empty($search)) {
@@ -44,6 +45,7 @@ class ClientController extends AuthController
         if ($active_search != -1 && $active_search != ''){
             $query->where('active', $active_search);
         }
+        $query->where('type_client',$type_client);
         if (!empty($date_search)){
             $date_search = explode(' - ',$date_search);
             $start_date = to_sql_date($date_search[0].' 00:00:00',true);
