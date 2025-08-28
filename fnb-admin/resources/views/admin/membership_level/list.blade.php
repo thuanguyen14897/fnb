@@ -171,6 +171,9 @@
         .p-l-20 {
             padding-left: 40px;
         }
+        .input-num:read-only {
+            border: 0px!important;
+        }
     </style>
     <div class="row">
         <div class="col-sm-12">
@@ -212,18 +215,42 @@
                                     </thead>
                                     <tbody>
                                     @if(!empty($membership_expense))
+                                        @php
+                                            $keySTT = 0;
+                                        @endphp
                                         @foreach($membership_expense as $key => $value)
                                             <tr>
                                                 <td>Từ
-                                                    <input name="membership_expense[{{$value->id}}][money_start]" type="text" class="input-num" value="{{number_format($value->money_start)}}"/>
-                                                    → dưới
-                                                    <input name="membership_expense[{{$value->id}}][money_end]" type="text" class="input-num" value="{{number_format($value->money_end)}}"/>
-                                                     VNĐ
+                                                    <input data-key="membership_expense-{{$keySTT}}-money_start" name="membership_expense[{{$value->id}}][money_start]"
+                                                           type="text"
+                                                           class="input-num"
+                                                           {{$keySTT > 0 ? 'readonly' : ''}}
+                                                           value="{{number_format($value->money_start)}}"/>
+                                                    @if(count($membership_expense) - 1 == $key)
+                                                        VNĐ Trở lên
+                                                        @if(is_numeric($value->point_end))
+                                                            <input name="membership_expense[{{$value->id}}][money_end]" type="hidden" class="input-num" value="{{number_format($value->money_end)}}"/>
+                                                        @endif
+                                                    @else
+                                                        → dưới
+                                                        <input
+                                                            data-key="membership_expense-{{$keySTT}}-money_end"
+                                                            name="membership_expense[{{$value->id}}][money_end]"
+                                                            type="text"
+                                                            class="input-num"
+                                                            onchange="changeEnd(this, {{$keySTT}}, 'membership_expense', 'money_start')"
+                                                            value="{{number_format($value->money_end)}}"/>
+                                                        VNĐ
+                                                    @endif
+
                                                 </td>
                                                 <td class="text-center">
                                                     <input name="membership_expense[{{$value->id}}][point]" type="text" class="input-num" value="{{number_format($value->point)}}"/>
                                                 </td>
                                             </tr>
+                                            @php
+                                                $keySTT++;
+                                            @endphp
                                         @endforeach
                                     @endif
                                     </tbody>
@@ -245,17 +272,46 @@
                                     </thead>
                                     <tbody>
                                         @if(!empty($membership_purchases))
+                                            @php
+                                                $keySTT = 0;
+                                            @endphp
                                             @foreach($membership_purchases as $key => $value)
                                                 @php
                                                     if(empty($value->number_purchases_start)) continue;
                                                 @endphp
                                                 <tr>
-                                                    <td> <input name="membership_purchases[{{$value->id}}][number_purchases_start]" type="text" class="input-num" value="{{number_format($value->number_purchases_start)}}"/>
-                                                        →
-                                                        <input name="membership_purchases[{{$value->id}}][number_purchases_end]" type="text" class="input-num" value="{{number_format($value->number_purchases_end)}}"/>
-                                                    lần</td>
+                                                    <td>
+                                                        @if(count($membership_purchases) - 1 == $key)
+                                                            Từ
+                                                        @endif
+                                                            <input
+                                                                data-key="membership_purchases-{{$keySTT}}-number_purchases_start"
+                                                                name="membership_purchases[{{$value->id}}][number_purchases_start]"
+                                                                type="text"
+                                                                class="input-num"
+                                                                {{$keySTT > 0 ? 'readonly' : ''}}
+                                                                value="{{number_format($value->number_purchases_start)}}"/>
+                                                        @if(count($membership_purchases) - 1 == $key)
+                                                            Lần trở lên
+                                                            @if(is_numeric($value->number_purchases_end))
+                                                                <input name="membership_purchases[{{$value->id}}][number_purchases_end]" type="hidden" class="input-num" value="{{number_format($value->number_purchases_end)}}"/>
+                                                            @endif
+                                                        @else
+                                                            →
+                                                            <input
+                                                                data-key="membership_purchases-{{$keySTT}}-number_purchases_end"
+                                                                onchange="changeEnd(this, {{$keySTT}}, 'membership_purchases', 'number_purchases_start', true)"
+                                                                name="membership_purchases[{{$value->id}}][number_purchases_end]"
+                                                                type="text" class="input-num"
+                                                                value="{{number_format($value->number_purchases_end - 1)}}"/>
+                                                            lần
+                                                        @endif
+                                                    </td>
                                                     <td class="text-center"><input name="membership_purchases[{{$value->id}}][point]" type="text" class="input-num" value="{{number_format($value->point)}}"/></td>
                                                 </tr>
+                                                @php
+                                                    $keySTT++;
+                                                @endphp
                                             @endforeach
                                         @endif
                                     </tbody>
@@ -277,13 +333,42 @@
                                     </thead>
                                     <tbody>
                                     @if(!empty($membership_long_term))
+                                        @php
+                                            $keySTT = 0;
+                                        @endphp
                                         @foreach($membership_long_term as $key => $value)
                                             <tr>
-                                                <td> <input name="membership_long_term[{{$value->id}}][month_start]" type="text" class="input-num" value="{{number_format($value->month_start)}}"/>
-                                                    →
-                                                    <input name="membership_long_term[{{$value->id}}][month_end]" type="text" class="input-num" value="{{number_format($value->month_end)}}"/> tháng</td>
+                                                <td>
+                                                    @if(count($membership_long_term) - 1 == $key)
+                                                        Từ
+                                                    @endif
+                                                    <input
+                                                        data-key="membership_long_term-{{$keySTT}}-month_start"
+                                                        {{$keySTT > 0 ? 'readonly' : ''}}
+                                                        name="membership_long_term[{{$value->id}}][month_start]"
+                                                        type="text" class="input-num"
+                                                        value="{{number_format($value->month_start)}}"/>
+                                                    @if(count($membership_long_term) - 1 == $key)
+                                                        Tháng Trở lên
+                                                        @if(is_numeric($value->month_end))
+                                                            <input name="membership_long_term[{{$value->id}}][month_end]" type="hidden" class="input-num" value="{{number_format($value->month_end)}}"/>
+                                                        @endif
+                                                    @else
+                                                        → <input
+                                                                data-key="membership_long_term-{{$keySTT}}-month_end"
+                                                                onchange="changeEnd(this, {{$keySTT}}, 'membership_long_term', 'month_start')"
+                                                                name="membership_long_term[{{$value->id}}][month_end]"
+                                                                type="text"
+                                                                class="input-num"
+                                                                value="{{number_format($value->month_end)}}"/> Tháng
+                                                    @endif
+
+                                                </td>
                                                 <td class="text-center"><input name="membership_long_term[{{$value->id}}][point]" type="text" class="input-num" value="{{number_format($value->point)}}"/></td>
                                             </tr>
+                                            @php
+                                                $keySTT++;
+                                            @endphp
                                         @endforeach
                                     @endif
                                     </tbody>
@@ -329,14 +414,40 @@
                                     </thead>
                                     <tbody>
                                     @if(!empty($membership_level))
+                                        @php
+                                            $keySTT = 0;
+                                        @endphp
                                         @foreach($membership_level as $key => $value)
                                             <tr>
-                                                <td>  <input name="membership_level[{{$value->id}}][point_start]" type="text" class="input-num" value="{{number_format($value->point_start)}}"/>
-                                                    →
-                                                    <input name="membership_level[{{$value->id}}][point_end]" type="text" class="input-num" value="{{number_format($value->point_end)}}"/>
+                                                <td>
+                                                    @if(count($membership_level) - 1 == $key)
+                                                        Từ
+                                                    @endif
+                                                    <input
+                                                        data-key="membership_level-{{$keySTT}}-point_start"
+                                                        {{$keySTT > 0 ? 'readonly' : ''}}
+                                                        name="membership_level[{{$value->id}}][point_start]"
+                                                        type="text" class="input-num"
+                                                        value="{{number_format($value->point_start)}}"/>
+                                                    @if(count($membership_level) - 1 == $key)
+                                                        Điểm Trở lên
+                                                        @if(is_numeric($value->point_end))
+                                                            <input name="membership_level[{{$value->id}}][point_end]" type="hidden" class="input-num" value="{{number_format($value->point_end)}}"/>
+                                                        @endif
+                                                    @else
+                                                    → <input
+                                                            data-key="membership_level-{{$keySTT}}-point_end"
+                                                            onchange="changeEnd(this, {{$keySTT}}, 'membership_level', 'point_start', true)"
+                                                            name="membership_level[{{$value->id}}][point_end]"
+                                                            type="text" class="input-num"
+                                                            value="{{number_format($value->point_end - 1)}}"/>
+                                                    @endif
                                                 </td>
                                                 <td class="text-center"><strong>{{$value->name}}</strong></td>
                                             </tr>
+                                            @php
+                                                $keySTT++;
+                                            @endphp
                                         @endforeach
                                     @endif
                                     </tbody>
@@ -405,7 +516,16 @@
                                         @foreach($membership_level as $key => $value)
                                             <tr>
                                                 <td class="text-center"><strong>{{$value->name}}</strong></td>
-                                                <td class="text-center">Dưới <input name="membership_level[{{$value->id}}][invoice_limit]" type="text" class="input-num" value="{{number_format($value->invoice_limit)}}"/> VNĐ</td>
+                                                <td class="text-center">
+                                                    @if(count($membership_level) - 1 == $key)
+                                                        Không giới hạn – có chiết khấu riêng
+                                                        @if(is_numeric($value->invoice_limit))
+                                                            <input name="membership_level[{{$value->id}}][invoice_limit]" type="hidden" class="input-num" value="{{number_format($value->invoice_limit)}}"/>
+                                                        @endif
+                                                    @else
+                                                        Dưới <input name="membership_level[{{$value->id}}][invoice_limit]" type="text" class="input-num" value="{{number_format($value->invoice_limit)}}"/> VNĐ
+                                                    @endif
+                                                </td>
                                             </tr>
                                         @endforeach
                                     @endif
@@ -506,5 +626,14 @@
                 return false;
             }
         });
+
+
+        function changeEnd(_this, keySTT, name, keyStart, plus = false) {
+            var startMoney = $(_this).val();
+            if(plus) {
+                startMoney++;
+            }
+            $(`input[data-key="${name}-${keySTT + 1}-${keyStart}"]`).val(startMoney);
+        }
     </script>
 @endsection

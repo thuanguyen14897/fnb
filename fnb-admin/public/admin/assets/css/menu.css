@@ -551,7 +551,7 @@ File: Menu
     margin-top: 2px;
 }
 
-.has-submenu:hover img.dashboard, .has-submenu.active img.dashboard {
+.has-submenu:hover img.dashboad, .has-submenu.active img.dashboad {
     content:url('/admin/assets/images/icon_menu/active/dashboard.png')
 }
 
@@ -559,31 +559,39 @@ File: Menu
     content:url('/admin/assets/images/icon_menu/active/danh_muc.png')
 }
 
+.has-submenu:hover img.dich_vu, .has-submenu.active img.dich_vu {
+    content:url('/admin/assets/images/icon_menu/active/dich_vu.png')
+}
+
 .has-submenu:hover img.nhan_vien, .has-submenu.active img.nhan_vien {
     content:url('/admin/assets/images/icon_menu/active/nhan_vien.png')
 }
 
-.has-submenu:hover img.quan_ly_xe, .has-submenu.active img.quan_ly_xe {
-    content:url('/admin/assets/images/icon_menu/active/quan_ly_xe.png')
+.has-submenu:hover img.hang_thanh_vien, .has-submenu.active img.hang_thanh_vien {
+    content:url('/admin/assets/images/icon_menu/active/hang_thanh_vien.png')
 }
 
-.has-submenu:hover img.nguoi_dung_app, .has-submenu.active img.nguoi_dung_app {
-    content:url('/admin/assets/images/icon_menu/active/nguoi_dung_app.png')
+.has-submenu:hover img.thanh_vien, .has-submenu.active img.thanh_vien {
+    content:url('/admin/assets/images/icon_menu/active/thanh_vien.png')
 }
 
-.has-submenu:hover img.giao_dich, .has-submenu.active img.giao_dich {
-    content:url('/admin/assets/images/icon_menu/active/giao_dich.png')
+.has-submenu:hover img.doi_tac, .has-submenu.active img.doi_tac {
+    content:url('/admin/assets/images/icon_menu/active/doi_tac.png')
+}
+
+.has-submenu:hover img.quan_ly_app, .has-submenu.active img.quan_ly_app {
+    content:url('/admin/assets/images/icon_menu/active/quan_ly_app.png')
 }
 
 /*.has-submenu img.thanh_toan {*/
 /*    content:url('/admin/assets/images/icon_menu/thanh_toan.png')*/
 /*}*/
-.has-submenu:hover img.thanh_toan, .has-submenu.active img.thanh_toan {
-    content:url('/admin/assets/images/icon_menu/active/thanh_toan.png')
+.has-submenu:hover img.chuyen_di, .has-submenu.active img.chuyen_di {
+    content:url('/admin/assets/images/icon_menu/active/chuyen_di.png')
 }
 
-.has-submenu:hover img.thong_ke, .has-submenu.active img.thong_ke {
-    content:url('/admin/assets/images/icon_menu/active/thong_ke.png')
+.has-submenu:hover img.bai_viet, .has-submenu.active img.bai_viet {
+    content:url('/admin/assets/images/icon_menu/active/bai_viet.png')
 }
 
 .has-submenu:hover img.cai_dat, .has-submenu.active img.cai_dat {

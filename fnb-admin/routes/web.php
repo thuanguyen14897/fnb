@@ -275,6 +275,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('delete/{id}', [ServiceController::class, 'delete']);
         Route::post('active', [ServiceController::class, 'active']);
         Route::get('changeHot/{id}', [ServiceController::class, 'changeHot']);
+        Route::get('view/{id}', [ServiceController::class, 'view']);
+        Route::post('getReviewService/{id}', [ServiceController::class, 'getReviewService']);
     });
 
 

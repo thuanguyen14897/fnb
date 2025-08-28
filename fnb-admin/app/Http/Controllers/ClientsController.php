@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MemberShipLevel;
 use App\Models\Province;
 use App\Traits\UploadFile;
 use Illuminate\Http\Request;
@@ -100,6 +101,34 @@ class ClientsController extends Controller
                 $str = $client['phone'];
                 return $str;
             })
+            ->addColumn('img_membership_level', function ($client) {
+                $memberLevel = MemberShipLevel::find($client['membership_level']);
+                $dtImage = !empty($client['membership_level']) ? url('/upload/membership_level/'.$client['membership_level'].'.png') : null;
+                $str = '<div style="display: flex;justify-content:center;margin-top: 5px"
+                     class="show_image">
+                    <img src="' . $dtImage . '" alt="avatar"
+                         class="img-responsive img-circle"
+                         style="width: 30px;height: 30px"><span class="m-t-5" style="color:'.$memberLevel->color.'">Hạng ' . $memberLevel->name. '</span>
+                </div>';
+                return $str;
+            })
+            ->addColumn('invoice_limit', function ($client) {
+                if(!empty($client->active_limit_private)) {
+                    return '<div class="text-center">'.(!empty($membership_level->invoice_limit_private) ? number_format($membership_level->invoice_limit_private) : 'Chưa đặt hạn mức').'</div>';
+                }
+                else {
+                    $membership_level = MemberShipLevel::find($client['membership_level']);
+                    return '<div class="text-center">' . (!empty($membership_level->invoice_limit) ? number_format($membership_level->invoice_limit) : 'Không giới hạn') . '</div>';
+                }
+            })
+            ->editColumn('point_membership', function ($client) {
+                $str = '<div class="label label-default">'.number_format($client['point_membership']).'</div>';
+                return '<div class="text-center">'.$str.'</div>';
+            })
+            ->editColumn('ranking_date', function ($client) {
+                $str = _dthuan($client['ranking_date']);
+                return '<div class="text-center">'.$str.'</div>';
+            })
             ->editColumn('referral_code', function ($client) {
                 $str = '<div class="label label-default">'.$client['referral_code'].'</div>';
                 return '<div class="text-center">'.$str.'</div>';
@@ -127,7 +156,7 @@ class ClientsController extends Controller
 
                 return $str;
             })
-            ->rawColumns(['options', 'active', 'avatar', 'phone', 'created_at', 'fullname','referral_code'])
+            ->rawColumns(['options', 'active', 'avatar','img_membership_level', 'phone', 'created_at', 'fullname','referral_code','point_membership','ranking_date','invoice_limit'])
             ->setTotalRecords($data['recordsTotal']) // tổng số bản ghi
             ->setFilteredRecords($data['recordsFiltered']) // sau khi lọc
             ->with([

@@ -19,8 +19,9 @@
                 data-placeholder="Chọn ..." name="status_search">
             <option></option>
             <option value="-1">Tất cả</option>
-            <option value="0">Không hoạt động</option>
-            <option value="1">Hoạt động</option>
+            @foreach(getListStatusService() as $key => $value)
+                <option value="{{$value['id']}}">{{$value['name']}}</option>
+            @endforeach
         </select>
     </div>
     <div class="col-md-2">

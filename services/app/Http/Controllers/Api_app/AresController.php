@@ -134,7 +134,6 @@ class AresController extends AuthController
                     $data['message'] = 'Cập nhập thất bại';
                 }
             }
-            d
             return response()->json($data);
         } catch (\Exception $exception) {
             DB::rollBack();

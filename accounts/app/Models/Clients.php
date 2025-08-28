@@ -30,6 +30,11 @@ class Clients extends Model
         'number_passport',
         'issued_passport',
         'date_passport',
+        'membership_level',
+        'point_membership',
+        'ranking_date',
+        'active_limit_private',
+        'invoice_limit_private',
     ];
 
 

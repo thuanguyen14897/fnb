@@ -70,7 +70,7 @@
             search_daterangepicker('date_search');
             oTable = InitDataTable('#table_client', 'admin/partner/getListCustomer', {
                 'order': [
-                    [6, 'desc']
+                    [5, 'desc']
                 ],
                 'responsive': false,
                 "ajax": {

@@ -11,6 +11,7 @@
         'category_service_search': '#category_service_search',
         'status_search': '#status_search',
         'customer_search': '#customer_search',
+        'customer_id': '#customer_id',
     };
     var oTable;
     oTable = InitDataTable('#table_service', 'admin/service/getList', {
@@ -42,7 +43,7 @@
             {   "render": function (data, type, row) {
                     return `<div class="text-center">${data}</data>`;
                 },
-                data: 'id', name: 'id',width: "50px", orderable: true
+                data: 'id', name: 'id',width: "50px"
             },
             {data: 'image', name: 'image',width: "120px" , orderable: false},
             {data: 'name', name: 'name',width: "250px" },

@@ -698,31 +698,36 @@ function getListStatusTransaction()
             'id' => 0,
             'name' => 'Đã khởi tạo',
             'color' => '#371585',
+            'background' => '#E9E1FD',
             'index' => 0,
         ],
         [
             'id' => 1,
             'name' => 'Đang xử lý',
             'color' => '#B43403',
+            'background' => '#FEECDC',
             'index' => 1,
         ],
         [
             'id' => 2,
             'name' => 'Đang trong hành trình',
             'color' => '#052E5C',
+            'background' => '#DBEEFF',
             'index' => 2,
         ],
         [
-            'id' => 2,
+            'id' => 3,
             'name' => 'Hoàn thành',
             'color' => '#03401F',
-            'index' => 2,
+            'background' => '#D7FAE0',
+            'index' => 3,
         ],
         [
-            'id' => 2,
+            'id' => 4,
             'name' => 'Hủy chuyến',
             'color' => '#BF1D28',
-            'index' => 2,
+            'background' => '#FFDBDE',
+            'index' => 4,
         ],
     ];
 }
@@ -1561,8 +1566,8 @@ if (!function_exists('menuHelper')) {
                 'id' => 'service',
                 'name' => 'Dịch vụ',
                 'link' => '',
-                'class' => 'danh_muc',
-                'image' => 'admin/assets/images/icon_menu/danh_muc.png',
+                'class' => 'dich_vu',
+                'image' => 'admin/assets/images/icon_menu/dich_vu.png',
                 'child' => [
                     [
                         'id' => 'group_category_service',
@@ -1602,15 +1607,15 @@ if (!function_exists('menuHelper')) {
                 'id' => 'membership_level',
                 'name' => lang('c_membership_level'),
                 'link' => 'admin/membership_level/list',
-                'class' => 'nhan_vien',
-                'image' => 'admin/assets/images/icon_menu/nhan_vien.png',
+                'class' => 'hang_thanh_vien',
+                'image' => 'admin/assets/images/icon_menu/hang_thanh_vien.png',
             ],
             [
                 'id' => 'manager_clients',
                 'name' => 'Thành viên',
                 'link' => 'admin/clients/list',
-                'class' => 'nguoi_dung_app',
-                'image' => 'admin/assets/images/icon_menu/nguoi_dung_app.png',
+                'class' => 'thanh_vien',
+                'image' => 'admin/assets/images/icon_menu/thanh_vien.png',
                 'child' => [],
             ],
             [
@@ -1618,15 +1623,15 @@ if (!function_exists('menuHelper')) {
                 'name' => 'Đối tác',
                 'link' => 'admin/partner/list',
                 'class' => 'doi_tac',
-                'image' => 'admin/assets/images/icon_menu/nguoi_dung_app.png',
+                'image' => 'admin/assets/images/icon_menu/doi_tac.png',
                 'child' => [],
             ],
             [
                 'id' => 'manager_app',
                 'name' => 'Quản lý App',
                 'link' => '',
-                'class' => 'danh_muc',
-                'image' => 'admin/assets/images/icon_menu/danh_muc.png',
+                'class' => 'quan_ly_app',
+                'image' => 'admin/assets/images/icon_menu/quan_ly_app.png',
                 'child' => [
                     [
                         'id' => 'homepage',
@@ -1640,8 +1645,8 @@ if (!function_exists('menuHelper')) {
                 'id' => 'transaction',
                 'name' => 'Chuyến đi',
                 'link' => 'admin/transaction/list',
-                'class' => 'giao_dich',
-                'image' => 'admin/assets/images/icon_menu/giao_dich.png',
+                'class' => 'chuyen_di',
+                'image' => 'admin/assets/images/icon_menu/chuyen_di.png',
                 'child' => [
                 ],
             ],
@@ -1649,8 +1654,8 @@ if (!function_exists('menuHelper')) {
                 'id' => 'blog',
                 'name' => 'Bài viết',
                 'link' => 'admin/blog/list',
-                'class' => 'danh_muc',
-                'image' => 'admin/assets/images/icon_menu/danh_muc.png',
+                'class' => 'bai_viet',
+                'image' => 'admin/assets/images/icon_menu/bai_viet.png',
                 'child' => [
                 ],
             ],
@@ -1776,3 +1781,29 @@ function getListStatusService($id = -1,$type = 'name')
     }
 }
 
+function getListTypeBusiness($id = 0)
+{
+    $data = [
+        [
+            'id' => 1,
+            'name' => 'Cá nhân',
+        ],
+        [
+            'id' => 2,
+            'name' => 'Công ty/chuỗi',
+        ],
+    ];
+    if (!empty($id)) {
+        $data = array_filter($data, function ($item) use ($id) {
+            return $item['id'] == $id;
+        });
+        if (!empty($data)) {
+            $data = array_values($data);
+            return $data[0]['name'];
+        } else {
+            return null;
+        }
+    } else {
+        return $data;
+    }
+}

@@ -19,17 +19,13 @@ class Transaction extends JsonResource
     {
         $day = date_range(_dthuan($this->date_start), _dthuan($this->date_end));
         $day = count($day);
-        $image_service = null;
+        $image_service = [];
         if (empty($this->check_detail)) {
-            $image_service = $this->whenLoaded('transaction_day_item', function () {
-                $collection = $this->transaction_day_item->map(function ($item) {
-                    $service = $item->service;
-                    return [
-                        'service_id' => $service['id'],
-                        'image' => $service['image_store'],
-                    ];
-                });
-                return $collection;
+            $image_service = $this->whenLoaded('transaction_day_item', function ($items) {
+                return $items->map(function ($item) {
+                    $images = $item->service['image_store'] ?? [];
+                    return collect($images)->pluck('image');
+                })->flatten(1)->toArray();
             });
         }
         return [
@@ -59,6 +55,7 @@ class Transaction extends JsonResource
                 'status' => $this->status,
                 'name' => getValueStatusTransaction($this->status,'name'),
                 'color' => getValueStatusTransaction($this->status,'color'),
+                'background' => getValueStatusTransaction($this->status,'background'),
                 'date_status' => $this->date_status,
                 'note' => $this->note_status,
             ]

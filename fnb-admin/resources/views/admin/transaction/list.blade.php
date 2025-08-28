@@ -114,17 +114,22 @@
                 }
             },
             columnDefs: [
-                {   "render": function (data, type, row) {
+                {
+                    "render": function (data, type, row) {
                         return `<div class="text-center">${data}</data>`;
                     },
-                    data: 'id', name: 'id',width: "50px",orderable: true
+                    data: 'id', name: 'id',width: "50px"
                 },
                 {data: 'reference_no', name: 'reference_no',width: "100px" },
                 {data: 'date', name: 'date',width: "100px" },
                 {data: 'customer', name: 'customer',width: "140px",orderable: false},
                 {data: 'date_start', name: 'date_start'},
                 {data: 'date_end', name: 'date_end'},
-                {data: 'status', name: 'status'},
+                {
+                    "render": function (data, type, row) {
+                        return `<div class="text-center">${data}</data>`;
+                    },
+                    data: 'status', name: 'status'},
                 {data: 'user_id', name: 'user_id'},
                 {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px" },
 

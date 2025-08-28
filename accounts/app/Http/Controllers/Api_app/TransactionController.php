@@ -227,7 +227,8 @@ class TransactionController extends AuthController
         }
         $query->where(function ($q) use ($status_search,$customer_search,$customer_id){
             if ($status_search != -1) {
-                $q->where('status', $status_search);
+                $status_search = is_array($status_search) ? $status_search : [$status_search];
+                $q->whereIn('status', $status_search);
             }
             if (empty($customer_search)) {
                 $q->where(function($q) use ($customer_id){
@@ -491,5 +492,13 @@ class TransactionController extends AuthController
             $data['message'] = $exception->getMessage();
             return response()->json($data);
         }
+    }
+
+    public function getListStatusTransaction(){
+        $result = getListStatusTransaction();
+        $data['result'] = true;
+        $data['message'] = 'Lấy thông tin thành công';
+        $data['data'] = $result;
+        return response()->json($data);
     }
 }

@@ -44,6 +44,8 @@ class Api_info extends AuthController
                 'intro_one',
                 'intro_two',
                 'intro_three',
+                'percent',
+                'policy_terms',
             ]);
         })->get();
         $data = [];

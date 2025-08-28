@@ -63,6 +63,7 @@ Route::group(['prefix' => 'service','middleware' => App\Http\Middleware\CheckLog
     Route::post('changeHot', [ServiceController::class, 'changeHot']);
     Route::get('getListReview', [ServiceController::class, 'getListReview']);
     Route::post('addService', [ServiceController::class, 'addService']);
+    Route::get('getReviewService', [ServiceController::class, 'getReviewService']);
 });
 
 Route::group(['prefix' => 'category'], function () {

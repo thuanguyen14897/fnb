@@ -80,6 +80,7 @@ class ServiceController extends Controller
             ->addColumn('options', function ($dtData) {
                 $id = $dtData['id'];
                 $edit = "<a href='admin/service/detail/$id'><i class='fa fa-pencil'></i> " . lang('dt_edit_service') . "</a>";
+                $view = "<a href='admin/service/view/$id'><i class='fa fa-eye'></i> " . lang('dt_view_service') . "</a>";
                 $delete = '<a type="button" class="po-delete" data-container="body" data-html="true" data-toggle="popover" data-placement="left" data-content="
                 <button href=\'admin/service/delete/' . $id. '\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
                 <button class=\'btn btn-default po-close\'>' . lang('dt_close') . '</button>
@@ -90,6 +91,7 @@ class ServiceController extends Controller
                             <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu " role="menu" aria-labelledby="dropdownMenu1">
+                                <li style="cursor: pointer">' . $view . '</li>
                                 <li style="cursor: pointer">' . $edit . '</li>
                                 <li style="cursor: pointer">' . $delete . '</li>
                             </ul>
@@ -101,7 +103,7 @@ class ServiceController extends Controller
                 return '<div>'.(++$start).'</div>';
             })
             ->editColumn('name', function ($dtData) {
-                $str = '<div>' . $dtData['name'] . '</div>';
+                $str = '<div><a href="admin/service/view/'.$dtData['id'].'">' . $dtData['name'] . '</a></div>';
                 return $str;
             })
             ->editColumn('price', function ($dtData) {
@@ -263,5 +265,106 @@ class ServiceController extends Controller
         $dataRes = $response->getData(true);
         $data = $dataRes['data'];
         return response()->json($data);
+    }
+
+    public function view($id = 0)
+    {
+        if (!has_permission('service', 'view')) {
+            access_denied();
+        }
+        $this->request->merge(['id' => $id]);
+        $response = $this->fnbService->getDetail($this->request);
+        $data = $response->getData(true);
+        $dtData = $data['dtData'] ?? [];
+        $this->request->merge(['customer_id' => [$dtData['customer_id'] ?? [0]]]);
+        $responseCustomer = $this->fnbCustomerService->getListData($this->request);
+        $dataCustomer = $responseCustomer->getData(true);
+        $customers = collect($dataCustomer['data']);
+        $dtData['customer'] = $customers->where('id','=',$dtData['customer_id'])->first();
+        $title = lang('dt_view_service');
+        $titleService = lang('dt_service');
+        $dtStatusTransaction = getListStatusTransaction();
+        return view('admin.service.view', [
+            'title' => $title,
+            'dtData' => $dtData,
+            'titleService' => $titleService,
+            'limitTransaction' => $this->per_page,
+            'dtStatusTransaction' => $dtStatusTransaction,
+        ]);
+    }
+
+    public function getReviewService($service_id = 0){
+        $this->request->merge(['service_id' => $service_id]);
+        $response = $this->fnbService->getReviewService($this->request);
+        $data = $response->getData(true);
+        $customer_ids = [];
+        if (!empty($data['data'])){
+            $customer_ids = array_column($data['data'], 'customer_id');
+        }
+        $dtData = collect($data['data']);
+        $customers = null;
+        if (!empty($customer_ids)){
+            $this->requestCustomer = clone $this->request;
+            $this->requestCustomer->merge(['customer_id' => $customer_ids]);
+            $this->requestCustomer->merge(['search' => null]);
+            $responseCustomer = $this->fnbCustomerService->getListData($this->requestCustomer);
+            $dataCustomer = $responseCustomer->getData(true);
+            $customers = collect($dataCustomer['data']);
+        }
+        $dtData = $dtData->map(function ($item) use ($customers) {
+            $customer = $customers->where('id','=',$item['customer_id'])->first();
+            return [
+                ...$item,
+                'customer' => $customer,
+            ];
+        });
+        $start = intval($this->request->input('start', 0));
+        return (new CollectionDataTable($dtData))
+            ->addColumn('options', function ($dtData) {
+                $id = $dtData['id'];
+                $delete = '<a type="button" class="po-delete" data-container="body" data-html="true" data-toggle="popover" data-placement="left" data-content="
+                <button href=\'admin/service/delete/' . $id. '\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
+                <button class=\'btn btn-default po-close\'>' . lang('dt_close') . '</button>
+            "><i class="fa fa-remove width-icon-actions"></i> ' . lang('Xóa đánh giá') . '</a>';
+                $options = ' <div class="dropdown text-center">
+                            <button class="btn btn-default dropdown-toggle nav-link" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+                             Tác vụ
+                            <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu " role="menu" aria-labelledby="dropdownMenu1">
+
+                                <li style="cursor: pointer">' . $delete . '</li>
+                            </ul>
+                        </div>';
+
+                return $options;
+            })
+            ->addColumn('id', function ($row) use (&$start) {
+                return '<div>'.(++$start).'</div>';
+            })
+            ->editColumn('customer', function ($dtData) {
+                $customer = $dtData['customer'] ?? [];
+                $url = !empty($customer['avatar']) ? $customer['avatar'] : asset('admin/assets/images/users/avatar-1.jpg');
+                return '<div style="display: flex;align-items: center;flex-wrap: wrap">' . loadImageAvatar($url,
+                        '40px') . '<div>'.(!empty($customer['fullname']) ? $customer['fullname'] : '') . '</div></div>';
+            })
+            ->editColumn('content', function ($dtData) {
+                $str = '<div class="text-left">' . ($dtData['content']) . '</div>';
+                return $str;
+            })
+            ->editColumn('star', function ($dtData) {
+                return loadHtmlReviewStar($dtData['star']);
+            })
+            ->editColumn('created_at', function ($dtData) {
+                return '<div>' . _dt($dtData['created_at']) . '</div>';
+            })
+            ->rawColumns(['options', 'star', 'content','id','customer','created_at'])
+            ->setTotalRecords($data['recordsTotal'])
+            ->setFilteredRecords($data['recordsFiltered'])
+            ->with([
+                'draw' => intval($this->request->input('draw')),
+            ])
+            ->skipPaging()
+            ->make(true);
     }
 }

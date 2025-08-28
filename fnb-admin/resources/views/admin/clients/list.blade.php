@@ -37,10 +37,14 @@
                     <thead>
                     <tr>
                         <th class="text-center">{{lang('c_avatar_client')}}</th>
+                        <th class="text-center">{{lang('c_membership_level')}}</th>
                         <th class="text-center">Mã KH</th>
                         <th class="text-center">{{lang('c_fullname_client')}}</th>
                         <th class="text-center">{{lang('c_phone_client')}}</th>
                         <th class="text-center">{{lang('c_email_client')}}</th>
+                        <th class="text-center">{{lang('c_point_membership')}}</th>
+                        <th class="text-center">{{lang('c_ranking_date')}}</th>
+                        <th class="text-center">{{lang('c_invoice_limit')}}</th>
                         <th class="text-center">{{lang('dt_date_created_customer')}}</th>
                         <th class="text-center">{{lang('Mã giới thiệu')}}</th>
                         <th class="text-center">{{lang('c_active_client')}}</th>
@@ -70,7 +74,7 @@
             search_daterangepicker('date_search');
             oTable = InitDataTable('#table_client', 'admin/clients/getListCustomer', {
                 'order': [
-                    [6, 'desc']
+                    [5, 'desc']
                 ],
                 'responsive': false,
                 "ajax": {
@@ -90,6 +94,7 @@
                 },
                 columnDefs: [
                     {data: 'avatar', name: 'avatar',width: "90px",},
+                    {data: 'img_membership_level', name: 'img_membership_level',width: "110px",},
                     {data: 'code', name: 'code',width: "110px",},
                     {data: 'fullname', name: 'fullname'},
                     {
@@ -99,6 +104,9 @@
                         data: 'phone', name: 'phone'
                     },
                     {data: 'email', name: 'email'},
+                    {data: 'point_membership', name: 'point_membership'},
+                    {data: 'ranking_date', name: 'ranking_date'},
+                    {data: 'invoice_limit', name: 'invoice_limit'},
                     {data: 'created_at', name: 'created_at'},
                     {data: 'referral_code', name: 'referral_code',width: "110px",},
                     {

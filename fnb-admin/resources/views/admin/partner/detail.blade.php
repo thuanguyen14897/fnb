@@ -3,10 +3,10 @@
     <!-- Page-Title -->
     <div class="row">
         <div class="col-sm-12">
-            <h4 class="page-title">{{lang('c_title_client')}}</h4>
+            <h4 class="page-title">{{lang('c_title_partner')}}</h4>
             <ol class="breadcrumb">
                 <li><a href="admin/dashboard">{{lang('dt_index')}}</a></li>
-                <li><a href="admin/clients/list">{{lang('c_title_client')}}</a></li>
+                <li><a href="admin/partner/list">{{lang('c_title_partner')}}</a></li>
                 <li class="active">{{$title}}</li>
             </ol>
         </div>
@@ -115,40 +115,27 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="col-md-6">
+                                            <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="number_cccd">Số CCCD</label>
-                                                    <input type="text" name="number_cccd" id="number_cccd" value="{{!empty($client) ? $client['number_cccd'] : ''}}" class="form-control number_cccd">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="date_cccd">Ngày cấp CCCD</label>
-                                                    <input type="text" name="date_cccd" id="date_cccd" value="{{!empty($client['date_cccd']) ? _dthuan($client['date_cccd']) : ''}}" class="form-control datepicker date_cccd">
+                                                    <label for="province_id">{{lang('dt_province')}}</label>
+                                                    <select class="province_id select2" id="province_id"
+                                                            data-placeholder="Chọn ..." name="province_id"
+                                                            onchange="changeProvince(this)">
+                                                        @if(!empty($client['province']))
+                                                            <option value="{{$client['province']['Id']}}" {{!empty($client) && $client['province_id'] == $client['province']['Id'] ? 'selected' : ''}}>{{$client['province']['Name'] ?? ''}}</option>
+                                                        @endif
+                                                    </select>
                                                 </div>
                                             </div>
                                             <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="issued_cccd">Nơi cấp CCCD</label>
-                                                    <input type="text" name="issued_cccd" id="issued_cccd" value="{{!empty($client) ? $client['issued_cccd'] : ''}}" class="form-control issued_cccd">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="number_passport">Số Passport</label>
-                                                    <input type="text" name="number_passport" id="number_passport" value="{{!empty($client) ? $client['number_passport'] : ''}}" class="form-control number_passport">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="date_passport">Ngày cấp Passport</label>
-                                                    <input type="text" name="date_passport" id="date_passport" value="{{!empty($client->date_passport) ? _dthuan($client['date_passport']) : ''}}" class="form-control datepicker date_passport">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="issued_passport">Nơi cấp Passport</label>
-                                                    <input type="text" name="issued_passport" id="issued_passport" value="{{!empty($client) ? $client['issued_passport'] : ''}}" class="form-control issued_passport">
+                                                    <label for="wards_id">{{lang('dt_wards')}}</label>
+                                                    <select class="wards_id select2" id="wards_id"
+                                                            data-placeholder="Chọn ..." name="wards_id">
+                                                        @if(!empty($client['wards']))
+                                                            <option value="{{$client['wards']['Id']}}" {{!empty($client) && $client['wards_id'] == $client['wards']['Id'] ? 'selected' : ''}}>{{$client['wards']['Name'] ?? ''}}</option>
+                                                        @endif
+                                                    </select>
                                                 </div>
                                             </div>
                                         </div>
@@ -169,7 +156,22 @@
 @endsection
 @section('script')
     <script>
+        function changeProvince(_this){
+            var province_id = $(_this).val();
+            searchAjaxSelect2('#wards_id','api/category/getListWard',0,{
+                'select2':true,
+                province_id: province_id,
+            })
+            $('select#wards_id').val(null).trigger('change.select2')
+        }
         $(document).ready(function(){
+            searchAjaxSelect2('#province_id','api/category/getListProvince',0,{
+                'select2':true
+            })
+            searchAjaxSelect2('#wards_id','api/category/getListWard',0,{
+                'select2':true,
+                province_id: {{!empty($dtData['province_id']) ? $dtData['province_id'] : -1}},
+            })
             $(`#type_client`).select2();
             $(".form-group a").click(function(){
                 var $this=$(this);
@@ -238,7 +240,7 @@
                     .done(function (data) {
                         if (data.result) {
                             alert_float('success',data.message);
-                            window.location.href='admin/clients/list';
+                            window.location.href='admin/partner/list';
                         } else {
                             alert_float('error',data.message);
                         }

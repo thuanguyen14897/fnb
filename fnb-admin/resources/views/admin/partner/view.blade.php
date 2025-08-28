@@ -17,7 +17,7 @@
     </div>
     <div class="row">
         <div class="col-lg-12">
-            <ul class="nav nav-tabs navtab-bg nav-justified">
+            <ul class="nav nav-tabs navtab-bg nav-justified" id="tab_partner">
                 <li class="active">
                     <a href="#info" data-toggle="tab" aria-expanded="false">
                         <span class="visible-xs">Thông tin chung</span>
@@ -77,10 +77,10 @@
                                         <p class="text-dark member-info-detail"><span>{{lang('dt_date_created_customer')}}: </span><span>{{_dt($client['created_at'])}}</span>
                                         </p>
                                         <p class="text-dark member-info-detail">
-                                            <span>Tỉnh/ Thành phố : </span><span>{{$client['address']}}</span>
+                                            <span>Tỉnh/ Thành phố : </span><span>{{!empty($client['province']) ? $client['province']['Type'].' '.$client['province']['Name'] : ''}}</span>
                                         </p>
                                         <p class="text-dark member-info-detail">
-                                            <span>Phường/ Thị Trấn/ Xã : </span><span>{{$client['address']}}</span>
+                                            <span>Phường/ Thị Trấn/ Xã : </span><span>{{!empty($client['wards']) ? $client['wards']['Type'].' '.$client['wards']['Name'] : ''}}</span>
                                         </p>
                                         <p class="text-dark member-info-detail">
                                             <span>Địa chỉ : </span><span>{{$client['address']}}</span>
@@ -202,7 +202,11 @@
                                                 <div class="form-group">
                                                     <label
                                                         for="type_representative">Loại hình kinh doanh</label>
-                                                    <select class="form-control type_representative select2" name="type_representative"></select>
+                                                    <select class="form-control type_representative select2" name="type_representative">
+                                                        @foreach(getListTypeBusiness() as $key => $value)
+                                                            <option {{!empty($client['representative']) ? ($client['representative']['type'] == $value['id'] ? 'selected' : '') : ''}} value="{{$value['id']}}">{{$value['name']}}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="image_cccd">Hình CCCD</label>
@@ -258,11 +262,20 @@
                         </div>
                     </div>
                 </div>
+                <div class="tab-pane" id="service">
+                    <input type="hidden" name="customer_id" class="customer_id" id="customer_id"
+                           value="{{$client['id']}}">
+                    <div class="row">
+                        @include('admin.service.search')
+                        {!! loadTableService() !!}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 @endsection
 @section('script')
+    @include('admin.service.script_index_js')
     <script>
         $(".edit_business").click(function () {
             if ($(this).hasClass('active_new')) {
@@ -275,6 +288,14 @@
                 $(this).addClass('active_new');
             }
         })
+
+        $(document).ready(function () {
+            var activeTab = localStorage.getItem('activeTab');
+            if (activeTab) {
+                $('#tab_partner a[href="#' + activeTab + '"]').tab('show');
+                localStorage.removeItem('activeTab'); // dùng xong thì xóa
+            }
+        });
 
         $("#business_form").validate({
             rules: {
@@ -360,8 +381,8 @@
                             $(".show_error").html(data.message);
                             alert_float('error', data.message);
                         }
-                        $(".result_business").html(data.html);
-                        initDatepicker();
+                        localStorage.setItem('activeTab', 'representative');
+                        location.reload();
                     })
                     .fail(function (err) {
                     });

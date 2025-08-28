@@ -120,5 +120,8 @@
         'c_quarterly_point_start' => 'Điểm tích lũy tối thiểu',
         'c_quarterly_point_end' => 'Điểm tích lũy tối đa',
         'c_invoice_limit' => 'Tổng điểm tích lũy trong quý',
+        'c_point_membership' => 'Điểm tích lũy trong Quý',
+        'c_ranking_date' => 'Ngày xếp hạng (Quý)',
+        'c_invoice_limit' => 'Hạn mức hóa đơn',
     ];
     return $array_c_message;

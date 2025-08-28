@@ -227,6 +227,14 @@ class ClientController extends AuthController
             $client->province_id = $this->request->province_id;
             $client->wards_id = $this->request->wards_id;
 
+            $client->active_limit_private = $this->request->active_limit_private ?? 0;
+            if($client->active_limit_private == 1) {
+                $client->invoice_limit_private = number_unformat($this->request->invoice_limit_private);
+            }
+            else {
+                $client->invoice_limit_private = NULL;
+            }
+
             $client->save();
             if ($client) {
                 if ($this->request->hasFile('avatar')) {

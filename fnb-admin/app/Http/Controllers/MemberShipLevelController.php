@@ -54,28 +54,46 @@ class MemberShipLevelController extends Controller
             foreach ($membership_level as $id => $value) {
                 $memberShipLevel = MemberShipLevel::find($id);
                 $memberShipLevel->point_start = number_unformat($value['point_start']);
-                $memberShipLevel->point_end = number_unformat($value['point_end']);
-                $memberShipLevel->invoice_limit = number_unformat($value['invoice_limit']);
+                if(is_numeric($memberShipLevel->point_end)) {
+                    if (empty($value['point_end'])) {
+                        $memberShipLevel->point_end = number_unformat($value['point_end']);
+                    } else {
+                        $memberShipLevel->point_end = number_unformat($value['point_end']) + 1;
+                    }
+                }
+                if(is_numeric($memberShipLevel->invoice_limit)) {
+                    $memberShipLevel->invoice_limit = number_unformat($value['invoice_limit']);
+                }
                 $memberShipLevel->save();
             }
             foreach ($membership_expense as $id => $value) {
                 $memberShipExpense = MemberShipExpense::find($id);
                 $memberShipExpense->money_start = number_unformat($value['money_start']);
-                $memberShipExpense->money_end = number_unformat($value['money_end']);
+                if(is_numeric($memberShipExpense->money_end)) {
+                    $memberShipExpense->money_end = number_unformat($value['money_end']);
+                }
                 $memberShipExpense->point = number_unformat($value['point']);
                 $memberShipExpense->save();
             }
             foreach ($membership_long_term as $id => $value) {
                 $memberShipLongTerm = MemberShipLongTerm::find($id);
                 $memberShipLongTerm->month_start = number_unformat($value['month_start']);
-                $memberShipLongTerm->month_end = number_unformat($value['month_end']);
+                if(is_numeric($memberShipLongTerm->month_end)) {
+                    $memberShipLongTerm->month_end = number_unformat($value['month_end']);
+                }
                 $memberShipLongTerm->point = number_unformat($value['point']);
                 $memberShipLongTerm->save();
             }
             foreach ($membership_purchases as $id => $value) {
                 $memberShipPurchases = MemberShipPurchases::find($id);
                 $memberShipPurchases->number_purchases_start = number_unformat($value['number_purchases_start']);
-                $memberShipPurchases->number_purchases_end = number_unformat($value['number_purchases_end']);
+                if(is_numeric($memberShipPurchases->number_purchases_end)) {
+                    if (empty($value['number_purchases_end'])) {
+                        $memberShipPurchases->number_purchases_end = number_unformat($value['number_purchases_end']);
+                    } else {
+                        $memberShipPurchases->number_purchases_end = number_unformat($value['number_purchases_end']) + 1;
+                    }
+                }
                 $memberShipPurchases->point = number_unformat($value['point']);
                 $memberShipPurchases->save();
             }

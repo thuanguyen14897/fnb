@@ -657,31 +657,36 @@ function getListStatusTransaction()
             'id' => 0,
             'name' => 'Đã khởi tạo',
             'color' => '#371585',
+            'background' => '#E9E1FD',
             'index' => 0,
         ],
         [
             'id' => 1,
             'name' => 'Đang xử lý',
             'color' => '#B43403',
+            'background' => '#FEECDC',
             'index' => 1,
         ],
         [
             'id' => 2,
             'name' => 'Đang trong hành trình',
             'color' => '#052E5C',
+            'background' => '#DBEEFF',
             'index' => 2,
         ],
         [
-            'id' => 2,
+            'id' => 3,
             'name' => 'Hoàn thành',
             'color' => '#03401F',
-            'index' => 2,
+            'background' => '#D7FAE0',
+            'index' => 3,
         ],
         [
-            'id' => 2,
+            'id' => 4,
             'name' => 'Hủy chuyến',
             'color' => '#BF1D28',
-            'index' => 2,
+            'background' => '#FFDBDE',
+            'index' => 4,
         ],
     ];
 }
@@ -699,6 +704,12 @@ function getValueStatusTransaction($id, $type = 'name')
     $option[2]['color'] = '#052E5C';
     $option[3]['color'] = '#03401F';
     $option[4]['color'] = '#BF1D28';
+
+    $option[0]['background'] = '#E9E1FD';
+    $option[1]['background'] = '#FEECDC';
+    $option[2]['background'] = '#DBEEFF';
+    $option[3]['background'] = '#D7FAE0';
+    $option[4]['background'] = '#FFDBDE';
 
     $option[0]['index'] = 0;
     $option[1]['index'] = 1;

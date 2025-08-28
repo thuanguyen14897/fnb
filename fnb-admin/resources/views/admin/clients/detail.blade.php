@@ -175,6 +175,35 @@
                                                 </select>
                                             </div>
                                         </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="">Hạng mức hóa đơn</label>
+                                                <div class="radio radio-custom radio-inline">
+                                                    <input type="radio"
+                                                           @if(!empty($client) && $client['active_limit_private'] == 1 )
+                                                               checked
+                                                           @else
+                                                               checked
+                                                           @endif
+                                                           id="active_limit_private1"
+                                                           value="1" name="active_limit_private">
+                                                    <label for="active_limit_private1">Chiết khấu riêng</label>
+                                                </div>
+                                                <div class="radio radio-custom radio-inline">
+                                                    <input type="radio"
+                                                           @if(!empty($client) && $client['active_limit_private'] == 0)
+                                                               checked
+                                                           @endif
+                                                           id="active_limit_private2"
+                                                           value="0" name="active_limit_private">
+                                                    <label for="active_limit_private2"> Chiết khấu theo hạng thành viên </label>
+                                                </div>
+                                            </div>
+                                            <div class="form-group div-active_limit_private {{empty($client['active_limit_private']) ? 'hide' : ''}}">
+                                                <label for="invoice_limit_private">Hạn mức hóa đơn mỗi lần thanh toá</label>
+                                                <input type="text" name="invoice_limit_private" id="invoice_limit_private" value="{{!empty($client) ? $client['invoice_limit_private'] : ''}}" class="form-control invoice_limit_private">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -193,6 +222,15 @@
 @endsection
 @section('script')
     <script>
+        $('input[name="active_limit_private"]').change(function() {
+            if($(this).val() == 0) {
+                $('.div-active_limit_private').addClass('hide');
+            }
+            else {
+                $('.div-active_limit_private').removeClass('hide');
+            }
+        })
+
         var provinceNow = $('#province_id').val();
             $(document).ready(function(){
 
