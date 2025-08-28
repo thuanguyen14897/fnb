@@ -19,18 +19,32 @@ class Transaction extends JsonResource
     {
         $day = date_range(_dthuan($this->date_start), _dthuan($this->date_end));
         $day = count($day);
+        $image_service = null;
+        if (empty($this->check_detail)) {
+            $image_service = $this->whenLoaded('transaction_day_item', function () {
+                $collection = $this->transaction_day_item->map(function ($item) {
+                    $service = $item->service;
+                    return [
+                        'service_id' => $service['id'],
+                        'image' => $service['image_store'],
+                    ];
+                });
+                return $collection;
+            });
+        }
         return [
             'id' => $this->id,
             'name' => $this->name,
             'reference_no' => $this->reference_no,
             'date' => $this->date,
+            'image_service' => $image_service,
             'customer' => $this->whenLoaded('customer', function () {
                 return [
                     'id' => $this->customer->id,
                     'fullname' => $this->customer->fullname,
                     'email' => $this->customer->email,
                     'phone' => $this->customer->phone,
-                    'avatar' => !empty($this->customer->avatar) ? asset('storage/' . $this->customer->avatar) : null,
+                    'avatar' => !empty($this->customer->avatar) ? env('STORAGE_URL').'/'.$this->customer->avatar : null,
                 ];
             }),
             'day' => [

@@ -87,6 +87,12 @@
                                         <p class="text-dark member-info-detail">
                                             <span>Nơi cấp passport: </span><span>{{($client['issued_passport'])}}</span>
                                         </p>
+                                        <p class="text-dark member-info-detail">
+                                            <span>{{lang('dt_province')}}: </span><span>{{($client['province']['Name'] ?? '')}}</span>
+                                        </p>
+                                        <p class="text-dark member-info-detail">
+                                            <span>{{lang('dt_wards')}}: </span><span>{{($client['wards']['Name'] ?? '')}}</span>
+                                        </p>
                                     </div>
 
                                 </div>

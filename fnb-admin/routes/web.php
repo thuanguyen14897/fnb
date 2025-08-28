@@ -25,6 +25,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AresController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\PartnerController;
+use App\Http\Controllers\MemberShipLevelController;
 
 /*
 |--------------------------------------------------------------------------
@@ -272,7 +273,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('detail/{id?}', [ServiceController::class, 'get_detail']);
         Route::post('detail/{id?}', [ServiceController::class, 'detail']);
         Route::get('delete/{id}', [ServiceController::class, 'delete']);
-        Route::get('active/{id}', [ServiceController::class, 'active']);
+        Route::post('active', [ServiceController::class, 'active']);
         Route::get('changeHot/{id}', [ServiceController::class, 'changeHot']);
     });
 
@@ -305,6 +306,12 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::post('detail', [PartnerController::class, 'detail']);
         Route::get('delete/{id}', [PartnerController::class, 'delete']);
         Route::get('active/{id}', [PartnerController::class, 'active']);
+        Route::post('detailRepresentativePartner/{id}', [PartnerController::class, 'detailRepresentativePartner']);
+    });
+
+    Route::group(['prefix' => 'membership_level'], function () {
+        Route::get('list', [MemberShipLevelController::class, 'get_list']);
+        Route::post('updateMember', [MemberShipLevelController::class, 'updateMember']);
     });
 
 });

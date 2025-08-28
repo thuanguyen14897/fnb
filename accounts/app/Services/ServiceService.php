@@ -230,4 +230,60 @@ class ServiceService
         }
     }
 
+    public function getProvice($request = []){
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/category/getListProvince",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? 'Unknown error',
+                ], $response->status());
+            }
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'data' => $data['data'] ?? [],
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getWards($request = []){
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/category/getListWard",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? 'Unknown error',
+                ], $response->status());
+            }
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'data' => $data['data'] ?? [],
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

@@ -211,4 +211,29 @@ class AccountService
         }
     }
 
+    public function detailRepresentativePartner($request){
+        try {
+            $response = $this->sendRequestToService(
+                'POST',
+                "{$this->baseUrl}/api/customer/detailRepresentativePartner",
+                $request,
+                [
+                    'has_file' => true
+                ]
+            );
+            $data = $response->json();
+            return response()->json([
+                'data' => $data,
+                'result' => $data['result'],
+                'message' => $data['message']
+            ]);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

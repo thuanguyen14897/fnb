@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Api_app;
 use App\Helpers\FilesHelpers;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
-use App\Models\IconApp;
-use App\Models\TransferAddress;
-use App\Models\TransferAddressRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -62,5 +59,18 @@ class Api_info extends AuthController
     public function getOption($field = ''){
         $data = get_option($field);
         return response()->json(['result' => $data]);
+    }
+
+    public function send_zalo(){
+        $dtObject = $this->request->input('dtObject');
+        $event = $this->request->input('event');
+        $template_id = $this->request->input('template_id');
+        $code = $this->request->input('code');
+        $phone_zalo = $this->request->input('phone_zalo');
+        $result = send_zalo($dtObject,$event,$template_id,$code,$phone_zalo);
+        return response()->json([
+            'result' => $result,
+            'message' => 'Gửi zalo zns thành công'
+        ]);
     }
 }

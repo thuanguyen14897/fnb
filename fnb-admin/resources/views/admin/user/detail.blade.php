@@ -115,6 +115,26 @@
                                                 <a style="position: absolute; top:54%;right: 25px" href="javascript:;void(0)" ><i class="fa fa-eye"></i></a>
                                             </div>
                                             <div class="form-group">
+                                                <label for="list_ares">{{lang('c_ares')}}</label>
+                                                <select multiple class="list_ares select2 select2-multiple" id="list_ares" data-placeholder="Chọn ..." name="list_ares[]">
+                                                    @foreach($ares as $detailAres)
+                                                        <option value="{{$detailAres->id ?? ''}}"
+                                                                @php
+                                                                    $selected = '';
+                                                                        if(!empty($user->ares)) {
+                                                                            foreach($user->ares as $k => $v) {
+                                                                                if($v['id_ares'] == $detailAres->id) {
+                                                                                    $selected = 'selected';
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                @endphp
+                                                        {{$selected}}>{{$detailAres->name ?? ''}}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
                                                 <label for="">{{lang('dt_active_user')}}</label>
                                                 <div class="radio radio-custom radio-inline">
                                                     <input type="radio"

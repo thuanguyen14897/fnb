@@ -88,7 +88,7 @@ class TransactionController extends AuthController
                 $dtCustomer = $value->customer ?? null;
                 if (!empty($dtCustomer)){
                     $dtImage = !empty($dtCustomer->avatar) ? env('STORAGE_URL').'/'.$dtCustomer->avatar : null;
-                    $data[$key]['customer']['avatar'] = $dtImage;
+                    $data[$key]['customer']['avatar_new'] = $dtImage;
                 } else {
                     $data[$key]->customer = null;
                 }
@@ -178,16 +178,17 @@ class TransactionController extends AuthController
 
     public function delete(){
         $id = $this->request->input('id') ?? 0;
-        $client = Clients::find($id);
-        if (empty($client)){
+        $dtData = Transaction::find($id);
+        if (empty($dtData)){
             $data['result'] = false;
-            $data['message'] = 'Không tồn tại khách hàng';
+            $data['message'] = 'Không tồn tại chuyến đi';
             return response()->json($data);
         }
         DB::beginTransaction();
         try {
-            $client->delete();
-            DB::table('tbl_session_login')->where('id_client', $id)->delete();
+            $dtData->delete();
+            $dtData->transaction_day()->delete();
+            $dtData->transaction_day_item()->delete();
             DB::commit();
             $data['result'] = true;
             $data['message'] = lang('c_delete_true');
@@ -287,6 +288,7 @@ class TransactionController extends AuthController
             return $dayItem;
         });
         //end
+        $dtData->check_detail = true;
         $collection = TransactionResource::make($dtData);
         return response()->json([
             'data' => $collection->response()->getData(true),
@@ -297,7 +299,7 @@ class TransactionController extends AuthController
 
     public function addTransaction(){
         $customer_id = $this->request->client->id ?? 0;
-        $dataPost = $this->request->input('data');
+        $dataPost = $this->request->input();
         if (empty($customer_id)){
             return response()->json([
                 'data' => [],
@@ -332,28 +334,28 @@ class TransactionController extends AuthController
             die();
         }
         $name = $dataPost['name'] ?? null;
-        $date = date('Y-m-d H:i:s');
+        $date_all = date('Y-m-d H:i:s');
         $date_start_post = $dataPost['date_start'] ?? null;
         $date_end_post = $dataPost['date_end'] ?? null;
+        $date_start = to_sql_date($date_start_post);
+        $date_end = to_sql_date($date_end_post);
         $note = $dataPost['note'] ?? null;
-        $reference_no = $this->fnbAdminService->getOrderRef('transaction');
+        $reference_no = $this->fnbAdminService->getOrderRef('transaction')['reference_no'];
 
-        if ((strtotime($dataPost['date_start']) < strtotime(date('Y-m-d H:i:s'))) || (strtotime($dataPost['date_end']) < strtotime(date('Y-m-d H:i:s')))) {
+        if ((strtotime($date_start) < strtotime(date('Y-m-d'))) || (strtotime($date_end) < strtotime(date('Y-m-d')))) {
             $data['result'] = false;
             $data['data'] = [];
             $data['message'] = 'Ngày lên lịch trình phải lớn hơn ngày hiện tại!';
             return response()->json($data);
         }
 
-        if (strtotime($dataPost['date_end']) <= strtotime($dataPost['date_start'])) {
+        if (strtotime($date_end) <= strtotime($date_start)) {
             $data['result'] = false;
             $data['data'] = [];
             $data['message'] = 'Ngày kết thúc phải lớn hơn ngày bắt đầu!';
             return response()->json($data);
         }
 
-        $date_start = to_sql_date($date_start_post, true);
-        $date_end = to_sql_date($date_end_post, true);
         $arrItems = [];
         $items = $dataPost['items'];
         if (empty($items)){
@@ -383,12 +385,12 @@ class TransactionController extends AuthController
                 $service_id = $v['service_id'] ?? 0;
                 $hour = $v['hour'] ?? null;
                 $note = $v['note'] ?? null;
-                $dtService = $this->fnbServiceService->getDetail(
-                    [
-                        'id' => $service_id,
-                        'client' => $this->request->client,
-                    ]
-                );
+                $this->requestService = new Request();
+                $this->requestService->merge(['id' => $service_id]);
+                $this->requestService->merge(['client' => $this->request->client]);
+                $responseService = $this->fnbServiceService->getDetail($this->requestService);
+                $dataService = $responseService->getData(true);
+                $dtService = collect($dataService['dtData']);
                 if (empty($dtService)){
                     $data['result'] = false;
                     $data['data'] = [];
@@ -403,7 +405,7 @@ class TransactionController extends AuthController
                 }
                 $latitude = $dtService['latitude'] ?? null;
                 $longitude = $dtService['longitude'] ?? null;
-                $partner_id = $dtService['partner_id'] ?? 0;
+                $partner_id = $dtService['customer_id'] ?? 0;
                 $arrDayItem[]= [
                     'service_id' => $service_id,
                     'hour' => $hour,
@@ -425,23 +427,24 @@ class TransactionController extends AuthController
             ];
         }
 
-        if ($arrItems){
+        if (empty($arrItems)){
             $data['result'] = false;
             $data['data'] = [];
             $data['message'] = 'Không có dữ liệu để thêm lịch trình!';
             return response()->json($data);
         }
-
         DB::beginTransaction();
         try {
             $transaction = new Transaction();
             $transaction->name = $name;
             $transaction->reference_no = $reference_no;
-            $transaction->date = $date;
+            $transaction->date = $date_all;
             $transaction->customer_id = $customer_id;
             $transaction->date_start = $date_start;
             $transaction->date_end = $date_end;
             $transaction->note = $note;
+            $transaction->created_by = $customer_id;
+            $transaction->type_created = 2;
             $transaction->save();
             if ($transaction){
                 foreach ($arrItems as $item){

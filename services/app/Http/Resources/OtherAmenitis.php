@@ -21,7 +21,7 @@ class OtherAmenitis extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $dtImage = !empty($this->image) ? asset('storage/'.$this->image) : null;
+        $dtImage = !empty($this->image) ? env('STORAGE_URL').'/'.$this->image : null;
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -34,7 +34,7 @@ class OtherAmenitis extends JsonResource
     {
         return [
             'base' => [
-                'base' => asset('storage'),
+                'base' => env('STORAGE_URL'),
             ]
         ];
     }

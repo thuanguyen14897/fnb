@@ -48,4 +48,18 @@ class Clients extends Model
         return $this->hasMany('App\Models\ClientAddress', 'customer_id', 'id');
     }
 
+    function representative()
+    {
+        return $this->hasOne('App\Models\PartnerRepresentative', 'customer_id', 'id');
+    }
+
+    function image_cccd()
+    {
+        return $this->hasMany('App\Models\PartnerImage', 'customer_id', 'id')->where('type','=',1);
+    }
+
+    function image_kd()
+    {
+        return $this->hasMany('App\Models\PartnerImage', 'customer_id', 'id')->where('type','=',2);
+    }
 }

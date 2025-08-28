@@ -62,6 +62,7 @@ Route::group(['prefix' => 'service','middleware' => App\Http\Middleware\CheckLog
     Route::post('active', [ServiceController::class, 'active']);
     Route::post('changeHot', [ServiceController::class, 'changeHot']);
     Route::get('getListReview', [ServiceController::class, 'getListReview']);
+    Route::post('addService', [ServiceController::class, 'addService']);
 });
 
 Route::group(['prefix' => 'category'], function () {
@@ -73,6 +74,7 @@ Route::group(['prefix' => 'category'], function () {
 Route::group(['prefix' => 'ares'], function () {
     Route::get('getList', [AresController::class, 'getList']);
     Route::get('getDetail', [AresController::class, 'getDetail']);
+    Route::get('getListData', [AresController::class, 'getListData']);
     Route::post('detail', [AresController::class, 'detail']);
     Route::post('delete', [AresController::class, 'delete']);
     Route::post('active', [AresController::class, 'active']);

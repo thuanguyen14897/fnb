@@ -115,5 +115,10 @@
         'c_delete_ares' => 'Xóa khu vực',
         'c_setup_ares' => 'Cài đặt khu vực',
         'c_title_ares' => 'Khu vực kinh doanh',
+        'c_membership_level' => 'Hạng thành viên',
+        'c_name_membership_level' => 'Hạng thành viên',
+        'c_quarterly_point_start' => 'Điểm tích lũy tối thiểu',
+        'c_quarterly_point_end' => 'Điểm tích lũy tối đa',
+        'c_invoice_limit' => 'Tổng điểm tích lũy trong quý',
     ];
     return $array_c_message;

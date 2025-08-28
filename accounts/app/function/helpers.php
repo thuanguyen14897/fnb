@@ -1592,3 +1592,69 @@ function generateRandomString($id, $length) {
     return $characters[rand(0, strlen($characters) - 1)] . $randomString;
 }
 
+function getListTypeBusiness($id = 0)
+{
+    $data = [
+        [
+            'id' => 1,
+            'name' => 'Cá nhân',
+        ],
+        [
+            'id' => 2,
+            'name' => 'Công ty/chuỗi',
+        ],
+    ];
+    if (!empty($id)) {
+        $data = array_filter($data, function ($item) use ($id) {
+            return $item['id'] == $id;
+        });
+        if (!empty($data)) {
+            $data = array_values($data);
+            return $data[0]['name'];
+        } else {
+            return null;
+        }
+    } else {
+        return $data;
+    }
+}
+
+function getListStatusService($id = 0,$type = 'name')
+{
+    $data = [
+        [
+            'id' => 0,
+            'name' => lang('Đang chờ duyệt'),
+            'color' => '#989898',
+        ],
+        [
+            'id' => 1,
+            'name' => lang('Đang hoạt động'),
+            'color' => '#81c868',
+        ],
+        [
+            'id' => 2,
+            'name' => lang('Đã bị từ chối'),
+            'color' => '#f05050',
+        ],
+        [
+            'id' => 3,
+            'name' => lang('Đang tạm ngưng'),
+            'color' => '#46b0b9',
+        ],
+    ];
+
+    if (!empty($id)) {
+        $data = array_filter($data, function ($item) use ($id) {
+            return $item['id'] == $id;
+        });
+        if (!empty($data)) {
+            $data = array_values($data);
+            return $data[0][$type];
+        } else {
+            return null;
+        }
+    } else {
+        return $data;
+    }
+}

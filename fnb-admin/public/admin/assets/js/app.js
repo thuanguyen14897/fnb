@@ -855,7 +855,8 @@ function searchAjaxSelect2(element,url = '',id = 0,paramsCus = {},allowClear = t
                     results: data.items,
                 };
             },
-            cache: true
+            cache: true,
+            global: false
         },
         placeholder: 'Chọn ...',
         templateResult: formatRepo,

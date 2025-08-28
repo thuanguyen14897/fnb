@@ -173,15 +173,23 @@ function convert_vi_to_en($str)
     return $str;
 }
 
-function send_zalo($transation_id = 0,$event = null,$template_id = 0){
-    if (!empty($transation_id)) {
-        $dtTransaction = Transaction::find($transation_id);
-        $phone = $dtTransaction->customer->phone;
-        if (empty($phone)){
+function send_zalo($dtObject = null, $event = null, $template_id = 0, $code = 0, $phone_zalo = 0)
+{
+    if (!empty($dtObject) || !empty($phone_zalo)) {
+        if ($event == 'otp') {
+            $phone = $phone_zalo;
+        } elseif ($event == 'cancel') {
+            $dtTransaction = $dtObject;
+            $phone = $phone_zalo;
+        } else {
+            $dtTransaction = $dtObject;
+            $phone = $dtTransaction->customer->phone;
+        }
+        if (empty($phone)) {
             return false;
         }
         $phone = substr($phone, 1, 9);
-        $phone = '84'.$phone;
+        $phone = '84' . $phone;
         $datetimeid = (time() . random_int(100, 999));
 
         $id_send_zalo = DB::table('tbl_send_zalo')->insertGetId([
@@ -191,85 +199,88 @@ function send_zalo($transation_id = 0,$event = null,$template_id = 0){
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
-        if(!empty($id_send_zalo)){
+        if (!empty($id_send_zalo)) {
             DB::table('tbl_send_zalo_client')->insertGetId([
                 'send_zalo_id' => $id_send_zalo,
                 'phone' => $phone,
                 'created_at' => date('Y-m-d H:i:s'),
             ]);
         }
-        $dtTemplate = DB::table('tbl_template_zalo')->where('template_id',$template_id)->first();
+        $dtTemplate = DB::table('tbl_template_zalo')->where('template_id', $template_id)->first();
         $content_api = '';
-        if (!empty($dtTemplate)){
+        $content = '';
+        if (!empty($dtTemplate)) {
             $content_api = $dtTemplate->content_api;
         }
-        $customer_name = " ";
-        $reference_no = $dtTransaction->reference_no;
-        $car_owner = $dtTransaction->car->customer->fullname;
-        $deposit = $dtTransaction->grand_total * get_option('percent_deposit') / 100;
-        $grand_total = $dtTransaction->grand_total;
-        $grand_total_all = $grand_total - $deposit;
-        $deposit_percent = get_option('percent_deposit');
-        $car_name = $dtTransaction->car->name;
-        $time =  'Từ '._dt_new($dtTransaction->date_start) . ' đến ' . _dt_new($dtTransaction->date_end);
-        $type = $dtTransaction->type == 1 ? '(Tự lái)' : '(Có tài)';
-        $type_fuel = getValueTypeFuel($dtTransaction->car->type_fuel);
-        $address = !empty($dtTransaction->address_delivery) ? $dtTransaction->address_delivery->name_location_delivery : ($dtTransaction->car->name_location .', '.$dtTransaction->car->district->name.', '.$dtTransaction->car->province->name);
-        $content_api = str_replace('{car_name}','"'.$car_name.'"',$content_api);
-        $content_api = str_replace('{address}','"'.$address.'"',$content_api);
-        $content_api = str_replace('{type_fuel}','"'.$type_fuel.'"',$content_api);
-        $content_api = str_replace('{deposit}',($deposit),$content_api);
-        $content_api = str_replace('{grand_total_all}',($grand_total_all),$content_api);
-        $content_api = str_replace('{grand_total}',($grand_total),$content_api);
-        $content_api = str_replace('{time}','"'.($time).'"',$content_api);
-        $content_api = str_replace('{customer_name}','"'.($customer_name).'"',$content_api);
-        $content_api = str_replace('{type}','"'.($type).'"',$content_api);
-        $content_api = str_replace('{reference_no}','"'.$reference_no.'"',$content_api);
-        $content_api = str_replace('{car_owner}','"'.$car_owner.'"',$content_api);
-        $content_api = str_replace('{deposit_percent}',$deposit_percent,$content_api);
+        if ($event == 'otp') {
+            $content_api = str_replace('{otp}', '"' . $code . '"', $content_api);
+            $content = 'Mã xác thực của bạn là' . '<br/>';
+            $content .= 'OTP: ' . $code . '';
+        } else {
+            if ($event == "cancel" || $event == "cancel_transaction") {
+                $customer_name = $dtTransaction->customer->fullname;
+            } else {
+                $customer_name = " ";
+            }
+            $reference_no = $dtTransaction->reference_no;
+            $deposit = ($dtTransaction->grand_total * get_option('percent_deposit')) / 100;
+            $grand_total = $dtTransaction->grand_total;
+            $grand_total_all = $grand_total - $deposit;
+            $time = 'Từ ' . _dt_new($dtTransaction->date_start) . ' đến ' . _dt_new($dtTransaction->date_end);
+            $type = $dtTransaction->type == 1 ? '(Tự lái)' : '(Có tài)';
+            $carItems = $dtTransaction->item;
+            $car_name = '';
+            $address = '';
+            $type_fuel = '';
+            if (!empty($carItems)) {
+                foreach ($carItems as $k => $v) {
+                    if ($k == 0) {
+                        $type_fuel = getValueTypeFuel($v->car->type_fuel);
+                    }
+                    $address = $v->type_delivery_car == 2 ? $v->name_location_delivery : ($v->car->address);
+                    $car_name .= $v->car->name . ', ';
+                }
+            }
+            $car_name = trim($car_name, ', ');
+            $content_api = str_replace('{car_name}', '"' . $car_name . '"', $content_api);
+            $content_api = str_replace('{address}', '"' . $address . '"', $content_api);
+            $content_api = str_replace('{type_fuel}', '"' . $type_fuel . '"', $content_api);
+            $content_api = str_replace('{deposit}', ($deposit), $content_api);
+            $content_api = str_replace('{grand_total_all}', ($grand_total_all), $content_api);
+            $content_api = str_replace('{grand_total}', ($grand_total), $content_api);
+            $content_api = str_replace('{time}', '"' . ($time) . '"', $content_api);
+            $content_api = str_replace('{customer_name}', '"' . ($customer_name) . '"', $content_api);
+            $content_api = str_replace('{type}', '"' . ($type) . '"', $content_api);
+            $content_api = str_replace('{reference_no}', '"' . $reference_no . '"', $content_api);
 
-        if ($template_id == '379483') {
-            $content = 'Dịch vụ ' . $type . ' Bạn vừa gửi yêu cầu thuê xe ' . $car_name . '. Bạn vui lòng chờ xác nhận, sau đó tiến hành cọc ngay để hoàn tất đặt xe. Trong thời gian chờ xác nhận, bạn có thể gửi thêm yêu cầu thuê xe đến nhiều chủ xe khác, và ưu tiên lựa chọn chủ xe xác nhận sớm để đặt cọc.' . '<br/>';
-            $content .= 'Mã chuyến: ' . $reference_no . '' . '<br/>';
-            $content .= 'Thuê xe: ' . $car_name . '' . '<br/>';
-            $content .= 'Truyền động: ' . $type_fuel . '' . '<br/>';
-            $content .= 'Thời gian: ' . $time . '' . '<br/>';
-            $content .= 'Đia điểm: ' . $address . '' . '<br/>';
-            $content .= 'Tổng cộng: ' . $grand_total . '' . '<br/>';
-            $content .= 'Tiền cọc: ' . $deposit . '' . '<br/>';
-            $content .= 'Thanh toán sau: ' . $grand_total_all . '';
-        } elseif($template_id == '379472'){
-            $content = 'Dịch vụ '.$type.' Bạn đã đặt xe thành công trên ứng dụng Kanow. Vui lòng liên hệ chủ xe để xác nhận lại lịch trình.' . '<br/>';
-            $content .= 'Mã chuyến: ' . $reference_no . '' . '<br/>';
-            $content .= 'Thuê xe: ' . $car_name . '' . '<br/>';
-            $content .= 'Truyền động: ' . $type_fuel . '' . '<br/>';
-            $content .= 'Thời gian: ' . $time . '' . '<br/>';
-            $content .= 'Đia điểm: ' . $address . '' . '<br/>';
-            $content .= 'Tổng cộng: ' . $grand_total . '' . '<br/>';
-            $content .= 'Tiền cọc: ' . $deposit . '' . '<br/>';
-            $content .= 'Thanh toán sau: ' . $grand_total_all . '';
-        } elseif($template_id == '379492'){
-            $content = 'Dịch vụ '.$type.' Chủ xe '.$car_owner.' đã đồng ý cho thuê xe '.$car_name.'. Để hoàn tất đặt xe, bạn vui lòng vào ứng dụng Kanow hoặc website, chọn đặt cọc để thanh toán trước '.$deposit_percent.'% giá trị chuyến đi.' . '<br/>';
-            $content .= 'Mã chuyến: ' . $reference_no . '' . '<br/>';
-            $content .= 'Thuê xe: ' . $car_name . '' . '<br/>';
-            $content .= 'Truyền động: ' . $type_fuel . '' . '<br/>';
-            $content .= 'Thời gian: ' . $time . '' . '<br/>';
-            $content .= 'Đia điểm: ' . $address . '' . '<br/>';
-            $content .= 'Tổng cộng: ' . $grand_total . '' . '<br/>';
-            $content .= 'Tiền cọc: ' . $deposit . '' . '<br/>';
-            $content .= 'Thanh toán sau: ' . $grand_total_all . '';
-        } elseif ($template_id == '379496'){
-            $content = 'Dịch vụ '.$type.' Chủ xe '.$car_owner.' đã hủy chuyến đi xe '.$car_name.'. Vui lòng liên hệ hotline hoặc fanpage Kanow để được hỗ trợ sớm nhất.' . '<br/>';
-            $content .= 'Mã chuyến: ' . $reference_no . '' . '<br/>';
-            $content .= 'Thuê xe: ' . $car_name . '' . '<br/>';
-            $content .= 'Truyền động: ' . $type_fuel . '' . '<br/>';
-            $content .= 'Thời gian: ' . $time . '' . '<br/>';
-            $content .= 'Đia điểm: ' . $address . '' . '<br/>';
-            $content .= 'Tổng cộng: ' . $grand_total . '' . '<br/>';
-            $content .= 'Tiền cọc: ' . $deposit . '' . '<br/>';
-            $content .= 'Thanh toán sau: ' . $grand_total_all . '';
+            if ($template_id == Config::get('constant')['template_id_finish']) {
+                $content = 'Chuyến đi ' . $reference_no . ' thuê xe ' . $car_name . ' của bạn đã hoàn thành. Cảm ơn bạn đã đồng hành cùng chúng tôi.' . '<br/>';
+                $content .= 'Mã chuyến: ' . $reference_no . '' . '<br/>';
+                $content .= 'Thuê xe: ' . $car_name . '' . '<br/>';
+                $content .= 'Truyền động: ' . $type_fuel . '' . '<br/>';
+                $content .= 'Thời gian: ' . $time . '' . '<br/>';
+                $content .= 'Đia điểm: ' . $address . '' . '<br/>';
+                $content .= 'Tổng cộng: ' . $grand_total . '';
+            } elseif ($template_id == Config::get('constant')['template_id_request']) {
+                $content = 'Bạn đã gửi yêu cầu đặt xe ' . $car_name . ' thành công. Vui lòng liên hệ Admin để xác nhận lại lịch trình.' . '<br/>';
+                $content .= 'Mã chuyến: ' . $reference_no . '' . '<br/>';
+                $content .= 'Thuê xe: ' . $car_name . '' . '<br/>';
+                $content .= 'Truyền động: ' . $type_fuel . '' . '<br/>';
+                $content .= 'Thời gian: ' . $time . '' . '<br/>';
+                $content .= 'Đia điểm: ' . $address . '' . '<br/>';
+                $content .= 'Tổng cộng: ' . $grand_total . '' . '<br/>';
+                $content .= 'Tiền cọc: ' . $deposit . '' . '<br/>';
+                $content .= 'Thanh toán sau: ' . $grand_total_all . '';
+            } elseif ($template_id == Config::get('constant')['template_id_cancel']) {
+                $content = 'Chuyến đi ' . $car_name . ' đã bị hủy chuyến.Khách thuê ' . $customer_name . ', thuê xe ' . $car_name . ' Vui lòng liên hệ admin để được hỗ trợ.' . '<br/>';
+                $content .= 'Mã chuyến: ' . $reference_no . '' . '<br/>';
+                $content .= 'Thuê xe: ' . $car_name . '' . '<br/>';
+                $content .= 'Truyền động: ' . $type_fuel . '' . '<br/>';
+                $content .= 'Thời gian: ' . $time . '' . '<br/>';
+                $content .= 'Đia điểm: ' . $address . '' . '<br/>';
+                $content .= 'Tổng cộng: ' . $grand_total . '';
+            }
         }
-        //        dd($content_api);
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
@@ -284,13 +295,13 @@ function send_zalo($transation_id = 0,$event = null,$template_id = 0){
             CURLOPT_SSL_VERIFYPEER => 0,
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_POSTFIELDS => '{
-            "phone": "'.$phone.'",
-            "template_id": "'.$template_id.'",
-            "template_data": '.$content_api.',
-                "tracking_id":"'.$datetimeid.'"
+            "phone": "' . $phone . '",
+            "template_id": "' . $template_id . '",
+            "template_data": ' . $content_api . ',
+                "tracking_id":"' . $datetimeid . '"
             }',
             CURLOPT_HTTPHEADER => array(
-                'access_token: '.get_option('access_token_zalo').'',
+                'access_token: ' . get_option('access_token_zalo') . '',
                 'Content-Type: application/json'
             ),
         ));
@@ -301,13 +312,13 @@ function send_zalo($transation_id = 0,$event = null,$template_id = 0){
         $status = 0;
         $log = null;
         $sendZalo = false;
-        if(!empty($curl_response)){
-            if($curl_response->error == 0){
+        if (!empty($curl_response)) {
+            if ($curl_response->error == 0) {
                 $status = $curl_response->data->msg_id;
                 $sendZalo = true;
-            } elseif ($curl_response->error == -124){
+            } elseif ($curl_response->error == -124) {
                 $status = $curl_response->error;
-                refresh_token_zalo($transation_id, $event, $template_id);
+                refresh_token_zalo($dtObject, $event, $template_id, $code,$phone_zalo);
             } else {
                 $status = $curl_response->error;
             }
@@ -325,7 +336,8 @@ function send_zalo($transation_id = 0,$event = null,$template_id = 0){
     return false;
 }
 
-function refresh_token_zalo($transation_id = 0, $event = '', $template_id = 0){
+function refresh_token_zalo($dtObject = null, $event = '', $template_id = 0, $code = 0,$phone_zalo = 0)
+{
 
     $curl = curl_init();
 
@@ -340,9 +352,9 @@ function refresh_token_zalo($transation_id = 0, $event = '', $template_id = 0){
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_SSL_VERIFYPEER => 0,
         CURLOPT_SSL_VERIFYHOST => 0,
-        CURLOPT_POSTFIELDS => 'refresh_token='.get_option('refresh_token_zalo').'&app_id=1369923589612502152&grant_type=refresh_token',
+        CURLOPT_POSTFIELDS => 'refresh_token=' . get_option('refresh_token_zalo') . '&app_id=' . get_option('app_id_zalo') . '&grant_type=refresh_token',
         CURLOPT_HTTPHEADER => array(
-            'secret_key: 4oY3eYENMHU8N6qNGLVs',
+            'secret_key: ' . get_option('secret_key_zalo') . '',
             'Content-Type: application/x-www-form-urlencoded'
         ),
     ));
@@ -362,7 +374,7 @@ function refresh_token_zalo($transation_id = 0, $event = '', $template_id = 0){
         ]);
         $app = new App();
         $app->flushCache();
-        send_zalo($transation_id,$event,$template_id);
+        send_zalo($dtObject, $event, $template_id, $code,$phone_zalo);
     }
 }
 
@@ -932,7 +944,7 @@ function _dt($date, $is_timesheet = false)
     return $date;
 }
 
-function _dt_new($date)
+function _dt_new($date,$show_hour = true)
 {
     $original = $date;
     $time_format = 24;
@@ -950,7 +962,11 @@ function _dt_new($date)
         $tf = '%H:%M';
         $dayname = convertDate(date('D', $date));
 
-        $date = strftime($tf . ' - ' . $dayname . ', ' . $format, $date);
+        if ($show_hour) {
+            $date = strftime($tf . ' - ' . $dayname . ', ' . $format, $date);
+        } else {
+            $date = strftime( $dayname . ', ' . $format, $date);
+        }
     } else {
         $date = date(get_current_date_format(true) . ' g:i A', $date);
     }
@@ -1389,7 +1405,7 @@ if (!function_exists('getReference')) {
             $ref = $q;
             switch ($field) {
                 case 'transaction':
-                    $prefix = 'GD';
+                    $prefix = 'CĐ';
                     break;
                 case 'payment':
                     $prefix = 'PT';
@@ -1538,52 +1554,8 @@ if (!function_exists('menuHelper')) {
                         'name' => lang('c_ares'),
                         'link' => 'admin/ares/list',
                         'image' => '',
-                    ]
+                    ],
                 ]
-            ],
-            [
-                'id' => 'user',
-                'name' => lang('dt_user'),
-                'link' => 'admin/user/list',
-                'class' => 'nhan_vien',
-                'image' => 'admin/assets/images/icon_menu/nhan_vien.png',
-                'child' => []
-            ],
-            [
-                'id' => 'manager_clients',
-                'name' => 'Thành viên',
-                'link' => '',
-                'class' => 'nguoi_dung_app',
-                'image' => 'admin/assets/images/icon_menu/nguoi_dung_app.png',
-                'child' => [
-                    [
-                        'id' => 'client',
-                        'name' => 'Thành viên',
-                        'link' => 'admin/clients/list',
-                        'image' => '',
-                    ],
-                    [
-                        'id' => 'partner',
-                        'name' => 'Đối tác',
-                        'link' => 'admin/partner/list',
-                        'image' => '',
-                    ],
-                ],
-            ],
-            [
-                'id' => 'manager_app',
-                'name' => 'Quản lý App',
-                'link' => '',
-                'class' => 'danh_muc',
-                'image' => 'admin/assets/images/icon_menu/danh_muc.png',
-                'child' => [
-                    [
-                        'id' => 'homepage',
-                        'name' => 'Trang chủ',
-                        'link' => 'admin/admin_website/homepage',
-                        'image' => '',
-                    ],
-                ],
             ],
             [
                 'id' => 'service',
@@ -1617,6 +1589,52 @@ if (!function_exists('menuHelper')) {
                         'image' => '',
                     ],
                 ]
+            ],
+            [
+                'id' => 'user',
+                'name' => lang('dt_user'),
+                'link' => 'admin/user/list',
+                'class' => 'nhan_vien',
+                'image' => 'admin/assets/images/icon_menu/nhan_vien.png',
+                'child' => []
+            ],
+            [
+                'id' => 'membership_level',
+                'name' => lang('c_membership_level'),
+                'link' => 'admin/membership_level/list',
+                'class' => 'nhan_vien',
+                'image' => 'admin/assets/images/icon_menu/nhan_vien.png',
+            ],
+            [
+                'id' => 'manager_clients',
+                'name' => 'Thành viên',
+                'link' => 'admin/clients/list',
+                'class' => 'nguoi_dung_app',
+                'image' => 'admin/assets/images/icon_menu/nguoi_dung_app.png',
+                'child' => [],
+            ],
+            [
+                'id' => 'manager_partner',
+                'name' => 'Đối tác',
+                'link' => 'admin/partner/list',
+                'class' => 'doi_tac',
+                'image' => 'admin/assets/images/icon_menu/nguoi_dung_app.png',
+                'child' => [],
+            ],
+            [
+                'id' => 'manager_app',
+                'name' => 'Quản lý App',
+                'link' => '',
+                'class' => 'danh_muc',
+                'image' => 'admin/assets/images/icon_menu/danh_muc.png',
+                'child' => [
+                    [
+                        'id' => 'homepage',
+                        'name' => 'Trang chủ',
+                        'link' => 'admin/admin_website/homepage',
+                        'image' => '',
+                    ],
+                ],
             ],
             [
                 'id' => 'transaction',
@@ -1719,4 +1737,42 @@ function loadTableService()
         </table>';
 }
 
+function getListStatusService($id = -1,$type = 'name')
+{
+    $data = [
+        [
+            'id' => 0,
+            'name' => lang('Đang chờ duyệt'),
+            'color' => '#989898',
+        ],
+        [
+            'id' => 1,
+            'name' => lang('Đang hoạt động'),
+            'color' => '#81c868',
+        ],
+        [
+            'id' => 2,
+            'name' => lang('Đã bị từ chối'),
+            'color' => '#f05050',
+        ],
+        [
+            'id' => 3,
+            'name' => lang('Đang tạm ngưng'),
+            'color' => '#46b0b9',
+        ],
+    ];
+    if ($id != -1) {
+        $data = array_filter($data, function ($item) use ($id) {
+            return $item['id'] == $id;
+        });
+        if (!empty($data)) {
+            $data = array_values($data);
+            return $data[0][$type];
+        } else {
+            return null;
+        }
+    } else {
+        return $data;
+    }
+}
 

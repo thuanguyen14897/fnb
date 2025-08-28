@@ -22,7 +22,7 @@ class AdminService
 
     public function updateOrderRef($ref = '')
     {
-        $response = Http::get("{$this->baseUrl}/api/getOrderRef/{$ref}");
+        $response = Http::get("{$this->baseUrl}/api/updateOrderRef/{$ref}");
         $response = $response->json();
         return $response;
     }

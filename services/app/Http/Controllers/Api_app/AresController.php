@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api_app;
 use App\Services\AdminService;
 use App\Traits\UploadFile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use App\Models\Ares;
 use App\Models\AresDetail;
@@ -133,6 +134,7 @@ class AresController extends AuthController
                     $data['message'] = 'Cập nhập thất bại';
                 }
             }
+            d
             return response()->json($data);
         } catch (\Exception $exception) {
             DB::rollBack();
@@ -235,6 +237,7 @@ class AresController extends AuthController
             return response()->json($data);
         }
     }
+
     public function ChangeStatus() {
         try {
             $id = $this->request->input('id') ?? 0;
@@ -253,6 +256,48 @@ class AresController extends AuthController
             $data['message'] = lang('Đổi trạng thái không thành công');
             return response()->json($data);
         }
+    }
+
+    public function getListData(){
+        $current_page = 1;
+        $per_page = 10;
+        if ($this->request->client == null) {
+            $this->request->client = (object)['token' => Config::get('constant')['token_default']];
+        }
+        if ($this->request->query('current_page')) {
+            $current_page = $this->request->query('current_page');
+        }
+        if ($this->request->query('per_page')) {
+            $per_page =$this->request->query('per_page');
+        }
+        $show_short = $this->request->query('show_short');
+        $search = $this->request->input('search') ?? null;
+        //gian hàng liên quan
+        $id = $this->request->input('id') ?? 0;
+        //end
+        $orderBy = 'id desc';
+        $query = Ares::select('tbl_ares.*')
+            ->where('id','!=',0)
+            ->where('active','=',1);
+        if(empty($show_short)) {
+            $query->with('ares_province');
+            $query->with('ares_ward');
+        }
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%");
+            });
+        }
+        if (!empty($id)){
+            $query->where('id','!=',$id);
+        }
+        $query->orderByRaw($orderBy);
+        $dtData = $query->paginate($per_page, ['*'], '', $current_page);
+        return response()->json([
+            'data' => $dtData,
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
     }
 
 }

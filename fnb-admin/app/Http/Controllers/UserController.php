@@ -9,6 +9,8 @@ use App\Models\Role;
 use App\Models\Transaction;
 use App\Models\TransactionDriver;
 use App\Models\User;
+use App\Models\UserAres;
+use App\Services\AresService;
 use App\Traits\UploadFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
@@ -17,22 +19,42 @@ use Yajra\DataTables\DataTables;
 
 class UserController extends Controller
 {
+    protected $fnbAres;
     use UploadFile;
-    public function __construct(Request $request)
+    public function __construct(Request $request, AresService $aresService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
+        $this->fnbAres = $aresService;
     }
 
     public function get_list(){
         if (!has_permission('user','view')){
             access_denied();
         }
-        return view('admin.user.list');
+        $this->request->merge([
+            'show_short' => 1
+        ]);//show chỉ thông tin cơ bản
+        $data_ares = $this->fnbAres->getListData($this->request);
+        if(!empty($data_ares->getData()->data->data)) {
+            $ares = $data_ares->getData()->data->data;
+        }
+        return view('admin.user.list', [
+            'ares'=> $ares ?? []
+        ]);
     }
 
     public function getUsers(){
-        $user = User::with('role')->with('department')->get();
+        $user = User::with('role')
+            ->with('department')
+            ->with('user_ares');
+        if($this->request->input('ares_search')) {
+            $ares_search = $this->request->input('ares_search');
+            $user->WhereHas('user_ares',function ($q) use ($ares_search){
+                $q->where('id_ares', '=', "$ares_search");
+            });
+        }
+        $user->get();
         return Datatables::of($user)
             ->addColumn('options', function ($user) {
                 $edit = "<a href='admin/user/detail/$user->id'><i class='fa fa-pencil'></i> " . lang('dt_edit_user') . "</a>";
@@ -74,6 +96,19 @@ class UserController extends Controller
 
                 return $str;
             })
+            ->addColumn('ares', function ($user) {
+                $str = '';
+                if(!empty($user->user_ares)) {
+                    foreach ($user->user_ares as $key => $value) {
+                        $data_ares = $this->fnbAres->getDetail($this->request, $value->id_ares);
+                        $_ares = $data_ares->getData(true);
+                        if(!empty($_ares['result'])){
+                            $str .= "<div class='label label-success'>". ($_ares['dtData']['name'] ?? '')."</div>".' ';
+                        }
+                    }
+                }
+                return $str;
+            })
             ->editColumn('active', function ($user) {
                 $classes = $user->active == 1 ? "btn-info" : "btn-danger";
                 $content = $user->active == 1 ? "Hoạt động" : "Khoá";
@@ -94,7 +129,7 @@ class UserController extends Controller
             })
             ->removeColumn('created_at')
             ->removeColumn('updated_at')
-            ->rawColumns(['options', 'department','role','active','image','service_support','priority'])
+            ->rawColumns(['options', 'department','role','active','image','service_support','priority','ares'])
             ->make(true);
     }
 
@@ -113,12 +148,21 @@ class UserController extends Controller
         $role = Role::all();
         $department = Department::all();
         $user = User::find($id);
+        $this->request->merge([
+            'show_short' => 1
+        ]);//show chỉ thông tin cơ bản
+        $data_ares = $this->fnbAres->getListData($this->request);
+        if(!empty($data_ares->getData()->data->data)) {
+            $ares = $data_ares->getData()->data->data;
+        }
+        $user->ares = UserAres::where('id_user', $user->id)->get();
         return view('admin.user.detail',[
             'id' => $id,
             'title' => $title,
             'role' => $role,
             'department' => $department,
             'user' => $user,
+            'ares' => $ares ?? [],
         ]);
     }
 
@@ -162,6 +206,15 @@ class UserController extends Controller
         }
         $user->save();
         if ($user) {
+            $list_ares = $this->request->list_ares;
+            UserAres::where('id_user', $user->id)
+                ->delete();
+            foreach($list_ares as $key => $value){
+                $UserAres = new UserAres();
+                $UserAres->id_user = $user->id;
+                $UserAres->id_ares = $value;
+                $UserAres->save();
+            }
 
             $department = $this->request->department;
             $user->department()->detach();

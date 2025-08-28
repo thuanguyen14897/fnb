@@ -46,12 +46,26 @@ trait RequestServiceTrait
 
             // Xử lý file upload
             foreach ($request->files as $name => $file) {
-                if ($file->isValid()) {
-                    $multipart[] = [
-                        'name' => $name,
-                        'contents' => fopen($file->getRealPath(), 'r'),
-                        'filename' => $file->getClientOriginalName(),
-                    ];
+                if (is_array($file)) {
+                    // Trường hợp file là mảng (nhiều file cùng name)
+                    foreach ($file as $index => $f) {
+                        if ($f->isValid()) {
+                            $multipart[] = [
+                                'name' => $name.'[]',
+                                'contents' => fopen($f->getRealPath(), 'r'),
+                                'filename' => $f->getClientOriginalName(),
+                            ];
+                        }
+                    }
+                } else {
+                    // Trường hợp file đơn
+                    if ($file->isValid()) {
+                        $multipart[] = [
+                            'name' => $name,
+                            'contents' => fopen($file->getRealPath(), 'r'),
+                            'filename' => $file->getClientOriginalName(),
+                        ];
+                    }
                 }
             }
 

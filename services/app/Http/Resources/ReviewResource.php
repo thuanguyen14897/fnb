@@ -33,7 +33,7 @@ class ReviewResource extends JsonResource
                 ];
             }),
             'image' => $this->image->map(function ($item) {
-                $image = !empty($item->image) ? asset('storage/' . $item->image) : null;
+                $image = !empty($item->image) ? env('STORAGE_URL').'/'.$item->image : null;
                 return [
                     'id' => $item->id,
                     'name' => $image,
@@ -47,7 +47,7 @@ class ReviewResource extends JsonResource
     {
         return [
             'base' => [
-                'base' => asset('storage'),
+                'base' => env('STORAGE_URL'),
             ]
         ];
     }

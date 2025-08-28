@@ -6,7 +6,7 @@ use App\Traits\RequestServiceTrait;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Request;
 
-class AccountService
+class MemberShipLevelService
 {
     protected $baseUrl;
     use RequestServiceTrait;
@@ -15,32 +15,34 @@ class AccountService
         $this->baseUrl = rtrim(config('services.fnb_account.base_url'), '/');
     }
 
-    public function getListCustomer($request)
+    public function getList($request)
     {
         try {
             $response = $this->sendRequestToService(
                 'get',
-                "{$this->baseUrl}/api/customer/getListCustomer",
+                "{$this->baseUrl}/api/ares/getList",
                 $request,
             );
             if (!$response->successful()) {
                 return response()->json([
                     'result' => false,
                     'status' => $response->status(),
-                    'message' => $response->json()['error'] ?? 'Unknown error',
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
                     'recordsTotal' => 0,
                     'recordsFiltered' => 0,
-                    'data' => []
+                    'data' => [],
+                    'customer_ids' => []
                 ], $response->status());
             }
 
             $data = $response->json();
             return response()->json([
-                'result' => ['result'],
+                'result' => $data['result'],
                 'draw' => intval($request->input('draw')),
-                'recordsTotal' => $data['total'], // tổng số user
-                'recordsFiltered' => $data['filtered'], // tổng user sau khi lọc
+                'recordsTotal' => $data['total'] ?? 0, // tổng số luowjng
+                'recordsFiltered' => $data['filtered'] ?? 0, // tổng user sau khi lọc
                 'data' => $data['data'], // danh sách user hiện tại
+                'customer_ids' => array_column($data['data'], 'customer_id'),
                 'message' => $data['message']
             ]);
         } catch (\Exception $e) {
@@ -51,24 +53,27 @@ class AccountService
         }
     }
 
-    public function getDetailCustomer($request = []){
+    public function getDetail($request = [], $id = 0){
         try {
+            if(!empty($id)) {
+                $request->merge(['id' => $id]);
+            }
             $response = $this->sendRequestToService(
                 'get',
-                "{$this->baseUrl}/api/customer/getDetailCustomer",
+                "{$this->baseUrl}/api/ares/getDetail",
                 $request,
             );
             if (!$response->successful()) {
                 return response()->json([
                     'result' => false,
                     'status' => $response->status(),
-                    'message' => $response->json()['error'] ?? 'Unknown error',
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
                 ], $response->status());
             }
             $data = $response->json();
             return response()->json([
                 'result' => $data['result'],
-                'client' => $data['client'] ?? [],
+                'dtData' => $data['dtData'] ?? [],
                 'message' => $data['message']
             ]);
         } catch (\Exception $e) {
@@ -79,11 +84,11 @@ class AccountService
         }
     }
 
-    public function detailCustomer($request){
+    public function detail($request){
         try {
             $response = $this->sendRequestToService(
                 'POST',
-                "{$this->baseUrl}/api/customer/detail",
+                "{$this->baseUrl}/api/ares/detail",
                 $request,
                 [
                     'has_file' => true
@@ -92,7 +97,7 @@ class AccountService
             $data = $response->json();
             return response()->json([
                 'data' => $data,
-                'result' => $data['result'],
+                'result' => $data['result'] ?? false,
                 'message' => $data['message']
             ]);
         }
@@ -104,50 +109,17 @@ class AccountService
         }
     }
 
-    public function countAll($request){
-        try {
-            $response = $this->sendRequestToService(
-                'get',
-                "{$this->baseUrl}/api/customer/countAll",
-                $request,
-            );
-            if (!$response->successful()) {
-                return response()->json([
-                    'total' => 0,
-                    'arrType' => [],
-                    'result' => false,
-                    'status' => $response->status(),
-                    'message' => $response->json()['error'] ?? 'Unknown error',
-                ]);
-            }
-
-            $data = $response->json();
-
-            return response()->json([
-                'total' => $data['total'],
-                'arrType' => $data['arrType'],
-                'result' => $data['result'],
-                'message' => $data['message']
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'result' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    public function deleteCustomer($request){
+    public function delete($request){
         try {
             $response = $this->sendRequestToService(
                 'POST',
-                "{$this->baseUrl}/api/customer/deleteCustomer",
+                "{$this->baseUrl}/api/ares/delete",
                 $request,
             );
             $data = $response->json();
             return response()->json([
                 'data' => $data,
-                'result' => $data['result'],
+                'result' => $data['result'] ?? false,
                 'message' => $data['message']
             ]);
         } catch (\Exception $e) {
@@ -156,28 +128,6 @@ class AccountService
                 'message' => $e->getMessage(),
             ], 500);
         }
-    }
-
-    public function active($request){
-        try {
-            $response = $this->sendRequestToService(
-                'POST',
-                "{$this->baseUrl}/api/customer/active",
-                $request,
-            );
-            $data = $response->json();
-            return response()->json([
-                'data' => $data,
-                'result' => $data['result'],
-                'message' => $data['message']
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'result' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-        }
-
     }
 
     public function getListData($request)
@@ -185,7 +135,7 @@ class AccountService
         try {
             $response = $this->sendRequestToService(
                 'get',
-                "{$this->baseUrl}/api/customer/getListData",
+                "{$this->baseUrl}/api/ares/getListData",
                 $request,
             );
             if (!$response->successful()) {
@@ -211,20 +161,73 @@ class AccountService
         }
     }
 
-    public function detailRepresentativePartner($request){
+    public function getSetup($request = []){
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/ares/getSetup",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
+                ], $response->status());
+            }
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'dtData' => $data['dtData'] ?? [],
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function updateSetup($request){
         try {
             $response = $this->sendRequestToService(
                 'POST',
-                "{$this->baseUrl}/api/customer/detailRepresentativePartner",
+                "{$this->baseUrl}/api/ares/updateSetup",
                 $request,
                 [
-                    'has_file' => true
+                    'has_file' => false
                 ]
             );
             $data = $response->json();
             return response()->json([
                 'data' => $data,
-                'result' => $data['result'],
+                'result' => $data['result'] ?? false,
+                'message' => $data['message']
+            ]);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function ChangeStatus($request){
+        try {
+            $response = $this->sendRequestToService(
+                'GET',
+                "{$this->baseUrl}/api/ares/ChangeStatus",
+                $request,
+                [
+                    'has_file' => false
+                ]
+            );
+            $data = $response->json();
+            return response()->json([
+                'data' => $data,
+                'result' => $data['result'] ?? false,
                 'message' => $data['message']
             ]);
         }

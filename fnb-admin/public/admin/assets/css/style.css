@@ -561,9 +561,9 @@ li.active-menu > a{
     pointer-events: none;
 }
 .active_new {
-    border: 2px solid #40a7af !important;
+    border: 2px solid #FF5A1F !important;
     font-weight: bold;
-    color: #40a7af !important;
+    color: #FF5A1F !important;
 }
 
 .element_div {

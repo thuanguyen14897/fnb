@@ -109,9 +109,18 @@ class ServiceController extends Controller
                 return $str;
             })
             ->editColumn('active', function ($dtData) {
-                $checked = $dtData['active'] == 1 ? 'checked' : '';
-                $str = '<div><input type="checkbox" '.$checked.' name="active" class="active dt-active"  data-plugin="switchery" data-color="#5fbeaa" data-href="admin/service/active/'.$dtData['id'].'" data-status="'.$dtData['active'].'"></div>';
-                return $str;
+                $optionStatus = '<div class="btn-group">
+                                 <button type="button" class="btn btn-white dropdown-toggle waves-effect" data-toggle="dropdown" aria-expanded="false" style="border: 1px solid ' . getListStatusService($dtData['active'],
+                        'color') . ' !important">
+                                 <div class="label" style="color: ' . getListStatusService($dtData['active'],
+                        'color') . '">' . getListStatusService($dtData['active']) . '</div>
+                                 <span class="caret"></span> </button>
+                                 <ul class="dropdown-menu">';
+                foreach (getListStatusService() as $key => $value) {
+                    $optionStatus .= '<li style="cursor: pointer"><a onclick="changeStatus(' . $dtData['id'] . ',' . $value['id'] . ')" data-id="' . $value['id'] . '">' . $value['name'] . '</a></li>';
+                }
+                $optionStatus .= '</ul></div>';
+                return $optionStatus;
             })
             ->editColumn('hot', function ($dtData) {
                 $checked = $dtData['hot'] == 1 ? 'checked' : '';
@@ -227,13 +236,16 @@ class ServiceController extends Controller
         return response()->json($data);
     }
 
-    public function active($id = 0){
+    public function active(){
+        $id = $this->request->input('service_id');
+        $status = $this->request->input('status');
         if (!has_permission('service', 'edit')) {
             $data['result'] = false;
             $data['message'] = lang('dt_access');
             return response()->json($data);
         }
         $this->request->merge(['id' => $id]);
+        $this->request->merge(['status' => $status]);
         $response = $this->fnbService->active($this->request);
         $dataRes = $response->getData(true);
         $data = $dataRes['data'];

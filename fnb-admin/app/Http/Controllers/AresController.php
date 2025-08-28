@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ares;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Validator;
 
 class AresController extends Controller
 {
+    protected $fnbAres;
     public function __construct(Request $request, AresService $aresService)
     {
         parent::__construct($request);
@@ -212,4 +214,5 @@ class AresController extends Controller
         $data = $dataRes['data'];
         return response()->json($data);
     }
+
 }

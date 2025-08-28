@@ -22,6 +22,20 @@
                 </div>
             @endif
             <div class="card-box table-responsive">
+                <div class="row m-b-10">
+                    <div class="col-md-3">
+                        <label for="ares_search">{{lang('c_ares')}}</label>
+                        <select class="ares_search select2" id="ares_search"
+                                data-placeholder="Chọn ..." name="ares_search">
+                            <option value="0">Tất cả</option>
+                            @if(!empty($ares))
+                                @foreach($ares as $key => $value)
+                                    <option value="{{$value->id}}">{{$value->name}}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+                </div>
                 <table id="table_user" class="table table-bordered table_user">
                     <thead>
                     <tr>
@@ -31,6 +45,7 @@
                         <th class="text-center">{{lang('dt_email_user')}}</th>
                         <th class="text-center">{{lang('dt_department')}}</th>
                         <th class="text-center">{{lang('dt_role')}}</th>
+                        <th class="text-center">{{lang('c_ares')}}</th>
                         <th class="text-center">{{lang('dt_active_user')}}</th>
                         <th class="text-center">{{lang('dt_actions')}}</th>
                     </tr>
@@ -44,8 +59,15 @@
 @endsection
 @section('script')
     <script>
-        var fnserverparams = {};
         var oTable;
+        var fnserverparams = {
+            "ares_search" : "#ares_search"
+        };
+        $.each(fnserverparams, function(index, value) {
+            $(value).change(function() {
+                oTable.draw(false);
+            })
+        })
         oTable = InitDataTable('#table_user', 'admin/user/getUsers', {
             'order': [
                 [3, 'desc']
@@ -70,6 +92,7 @@
                 {data: 'email', name: 'email'},
                 {data: 'department', name: 'department'},
                 {data: 'role', name: 'role'},
+                {data: 'ares', name: 'ares'},
                 {
                     "render": function (data, type, row) {
                         return `<div class="text-center">${data}</div>`;

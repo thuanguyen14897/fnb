@@ -53,8 +53,11 @@ class AresService
         }
     }
 
-    public function getDetail($request = []){
+    public function getDetail($request = [], $id = 0){
         try {
+            if(!empty($id)) {
+                $request->merge(['id' => $id]);
+            }
             $response = $this->sendRequestToService(
                 'get',
                 "{$this->baseUrl}/api/ares/getDetail",

@@ -75,4 +75,29 @@
     $('#table_car').on('draw.dt', function () {
 
     });
+
+    function changeStatus(service_id,status){
+        $.ajax({
+            url: 'admin/service/active',
+            type: 'POST',
+            dataType: 'JSON',
+            cache: false,
+            data: {
+                service_id: service_id,
+                status: status,
+            },
+        })
+            .done(function (data) {
+                if(data.result){
+                    alert_float('success',data.message);
+                } else {
+                    alert_float('error',data.message);
+                }
+                oTable.draw('page');
+            })
+            .fail(function () {
+
+            });
+        return false;
+    }
 </script>

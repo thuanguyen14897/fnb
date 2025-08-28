@@ -31,6 +31,8 @@ Route::post('logout', [LoginApi::class, 'logout']); // đăng xuất phiên đă
 Route::post('update_account', [LoginApi::class, 'update_account'])->middleware(\App\Http\Middleware\CheckLoginApi::class);
 Route::post('get_info_account', [LoginApi::class, 'get_info_account'])->middleware(\App\Http\Middleware\CheckLoginApi::class);
 Route::post('lockAccount', [LoginApi::class, 'lockAccount'])->middleware(\App\Http\Middleware\CheckLoginApi::class);
+Route::post('checkPassword', [LoginApi::class, 'checkPassword'])->middleware(\App\Http\Middleware\CheckLoginApi::class);
+Route::post('changePassword', [LoginApi::class, 'changePassword'])->middleware(\App\Http\Middleware\CheckLoginApi::class);
 
 Route::group(['prefix' => 'customer','middleware' => \App\Http\Middleware\CheckLoginApi::class], function () {
     Route::get('getListCustomer', [ClientController::class, 'getListCustomer']);
@@ -40,15 +42,18 @@ Route::group(['prefix' => 'customer','middleware' => \App\Http\Middleware\CheckL
     Route::post('detail', [ClientController::class, 'detail']);
     Route::post('deleteCustomer', [ClientController::class, 'deleteCustomer']);
     Route::post('active', [ClientController::class, 'active']);
+    Route::post('detailRepresentativePartner', [ClientController::class, 'detailRepresentativePartner']);
 });
 
 Route::group(['prefix' => 'transaction','middleware' => \App\Http\Middleware\CheckLoginApi::class], function () {
     Route::get('getList', [TransactionController::class, 'getList']);
     Route::get('getListData', [TransactionController::class, 'getListData']);
     Route::get('getListDataDetail/{id}', [TransactionController::class, 'getListDataDetail']);
-    Route::get('addTransaction', [TransactionController::class, 'addTransaction']);
+    Route::post('addTransaction', [TransactionController::class, 'addTransaction']);
     Route::get('countAll', [TransactionController::class, 'countAll']);
     Route::get('getDetail', [TransactionController::class, 'getDetail']);
     Route::post('detail', [TransactionController::class, 'detail']);
     Route::post('delete', [TransactionController::class, 'delete']);
 });
+
+

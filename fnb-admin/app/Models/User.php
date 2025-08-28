@@ -59,4 +59,10 @@ class User extends Authenticatable
         return $this->belongstoMany('App\Models\Permission', 'tbl_user_permission', 'user_id', 'permission_id');
     }
 
+    function user_ares()
+    {
+
+        return $this->hasMany(\App\Models\UserAres::class, 'id_user', 'id');
+//        return $this->belongstoMany('App\Models\UserAres', 'tbl_users', 'user_id', 'id');
+    }
 }

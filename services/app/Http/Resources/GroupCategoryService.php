@@ -21,7 +21,7 @@ class GroupCategoryService extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $dtImage = !empty($this->icon) ? asset('storage/'.$this->icon) : null;
+        $dtImage = !empty($this->icon) ? env('STORAGE_URL').'/'.$this->icon : null;
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -35,7 +35,7 @@ class GroupCategoryService extends JsonResource
     {
         return [
             'base' => [
-                'base' => asset('storage'),
+                'base' => env('STORAGE_URL'),
             ]
         ];
     }

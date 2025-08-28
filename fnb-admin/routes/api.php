@@ -28,6 +28,7 @@ Route::post('get_info_settings', [Api_info::class, 'get_info_settings']);
 Route::get('getOrderRef/{ref?}', [OrderRefController::class, 'getOrderRef']);
 Route::get('updateOrderRef/{ref?}', [OrderRefController::class, 'updateOrderRef']);
 Route::get('getOption/{ref?}', [Api_info::class, 'getOption']);
+Route::post('send_zalo', [Api_info::class, 'send_zalo']);
 
 
 Route::group(['prefix' => 'category'], function () {

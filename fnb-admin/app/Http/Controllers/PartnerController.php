@@ -166,4 +166,12 @@ class PartnerController extends Controller
         $data = $dataRes['data'];
         return response()->json($data);
     }
+
+    public function detailRepresentativePartner($id){
+        $this->request->merge(['partner_id' => $id]);
+        $response = $this->fnbAccount->detailRepresentativePartner($this->request);
+        $dataRes = $response->getData(true);
+        $data = $dataRes['data'];
+        return response()->json($data);
+    }
 }

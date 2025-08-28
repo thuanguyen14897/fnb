@@ -110,7 +110,7 @@ class TransactionService
         try {
             $response = $this->sendRequestToService(
                 'POST',
-                "{$this->baseUrl}/api/service/delete",
+                "{$this->baseUrl}/api/transaction/delete",
                 $request,
             );
             $data = $response->json();

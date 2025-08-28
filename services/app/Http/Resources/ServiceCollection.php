@@ -19,7 +19,7 @@ class ServiceCollection extends ResourceCollection
         return [
             'data' => $this->collection,
             'base' => [
-                'base' => asset('storage'),
+                'base' => env('STORAGE_URL'),
             ],
         ];
     }

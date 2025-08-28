@@ -83,10 +83,10 @@ class TransactionController extends Controller
                 return '<div>'.(!empty($dtData['date']) ? _dt($dtData['date']) : '').'</div>';
             })
             ->editColumn('date_start', function ($dtData) {
-                return '<div>'.(!empty($dtData['date_start']) ? _dt_new($dtData['date_start']) : '').'</div>';
+                return '<div>'.(!empty($dtData['date_start']) ? _dt_new($dtData['date_start'],false) : '').'</div>';
             })
             ->editColumn('date_end', function ($dtData) {
-                return '<div>'.(!empty($dtData['date_end']) ? _dt_new($dtData['date_end']) : '').'</div>';
+                return '<div>'.(!empty($dtData['date_end']) ? _dt_new($dtData['date_end'],false) : '').'</div>';
             })
             ->editColumn('status', function ($transaction) {
                 $optionStatus = '<div class="btn-group">
@@ -134,7 +134,7 @@ class TransactionController extends Controller
             })
             ->addColumn('customer', function ($dtData) {
                 $customer = $dtData['customer'] ?? [];
-                $url = !empty($customer['avatar']) ? $customer['avatar'] : asset('admin/assets/images/users/avatar-1.jpg');
+                $url = !empty($customer['avatar_new']) ? $customer['avatar_new'] : asset('admin/assets/images/users/avatar-1.jpg');
                 return '<div style="display: flex;align-items: center;flex-wrap: wrap">' . loadImageAvatar($url,
                         '40px') . '<div>'.(!empty($customer['fullname']) ? $customer['fullname'] : '') . '</div></div><div style="color:#337ab7">'.(!empty($customer['phone']) ? $customer['phone'] : 'Chưa có sdt').'</div>';
             })
@@ -212,13 +212,13 @@ class TransactionController extends Controller
     }
 
     public function delete($id = 0){
-        if (!has_permission('service', 'delete')) {
+        if (!has_permission('transaction', 'delete')) {
             $data['result'] = false;
             $data['message'] = lang('dt_access');
             return response()->json($data);
         }
         $this->request->merge(['id' => $id]);
-        $response = $this->fnbService->delete($this->request);
+        $response = $this->fnbTransactionService->delete($this->request);
         $dataRes = $response->getData(true);
         $data = $dataRes['data'];
         return response()->json($data);

@@ -23,7 +23,7 @@ class Service extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $dtImage = !empty($this->image) ? asset('storage/'.$this->image) : null;
+        $dtImage = !empty($this->image) ? env('STORAGE_URL').'/'.$this->image : null;
         $total_review = ReviewService::where('service_id', $this->id)->count();
         $star = ReviewService::where('service_id', $this->id)->avg('star');
         if (!empty($this->homepage)){
@@ -48,6 +48,41 @@ class Service extends JsonResource
                 ],
                 'other_amenities' => OtherAmenitis::collection($this->whenLoaded('other_amenities')),
             ];
+        } elseif(!empty($this->check_transaction)){
+            return [
+                'id' => $this->id,
+                'name' => $this->name,
+                'image' => $dtImage,
+                'image_store' => $this->whenLoaded('image_store', function () {
+                    $collection = $this->image_store->map(function ($item) {
+                        $image = !empty($item->image) ? env('STORAGE_URL').'/'.$item->image : null;
+                        return [
+                            'id' => $item->id,
+                            'image' => $image,
+                        ];
+                    });
+
+                    $collection->push([
+                        'id' => 0,
+                        'image' => !empty($this->image) ? env('STORAGE_URL').'/'.$this->image : null,
+                    ]);
+
+                    return $collection;
+                }),
+                'price' => $this->price,
+                'star' => $star,
+                'total_review' => $total_review,
+                'location' => [
+                    'address' => $this->address,
+                    'province_name' => !empty($this->province) ? $this->province->Name : null,
+                    'wards_name' => !empty($this->ward) ? $this->ward->Name : null,
+                    'province_id' => $this->province_id,
+                    'wards_id' => $this->wards_id,
+                    'latitude' => $this->latitude,
+                    'longitude' => $this->longitude,
+                ],
+                'category_service' => CategoryService::make($this->whenLoaded('category_service')),
+            ];
         } else {
             $dtReview = null;
             $dtReviewImage = null;
@@ -66,7 +101,7 @@ class Service extends JsonResource
                 });
                 $dtReviewImage = ReviewServiceImage::select('id','image')->where('service_id', $this->id)->get();
                 $dtReviewImage = $dtReviewImage->map(function ($item) {
-                    $image_review = !empty($item->image) ? asset('storage/' . $item->image) : null;
+                    $image_review = !empty($item->image) ? env('STORAGE_URL').'/'.$item->image : null;
                     return [
                         'id' => $item->id,
                         'image' => $image_review,
@@ -79,7 +114,7 @@ class Service extends JsonResource
                 'image' => $dtImage,
                 'image_store' => $this->whenLoaded('image_store', function () {
                     $collection = $this->image_store->map(function ($item) {
-                        $image = !empty($item->image) ? asset('storage/' . $item->image) : null;
+                        $image = !empty($item->image) ? env('STORAGE_URL').'/'.$item->image : null;
                         return [
                             'id' => $item->id,
                             'image' => $image,
@@ -88,14 +123,14 @@ class Service extends JsonResource
 
                     $collection->push([
                         'id' => 0,
-                        'image' => !empty($this->image) ? asset('storage/' . $this->image) : null,
+                        'image' => !empty($this->image) ? env('STORAGE_URL').'/'.$this->image : null,
                     ]);
 
                     return $collection;
                 }),
                 'image_menu' =>$this->whenLoaded('image_menu', function () {
                     return $this->image_menu->map(function ($item) {
-                        $dtImage = !empty($item->image) ? asset('storage/' . $item->image) : null;
+                        $dtImage = !empty($item->image) ? env('STORAGE_URL').'/'.$item->image : null;
                         return [
                             'id' => $item->id,
                             'image' => $dtImage,
@@ -154,7 +189,7 @@ class Service extends JsonResource
     {
         return [
             'base' => [
-                'base' => asset('storage'),
+                'base' => env('STORAGE_URL'),
             ]
         ];
     }

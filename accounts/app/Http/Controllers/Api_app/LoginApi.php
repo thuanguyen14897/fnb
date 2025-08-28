@@ -578,7 +578,12 @@ class LoginApi extends AuthController
                 $content_sms = str_replace('{code}', $key_code,$content_sms);
                 if (empty(strpos($userAgent, $needle))) {
                     if (!config('app.debug')) {
-                        send_zalo($phone,'otp',Config::get('constant')['template_id_otp'],$key_code);
+                        $this->request->merge(['dtObject' => null]);
+                        $this->request->merge(['event' => 'otp']);
+                        $this->request->merge(['template_id' => Config::get('constant')['template_id_otp']]);
+                        $this->request->merge(['code' => $key_code]);
+                        $this->request->merge(['phone_zalo' => $phone]);
+                        $this->fnbAdmin->send_zalo($this->request);
                     }
                 }
                 return response()->json($dataResult);
@@ -691,7 +696,7 @@ class LoginApi extends AuthController
                         if (!empty($dataUpdate['password'])) {
                             $dataResult['token'] = $this->Create_Token([
                                 'password' => $dataUpdate['password'],
-                                'fullname' => $dataUpdate['fullname'],
+                                'fullname' => isset($dataUpdate['fullname']) ? $dataUpdate['fullname'] : $dataClient['fullname'],
                                 'id' => $id,
                                 'player_id' => !empty($data['player_id']) ? $data['player_id'] : null,
                             ]);
@@ -792,7 +797,7 @@ class LoginApi extends AuthController
                 } elseif (!empty($data->password)) {
                     $data->password = false;
                 }
-                $data->avatar = !empty($data->avatar) ? asset('storage/'.$data->avatar) : asset('images/avatar_default.png');
+                $data->avatar = !empty($data->avatar) ? env('STORAGE_URL').'/'.$data->avatar : env('APP_URL').'/images/avatar_default.png';
 
                 $dataResult['result'] = true;
                 $dataResult['info'] = $data;
@@ -907,4 +912,75 @@ class LoginApi extends AuthController
         }
     }
 
+    public function checkPassword(){
+        $id = !empty($this->request->client) ? $this->request->client->id : 0;
+        $password = $this->request->input('password');
+        if (!empty($id)){
+            $dtClient = Clients::find($id);
+            if (empty($password)){
+                $dataResult['result'] = false;
+                $dataResult['message'] = 'Vui lòng nhập mật khẩu!';
+                return response()->json($dataResult);
+            }
+            if (!empty($dtClient) && !empty($dtClient['password'])) {
+                if (decrypt($dtClient['password']) != $password) {
+                    $dataResult['result'] = false;
+                    $dataResult['message'] = 'Mật khẩu cũ không đúng!';
+                    return response()->json($dataResult);
+                }
+                $dataResult['result'] = true;
+                $dataResult['message'] = '';
+                return response()->json($dataResult);
+            }
+        } else {
+            $dataResult['result'] = false;
+            $dataResult['message'] = lang('c_code_token_fail');
+            return response()->json($dataResult, 503);
+        }
+    }
+
+    public function changePassword(){
+        $id = !empty($this->request->client) ? $this->request->client->id : 0;
+        $password_old = $this->request->input('password_old');
+        $password = $this->request->input('password');
+        if (!empty($id)){
+            $dtClient = Clients::find($id);
+            if (empty($password_old)){
+                $dataResult['result'] = false;
+                $dataResult['message'] = 'Vui lòng nhập mật khẩu cũ!';
+                return response()->json($dataResult);
+            }
+            if (empty($password)){
+                $dataResult['result'] = false;
+                $dataResult['message'] = 'Vui lòng nhập mật khẩu!';
+                return response()->json($dataResult);
+            }
+            DB::beginTransaction();
+            try {
+                $password = encrypt($password);
+                if (!empty($dtClient) && !empty($dtClient['password'])) {
+                    if (decrypt($dtClient['password']) != $password_old) {
+                        $dataResult['result'] = false;
+                        $dataResult['message'] = 'Mật khẩu cũ không đúng!';
+                        return response()->json($dataResult);
+                    }
+                    $dtClient->password = $password;
+                    $dtClient->save();
+                    DB::commit();
+                    $dataResult['result'] = true;
+                    $dataResult['message'] = 'Đổi mật khẩu thành công';
+                    return response()->json($dataResult);
+                }
+            } catch (\Exception $exception){
+                DB::rollBack();
+                $dataResult['result'] = false;
+                $dataResult['message'] = $exception->getMessage();
+                return response()->json($dataResult);
+            }
+        } else {
+            $dataResult['result'] = false;
+            $dataResult['message'] = lang('c_code_token_fail');
+            return response()->json($dataResult, 503);
+        }
+    }
 }

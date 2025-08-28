@@ -117,7 +117,7 @@
                 });
             });
             $('#table_client').on('draw.dt', function () {
-                countAll();
+                // countAll();
             });
 
             function countAll() {
