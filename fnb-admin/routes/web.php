@@ -112,6 +112,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('delete/{id}', [UserController::class, 'delete']);
         Route::get('active/{id}', [UserController::class, 'active']);
         Route::post('updatePriority', [UserController::class, 'updatePriority']);
+        Route::get('import_excel', [UserController::class, 'import_excel']);
+        Route::post('action_import', [UserController::class, 'action_import']);
     });
     Route::group(['prefix' => 'department'], function () {
         Route::get('list', [DepartmentController::class, 'get_list']);
@@ -192,6 +194,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('searchGroupCategoryService/{id?}', [CategoryController::class, 'searchGroupCategoryService']);
         Route::get('searchCategoryService/{id?}', [CategoryController::class, 'searchCategoryService']);
         Route::get('searchOtherAmenities/{id?}', [CategoryController::class, 'searchOtherAmenities']);
+        Route::get('searchService/{id?}', [CategoryController::class, 'searchService']);
     });
 
 
@@ -277,6 +280,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('changeHot/{id}', [ServiceController::class, 'changeHot']);
         Route::get('view/{id}', [ServiceController::class, 'view']);
         Route::post('getReviewService/{id}', [ServiceController::class, 'getReviewService']);
+        Route::post('loadTransaction', [ServiceController::class, 'loadTransaction']);
+        Route::post('loadMoreTransaction', [ServiceController::class, 'loadMoreTransaction']);
     });
 
 
@@ -286,6 +291,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('detail/{id?}', [TransactionController::class, 'get_detail']);
         Route::post('detail/{id?}', [TransactionController::class, 'detail']);
         Route::get('delete/{id}', [TransactionController::class, 'delete']);
+        Route::post('countAll', [TransactionController::class, 'countAll']);
+        Route::get('view/{id}', [TransactionController::class, 'view']);
     });
 
     Route::group(['prefix' => 'ares'], function () {

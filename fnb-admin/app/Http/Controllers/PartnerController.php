@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\UserAres;
+use App\Services\AresService;
 use App\Traits\UploadFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,30 +14,56 @@ use Yajra\DataTables\CollectionDataTable;
 class PartnerController extends Controller
 {
     protected $fnbAccount;
+    protected $fnbAres;
     use UploadFile;
-    public function __construct(Request $request,AccountService $accountService)
+    public function __construct(Request $request,AccountService $accountService,AresService $aresService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
         $this->per_page = 10;
         $this->fnbAccount = $accountService;
+        $this->fnbAres = $aresService;
     }
 
     public function get_list(){
-        if (!has_permission('partner','view')) {
+        if (!has_permission('partner','view') && !has_permission('partner','viewown')) {
             access_denied();
         }
-        return view('admin.partner.list',[]);
+        $this->request->merge([
+            'show_short' => 1
+        ]);//show chỉ thông tin cơ bản
+        $data_ares = $this->fnbAres->getListData($this->request);
+        if(!empty($data_ares->getData()->data->data)) {
+            $ares = $data_ares->getData()->data->data;
+        }
+        return view('admin.partner.list',[
+            'ares' => $ares
+        ]);
     }
 
     public function get_detail($id = 0) {
         if (!has_permission('partner', 'edit')){
             access_denied();
         }
+        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+            $this->request->merge(['ares_permission' => 1]);
+            $aresPer = [];
+            foreach ($UserAres as $key => $item) {
+                $aresPer[] = $item->id_ares;
+            }
+            $this->request->merge(['aresPer' => $aresPer]);
+        }
+
         $this->request->merge(['id' => $id]);
         $response = $this->fnbAccount->getDetailCustomer($this->request);
         $data = $response->getData(true);
         $client = $data['client'] ?? [];
+        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+            if (!empty($id) && empty($client['id'])) {
+                access_denied();
+            }
+        }
         $title = lang('c_title_edit_client');
         return view('admin.partner.detail',[
             'id' => $id,
@@ -44,13 +73,26 @@ class PartnerController extends Controller
     }
 
     public function view($id = 0){
-        if (!has_permission('partner', 'view')){
-            access_denied();
+        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+            $this->request->merge(['ares_permission' => 1]);
+            $aresPer = [];
+            foreach ($UserAres as $key => $item) {
+                $aresPer[] = $item->id_ares;
+            }
+            $this->request->merge(['aresPer' => $aresPer]);
         }
+
         $this->request->merge(['id' => $id]);
         $response = $this->fnbAccount->getDetailCustomer($this->request);
         $data = $response->getData(true);
         $client = $data['client'] ?? [];
+        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+            if (!empty($id) && empty($client['id'])) {
+                access_denied();
+            }
+        }
+
         $title = lang('dt_view_client');
         return view('admin.partner.view',[
             'title' => $title,
@@ -61,6 +103,17 @@ class PartnerController extends Controller
     public function getListCustomer()
     {
         $this->request->merge(['type_client' => 2]);
+
+        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+            $this->request->merge(['ares_permission' => 1]);
+            $aresPer = [];
+            foreach ($UserAres as $key => $item) {
+                $aresPer[] = $item->id_ares;
+            }
+            $this->request->merge(['aresPer' => $aresPer]);
+        }
+
         $response = $this->fnbAccount->getListCustomer($this->request);
         $data = $response->getData(true);
         if ($data['result'] == false){
@@ -126,7 +179,28 @@ class PartnerController extends Controller
 
                 return $str;
             })
-            ->rawColumns(['options', 'active', 'avatar', 'phone', 'created_at', 'fullname','referral_code'])
+
+            ->addColumn('ares', function ($client) {
+                $str = '';
+                if(!empty($client['province_id']) && !empty($client['wards_id'])) {
+                    $this->request->merge(['province' => $client['province_id']]);
+                    $this->request->merge(['ward' => $client['wards_id']]);
+                    $data_ares = $this->fnbAres->getDetailWhere($this->request);
+                    $_ares = $data_ares->getData(true);
+                    if(!empty($_ares['result'])){
+                        if(!empty($_ares['dtData'])) {
+                            foreach ($_ares['dtData'] as $k => $v) {
+                                $str .= "<div class='label label-success'>" . ($v['name'] ?? '') . "</div>" . ' ';
+                            }
+                        }
+                        else {
+                            $str = "<div class='label label-danger'>Chưa thiết lập</div>";
+                        }
+                    }
+                }
+                return $str;
+            })
+            ->rawColumns(['options', 'active', 'avatar', 'phone', 'created_at', 'fullname','referral_code', 'ares'])
             ->setTotalRecords($data['recordsTotal']) // tổng số bản ghi
             ->setFilteredRecords($data['recordsFiltered']) // sau khi lọc
             ->with([

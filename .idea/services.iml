@@ -14,6 +14,7 @@
       <sourceFolder url="file://$MODULE_DIR$/fnb-admin/tests" isTestSource="true" packagePrefix="Tests\" />
       <sourceFolder url="file://$MODULE_DIR$/services/app" isTestSource="false" packagePrefix="App\" />
       <sourceFolder url="file://$MODULE_DIR$/services/database/factories" isTestSource="false" packagePrefix="Database\Factories\" />
+      <sourceFolder url="file://$MODULE_DIR$/fnb-admin/public/admin/ckfinder/core/connector/php/vendor/league/flysystem-cached-adapter/spec" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/services/database/seeders" isTestSource="false" packagePrefix="Database\Seeders\" />
       <sourceFolder url="file://$MODULE_DIR$/services/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/services/tests" isTestSource="true" packagePrefix="Tests\" />
@@ -395,6 +396,12 @@
       <excludeFolder url="file://$MODULE_DIR$/services/vendor/vlucas/phpdotenv" />
       <excludeFolder url="file://$MODULE_DIR$/services/vendor/voku/portable-ascii" />
       <excludeFolder url="file://$MODULE_DIR$/services/vendor/webmozart/assert" />
+      <excludeFolder url="file://$MODULE_DIR$/fnb-admin/vendor/ezyang/htmlpurifier" />
+      <excludeFolder url="file://$MODULE_DIR$/fnb-admin/vendor/maatwebsite/excel" />
+      <excludeFolder url="file://$MODULE_DIR$/fnb-admin/vendor/maennchen/zipstream-php" />
+      <excludeFolder url="file://$MODULE_DIR$/fnb-admin/vendor/markbaker/complex" />
+      <excludeFolder url="file://$MODULE_DIR$/fnb-admin/vendor/markbaker/matrix" />
+      <excludeFolder url="file://$MODULE_DIR$/fnb-admin/vendor/phpoffice/phpspreadsheet" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

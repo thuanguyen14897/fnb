@@ -582,6 +582,7 @@ $arrayList = [
     'c_fullname_partner' => 'Họ và tên đối tác',
     'dt_delete_partner' => 'Xóa đối tác',
     'dt_view_partner' => 'Chi tiết đối tác',
+    'viewown' => 'Xem riêng',
 ];
 
 $array_c_message = include resource_path('lang/vn/c_message.php');

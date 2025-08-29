@@ -10,6 +10,7 @@ use App\Services\GroupCategoryService;
 use App\Services\OtherAmenitisService;
 use App\Services\CategoryService;
 use App\Services\AccountService;
+use App\Services\ServiceService;
 
 class CategoryController extends Controller
 {
@@ -17,7 +18,8 @@ class CategoryController extends Controller
     protected $fnbCategoryService;
     protected $fnbOtherAmenitisService;
     protected $fnbCustomerService;
-    public function __construct(Request $request,GroupCategoryService $groupCategoryService,OtherAmenitisService $otherAmenitisService,AccountService $customerService,CategoryService $categoryService)
+    protected $fnbServiceService;
+    public function __construct(Request $request,GroupCategoryService $groupCategoryService,OtherAmenitisService $otherAmenitisService,AccountService $customerService,CategoryService $categoryService,ServiceService $serviceService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
@@ -25,6 +27,7 @@ class CategoryController extends Controller
         $this->fnbCategoryService = $categoryService;
         $this->fnbOtherAmenitisService = $otherAmenitisService;
         $this->fnbCustomerService = $customerService;
+        $this->fnbServiceService = $serviceService;
     }
 
     public function searchTransaction(){
@@ -268,6 +271,31 @@ class CategoryController extends Controller
                 'id' => $value['id'],
                 'text' => $value['fullname'] .' ('.$value['phone'].')',
                 'phone' => $value['phone'],
+            ];
+        }
+        $data = [
+            'items' => $results
+        ];
+        return response()->json($data);
+    }
+
+    public function searchService(){
+        $search = $this->request->input('term');
+        $this->request->merge(['search' => $search]);
+        $this->request->merge(['current_page' => 1]);
+        $this->request->merge(['per_page' => 50]);
+        $response = $this->fnbServiceService->getListData($this->request);
+        $data = $response->getData(true);
+        if ($data['result'] == false){
+            return response()->json($data);
+        }
+        $dtData = ($data['data']['data']) ?? [];
+        $results = [];
+        foreach ($dtData as $key => $value) {
+            $results[] = [
+                'id' => $value['id'],
+                'text' => $value['name'],
+                'category' => json_encode($value['category_service'])
             ];
         }
         $data = [

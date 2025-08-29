@@ -58,7 +58,12 @@
                         <div class="title_car">{{$dtData['name']}}</div>
                         <div class="wrap_features_car">
                             <div class="features_car">SĐT: {{$dtData['phone_number']}}</div>
-                            @if(empty($dtData['name']))
+                            @if($dtData['transaction']['total'] > 0)
+                                <div class="title_trip">
+                                    {!! (!empty($dtData['total_star']) ? '<div class="features_car_star"><img src="admin/assets/images/star.svg"> '.($dtData['total_star']).'</div>' : '') !!}
+                                    <div><img src="admin/assets/images/tick-circle.svg">{{$dtData['transaction']['total']}} chuyến đi
+                                    </div>
+                                </div>
                             @else
                                 <div style="display: flex;align-items: center">Chưa có chuyến</div>
                             @endif
@@ -110,12 +115,9 @@
                                                                         src="{{$dtImage}}"></div>
                                 <div class="wrap_detail_customer_text">
                                     <div class="detail_customer_text">{{!empty($dtData['customer']) ? $dtData['customer']['fullname'] : '' }}</div>
-                                    @if(empty($dtData['name']))
-                                    @else
-                                        <div class="detail_customer_info">
-                                            <div>Chưa có chuyến</div>
-                                        </div>
-                                    @endif
+                                    <div class="detail_customer_info">
+                                        <div>{{!empty($dtData['customer']) ? $dtData['customer']['phone'] : '' }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -159,7 +161,7 @@
                 </div>
                 <div class="tab-pane" id="transaction">
                     <input type="hidden" name="count_transaction" class="count_transaction"
-                           value="0">
+                           value="{{!empty($dtData['transaction']['total_all']) ? $dtData['transaction']['total_all'] : 0}}">
                     <input type="hidden" name="next" class="next" value="">
                     <div class="row m-b-10">
                         <div class="col-md-3">
@@ -201,6 +203,7 @@
                                         <th class="text-center">{{lang('dt_stt')}}</th>
                                         <th class="text-center">{{lang('Thành viên')}}</th>
                                         <th class="text-center">{{lang('dt_content')}}</th>
+                                        <th class="text-center">{{lang('Tag')}}</th>
                                         <th class="text-center">{{lang('dt_star')}}</th>
                                         <th class="text-center">{{lang('dt_time')}}</th>
                                         <th class="text-center">{{lang('dt_actions')}}</th>
@@ -289,6 +292,7 @@
                     },
                     {data: 'customer', name: 'customer', width: "200px"},
                     {data: 'content', name: 'content'},
+                    {data: 'tag', name: 'tag',width: "200px"},
                     {data: 'star', name: 'star', width: "150px"},
                     {data: 'created_at', name: 'created_at', width: "150px"},
                     {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px" },
@@ -322,19 +326,19 @@
             search_daterangepicker('date_search');
             search_daterangepicker('date_search_end');
         })
-        $(document).on('change', '#status_search, #type_search, #date_search, #date_search_end', function (event) {
+        $(document).on('change', '#status_search, #date_search, #date_search_end', function (event) {
             pageTransaction = 1;
             loadTransaction();
         });
 
         function loadTransaction() {
             $.ajax({
-                url: 'admin/car/loadTransaction',
+                url: 'admin/service/loadTransaction',
                 type: 'POST',
                 dataType: 'html',
                 cache: false,
                 data: {
-                    car_id: {{$dtData['id']}},
+                    service_id: {{$dtData['id']}},
                     status_search: $("#status_search").val(),
                     type_search: $("#type_search").val(),
                     date_search: $("#date_search").val(),
@@ -342,9 +346,9 @@
                 },
             }).done(function (data) {
                 $(".result_transaction").html(data);
-                if ($('body').height() > $('.result_transaction').height()) {
-                    loadMoreTransaction();
-                }
+                // if ($('body').height() > $('.result_transaction').height()) {
+                //     loadMoreTransaction();
+                // }
             }).fail(function () {
             })
         }
@@ -359,10 +363,10 @@
             count_page = Math.ceil(countTransaction / limitTransaction);
             $.ajax({
                 type: "POST",
-                url: 'admin/car/loadMoreTransaction',
+                url: 'admin/service/loadMoreTransaction',
                 data: {
                     page: pageTransaction,
-                    car_id: {{$dtData['id']}},
+                    service_id: {{$dtData['id']}},
                     status_search: $("#status_search").val(),
                     type_search: $("#type_search").val(),
                     date_search: $("#date_search").val(),
@@ -372,9 +376,9 @@
                 success: function (data) {
                     if (data) {
                         $(`.result_transaction`).append(data);
-                        if ($('body').height() > $('.data_notification').height()) {
-                            loadMoreTransaction();
-                        }
+                        // if ($('body').height() > $('.result_transaction').height()) {
+                        //     loadMoreTransaction();
+                        // }
                     }
                 }
             });

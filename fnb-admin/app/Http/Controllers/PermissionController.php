@@ -21,6 +21,9 @@ class PermissionController extends Controller
 
     public function get_list()
     {
+        if(!is_admin()) {
+            access_denied();
+        }
 
         return view('admin.permission.list');
     }

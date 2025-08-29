@@ -749,8 +749,8 @@ function getValueStatusTransaction($id, $type = 'name')
     $option[0]['index'] = 0;
     $option[1]['index'] = 1;
     $option[2]['index'] = 2;
-    $option[3]['index'] = 2;
-    $option[4]['index'] = 2;
+    $option[3]['index'] = 3;
+    $option[4]['index'] = 4;
 
     return $option[$id][$type];
 }
@@ -830,7 +830,7 @@ function number_unformat($number, $force_number = true)
     return $number;
 }
 
-function get_staff_user_id($staff_id = 7)
+function get_staff_user_id($staff_id = 0)
 {
     if (!empty($staff_id)) {
         $user = Cache::remember('user-info', 3600, function () use ($staff_id){

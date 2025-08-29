@@ -56,6 +56,7 @@ class TransactionController extends Controller
         return (new CollectionDataTable($dtData))
             ->addColumn('options', function ($dtData) {
                 $id = $dtData['id'];
+                $view = "<a href='admin/transaction/view/$id' class='dt-modal'><i class='fa fa-eye'></i> " . lang('dt_view_transaction') . "</a>";
                 $delete = '<a type="button" class="po-delete" data-container="body" data-html="true" data-toggle="popover" data-placement="left" data-content="
                     <button href=\'admin/transaction/delete/' . $id. '\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
                     <button class=\'btn btn-default po-close\'>' . lang('dt_close') . '</button>
@@ -237,16 +238,16 @@ class TransactionController extends Controller
         return response()->json($data);
     }
 
-    public function changeHot($id = 0){
-        if (!has_permission('service', 'edit')) {
-            $data['result'] = false;
-            $data['message'] = lang('dt_access');
-            return response()->json($data);
-        }
-        $this->request->merge(['id' => $id]);
-        $response = $this->fnbService->changeHot($this->request);
-        $dataRes = $response->getData(true);
-        $data = $dataRes['data'];
+    public function countAll(){
+        $response = $this->fnbTransactionService->countAll($this->request);
+        $data = $response->getData(true);
         return response()->json($data);
+    }
+
+    public function view($id){
+        $title = lang('dt_view_transaction');
+        return view('admin.transaction.view',[
+            'title' => $title,
+        ]);
     }
 }

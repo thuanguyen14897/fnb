@@ -123,5 +123,9 @@
         'c_point_membership' => 'Điểm tích lũy trong Quý',
         'c_ranking_date' => 'Ngày xếp hạng (Quý)',
         'c_invoice_limit' => 'Hạn mức hóa đơn',
+        'c_file_excel' => 'File Excel',
+        'c_import' => 'Import',
+        'c_import_user' => 'Nhập nhân viên từ file Excel',
+        'c_user' => 'Nhân viên',
     ];
     return $array_c_message;

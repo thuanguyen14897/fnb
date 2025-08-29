@@ -20,6 +20,7 @@ class Transaction extends JsonResource
         $day = date_range(_dthuan($this->date_start), _dthuan($this->date_end));
         $day = count($day);
         $image_service = [];
+        $image_service_new = [];
         if (empty($this->check_detail)) {
             $image_service = $this->whenLoaded('transaction_day_item', function ($items) {
                 return $items->map(function ($item) {
@@ -27,6 +28,18 @@ class Transaction extends JsonResource
                     return collect($images)->pluck('image');
                 })->flatten(1)->toArray();
             });
+
+            $service_id = $request->service_id;
+            if (!empty($service_id)){
+                $image_service_new = $this->whenLoaded('transaction_day_item', function ($items) use ($service_id) {
+                    return $items->map(function ($item) use ($service_id) {
+                        if ($item->service_id == $service_id) {
+                            $images = $item->service['image_store'] ?? [];
+                            return collect($images)->pluck('image');
+                        }
+                    })->filter()->flatten(1)->toArray();
+                });
+            }
         }
         return [
             'id' => $this->id,
@@ -34,6 +47,7 @@ class Transaction extends JsonResource
             'reference_no' => $this->reference_no,
             'date' => $this->date,
             'image_service' => $image_service,
+            'image_service_new' => $image_service_new,
             'customer' => $this->whenLoaded('customer', function () {
                 return [
                     'id' => $this->customer->id,

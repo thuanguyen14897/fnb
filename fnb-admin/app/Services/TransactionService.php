@@ -158,4 +158,89 @@ class TransactionService
         }
     }
 
+    public function countAll($request){
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/transaction/countAll",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'follow' => 0,
+                    'arr' => [],
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? 'Unknown error',
+                ]);
+            }
+
+            $data = $response->json();
+
+            return response()->json([
+                'follow' => $data['follow'],
+                'arr' => $data['arr'],
+                'result' => $data['result'],
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function countTransaction($request){
+        try {
+            $response = $this->sendRequestToService(
+                'POST',
+                "{$this->baseUrl}/api/transaction/countTransaction",
+                $request,
+            );
+            $data = $response->json();
+            return response()->json([
+                'data' => $data,
+                'result' => $data['result'] ?? false,
+                'message' => $data['message']
+            ]);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getListDataTransaction($request)
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/transaction/getListData",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
+                    'data' => []
+                ], $response->status());
+            }
+
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'data' => $data['data'],
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

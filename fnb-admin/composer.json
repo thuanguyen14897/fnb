@@ -19,6 +19,7 @@
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "league/flysystem-aws-s3-v3": "^3.29",
+        "maatwebsite/excel": "^3.1",
         "maestroerror/php-heic-to-jpg": "^1.0",
         "mavinoo/laravel-batch": "^2.3",
         "phpseclib/phpseclib": "^3.0",

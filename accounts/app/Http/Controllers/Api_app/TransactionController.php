@@ -41,6 +41,8 @@ class TransactionController extends AuthController
         $customer_search = $this->request->input('customer_search') ?? 0;
         $date_search = $this->request->input('date_search') ?? null;
         $date_search_end = $this->request->input('date_search_end') ?? null;
+        $status_search = $this->request->input('status_search');
+        $service_search = $this->request->input('service_search');
 
         if (!empty($date_search)){
             $date_search = explode(' - ',$date_search);
@@ -71,6 +73,17 @@ class TransactionController extends AuthController
                 });
             });
         }
+        if ($status_search != -1) {
+            if ($status_search == -2){
+                $query->whereIn('status', [
+                    Config::get('constant')['status_request'],
+                    Config::get('constant')['status_process'],
+                    Config::get('constant')['status_start'],
+                ]);
+            } else {
+                $query->where('status', $status_search);
+            }
+        }
         if (($customer_search)){
             $query->where('customer_id', $customer_search);
         }
@@ -80,9 +93,15 @@ class TransactionController extends AuthController
         if (!empty($date_search_end)){
             $query->whereBetween('date_end', [$start_date_end, $end_date_end]);
         }
+        if (!empty($service_search)){
+            $query->whereHas('transaction_day_item',function ($q) use ($service_search){
+               $q->where('service_id',$service_search);
+            });
+        }
         $filtered = $query->count();
         $query->orderBy($orderBy, $orderDir);
         $data = $query->skip($start)->take($length)->get();
+
         if (!empty($data)){
             foreach ($data as $key => $value){
                 $dtCustomer = $value->customer ?? null;
@@ -106,58 +125,74 @@ class TransactionController extends AuthController
     }
 
     public function countAll(){
-        $type_client_search = $this->request->input('type_client_search') ?? 0;
-        $active_search = $this->request->input('active_search') ?? -1;
+        $customer_search = $this->request->input('customer_search') ?? 0;
         $date_search = $this->request->input('date_search') ?? null;
-
+        $date_search_end = $this->request->input('date_search_end') ?? null;
+        $service_search = $this->request->input('service_search');
         if (!empty($date_search)){
             $date_search = explode(' - ',$date_search);
-            $start_date = to_sql_date($date_search[0].' 00:00:00',true);
-            $end_date = to_sql_date($date_search[1].' 23:59:59',true);
+            $start_date = to_sql_date($date_search[0],true);
+            $end_date = to_sql_date($date_search[1],true);
         } else {
             $start_date = null;
             $end_date = null;
         }
-
-        $arrType = [
-            [
-                'id' => 1,
-            ],
-            [
-                'id' => 2,
-            ],
-        ];
-
-        $query = Clients::where('id','!=',0);
-
-        if (($type_client_search)){
-            $query->where('type_client', $type_client_search);
+        if (!empty($date_search_end)){
+            $date_search_end = explode(' - ',$date_search_end);
+            $start_date_end = to_sql_date($date_search_end[0],true);
+            $end_date_end = to_sql_date($date_search_end[1],true);
+        } else {
+            $start_date_end = null;
+            $end_date_end = null;
         }
-        if ($active_search != -1 && $active_search != ''){
-            $query->where('active', $active_search);
+
+        $query = Transaction::with('customer')->where('id','!=',0);
+        if (($customer_search)){
+            $query->where('customer_id', $customer_search);
         }
         if (!empty($date_search)){
-            $query->whereBetween('tbl_clients.created_at', [$start_date, $end_date]);
+            $query->whereBetween('date_start', [$start_date, $end_date]);
         }
-        $totalAll = $query->count();
+        if (!empty($date_search_end)){
+            $query->whereBetween('date_end', [$start_date_end, $end_date_end]);
+        }
+        $query->whereIn('status', [
+            Config::get('constant')['status_request'],
+            Config::get('constant')['status_process'],
+            Config::get('constant')['status_start'],
+        ]);
+        if (!empty($service_search)){
+            $query->whereHas('transaction_day_item',function ($q) use ($service_search){
+                $q->where('service_id',$service_search);
+            });
+        }
+        $follow = $query->count();
 
-        foreach ($arrType as $key => $value){
-            $type_client = $value['id'];
-            $query = Clients::where('id','!=',0);
-            $query->where('type_client', $type_client);
-            if ($active_search != -1 && $active_search != ''){
-                $query->where('active', $active_search);
+        $arr = getListStatusTransaction();
+        foreach ($arr as $key => $value) {
+            $status = $value['id'];
+            $query = Transaction::with('customer')->where('id','!=',0);
+            if (($customer_search)){
+                $query->where('customer_id', $customer_search);
             }
             if (!empty($date_search)){
-                $query->whereBetween('tbl_clients.created_at', [$start_date, $end_date]);
+                $query->whereBetween('date_start', [$start_date, $end_date]);
             }
-            $total = $query->count();
-            $arrType[$key]['total'] = $total;
+            if (!empty($date_search_end)){
+                $query->whereBetween('date_end', [$start_date_end, $end_date_end]);
+            }
+            if (!empty($service_search)){
+                $query->whereHas('transaction_day_item',function ($q) use ($service_search){
+                    $q->where('service_id',$service_search);
+                });
+            }
+            $query->where('status',$status);
+            $arr[$key]['count'] = $query->count();
         }
 
         return response()->json([
-            'total' => $totalAll,
-            'arrType' => $arrType,
+            'follow' => $follow,
+            'arr' => $arr,
             'result' => true,
             'message' => 'Thành công'
         ]);
@@ -217,6 +252,27 @@ class TransactionController extends AuthController
         $status_search = $this->request->input('status_search');
         $customer_search = $this->request->input('customer_search');
         $search = $this->request->input('search') ?? null;
+        //admin
+        $service_id = $this->request->input('service_id') ?? 0;
+        $date_search = $this->request->input('date_search') ?? null;
+        $date_search_end = $this->request->input('date_search_end') ?? null;
+        if (!empty($date_search)){
+            $date_search = explode(' - ',$date_search);
+            $start_date = to_sql_date($date_search[0],true);
+            $end_date = to_sql_date($date_search[1],true);
+        } else {
+            $start_date = null;
+            $end_date = null;
+        }
+        if (!empty($date_search_end)){
+            $date_search_end = explode(' - ',$date_search_end);
+            $start_date_end = to_sql_date($date_search_end[0],true);
+            $end_date_end = to_sql_date($date_search_end[1],true);
+        } else {
+            $start_date_end = null;
+            $end_date_end = null;
+        }
+        //end
         $query = Transaction::with('customer')
             ->with('transaction_day_item')
             ->where('id','!=',0);
@@ -225,7 +281,7 @@ class TransactionController extends AuthController
                 $q->where('reference_no', 'like', "%$search%");
             });
         }
-        $query->where(function ($q) use ($status_search,$customer_search,$customer_id){
+        $query->where(function ($q) use ($status_search,$customer_search,$customer_id,$service_id,$start_date,$end_date,$start_date_end,$end_date_end,$date_search,$date_search_end){
             if ($status_search != -1) {
                 $status_search = is_array($status_search) ? $status_search : [$status_search];
                 $q->whereIn('status', $status_search);
@@ -237,6 +293,17 @@ class TransactionController extends AuthController
 //                        $instance->where('s',$customer_id);
 //                    });
                 });
+            }
+            if (!empty($service_id)){
+                $q->whereHas('transaction_day_item',  function ($instance) use ($service_id){
+                    $instance->where('service_id',$service_id);
+                });
+            }
+            if (!empty($date_search)){
+                $q->whereBetween('date_start', [$start_date, $end_date]);
+            }
+            if (!empty($date_search_end)){
+                $q->whereBetween('date_end', [$start_date_end, $end_date_end]);
             }
         });
         $query->orderByRaw("id desc");
@@ -499,6 +566,25 @@ class TransactionController extends AuthController
         $data['result'] = true;
         $data['message'] = 'Lấy thông tin thành công';
         $data['data'] = $result;
+        return response()->json($data);
+    }
+
+    public function countTransaction(){
+        $service_id = $this->request->input('service_id') ?? 0;
+        $type_search = $this->request->input('type_search') ?? 'all';
+        $query = Transaction::where('id','!=',0);
+        if (!empty($service_id)){
+            $query->whereHas('transaction_day_item',function ($q) use ($service_id){
+                $q->where('service_id',$service_id);
+            });
+        }
+        if ($type_search == 'finish'){
+            $query->where('status', Config::get('constant')['status_transaction_finish']);
+        }
+        $total = $query->count();
+        $data['result'] = true;
+        $data['message'] = 'Thành công';
+        $data['data'] = $total;
         return response()->json($data);
     }
 }

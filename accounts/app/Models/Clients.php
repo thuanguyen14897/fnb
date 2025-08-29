@@ -35,6 +35,7 @@ class Clients extends Model
         'ranking_date',
         'active_limit_private',
         'invoice_limit_private',
+        'radio_discount_private',
     ];
 
 

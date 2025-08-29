@@ -10,6 +10,7 @@ use App\Services\AccountService;
 use App\Services\CategoryService;
 use App\Services\GroupCategoryService;
 use App\Services\OtherAmenitisService;
+use App\Services\TransactionService;
 use Yajra\DataTables\CollectionDataTable;
 
 class ServiceController extends Controller
@@ -19,8 +20,9 @@ class ServiceController extends Controller
     protected $fnbGroupCategoryService;
     protected $fnbCategoryService;
     protected $fnbOtherAmenitisService;
+    protected $fnbTransactionService;
     use UploadFile;
-    public function __construct(Request $request,ServiceService $serviceService,AccountService $accountService,CategoryService $categoryService,GroupCategoryService $groupCategoryService,OtherAmenitisService $otherAmenitisService)
+    public function __construct(Request $request,ServiceService $serviceService,AccountService $accountService,CategoryService $categoryService,GroupCategoryService $groupCategoryService,OtherAmenitisService $otherAmenitisService,TransactionService $transactionService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
@@ -30,6 +32,7 @@ class ServiceController extends Controller
         $this->fnbGroupCategoryService = $groupCategoryService;
         $this->fnbCategoryService = $categoryService;
         $this->fnbOtherAmenitisService = $otherAmenitisService;
+        $this->fnbTransactionService = $transactionService;
     }
 
     public function get_list(){
@@ -272,6 +275,10 @@ class ServiceController extends Controller
         if (!has_permission('service', 'view')) {
             access_denied();
         }
+        //đếm giao dịch
+        $this->requestTransaction = clone $this->request;
+        //end
+
         $this->request->merge(['id' => $id]);
         $response = $this->fnbService->getDetail($this->request);
         $data = $response->getData(true);
@@ -284,6 +291,21 @@ class ServiceController extends Controller
         $title = lang('dt_view_service');
         $titleService = lang('dt_service');
         $dtStatusTransaction = getListStatusTransaction();
+
+        //đếm giao dịch
+        $this->requestTransaction->merge(['service_id' => $id]);
+        $this->requestTransaction->merge(['type_search' => 'finish']);
+        $responseTransaction = $this->fnbTransactionService->countTransaction($this->requestTransaction);
+        $dataTransaction = $responseTransaction->getData(true);
+        $total = ($dataTransaction['data']);
+        $dtData['transaction']['total'] = $total['data'] ?? 0;
+
+        $this->requestTransaction->merge(['type_search' => 'all']);
+        $responseTransaction = $this->fnbTransactionService->countTransaction($this->requestTransaction);
+        $dataTransaction = $responseTransaction->getData(true);
+        $total_all = ($dataTransaction['data']);
+        $dtData['transaction']['total_all'] = $total_all['data'] ?? 0;
+
         return view('admin.service.view', [
             'title' => $title,
             'dtData' => $dtData,
@@ -294,6 +316,9 @@ class ServiceController extends Controller
     }
 
     public function getReviewService($service_id = 0){
+        if (!has_permission('review', 'view')) {
+            access_denied();
+        }
         $this->request->merge(['service_id' => $service_id]);
         $response = $this->fnbService->getReviewService($this->request);
         $data = $response->getData(true);
@@ -352,13 +377,24 @@ class ServiceController extends Controller
                 $str = '<div class="text-left">' . ($dtData['content']) . '</div>';
                 return $str;
             })
+            ->editColumn('tag', function ($dtData) {
+                $detail = $dtData['detail'] ?? [];
+                $html = '';
+                if (!empty($detail)){
+                    foreach ($detail as $k => $v){
+                        $html .= '<div style="padding: 5px;border: 1px solid;border-radius: 10px;margin-left: 5px">'.$v['content'].'</div>';
+                    }
+                }
+                $str = '<div class="text-left" style="display: flex;flex-wrap: wrap">' . $html . '</div>';
+                return $str;
+            })
             ->editColumn('star', function ($dtData) {
                 return loadHtmlReviewStar($dtData['star']);
             })
             ->editColumn('created_at', function ($dtData) {
                 return '<div>' . _dt($dtData['created_at']) . '</div>';
             })
-            ->rawColumns(['options', 'star', 'content','id','customer','created_at'])
+            ->rawColumns(['options', 'star', 'content','id','customer','created_at','tag'])
             ->setTotalRecords($data['recordsTotal'])
             ->setFilteredRecords($data['recordsFiltered'])
             ->with([
@@ -366,5 +402,37 @@ class ServiceController extends Controller
             ])
             ->skipPaging()
             ->make(true);
+    }
+
+    public function loadTransaction(){
+        if (!has_permission('transaction', 'view')) {
+            access_denied(true,'Không có quyền xem');
+        }
+        $this->request->merge(['customer_search' => -1]);
+        $this->request->merge(['current_page' => 1]);
+        $this->request->merge(['per_page' => $this->per_page]);
+        $response = $this->fnbTransactionService->getListDataTransaction($this->request);
+        $data = $response->getData(true);
+        $dtData = collect($data['data']);
+        $next = !empty($dtData['links']['next']) ? 1 : 0;
+        return view('admin.service.list_transaction', [
+            'dtTransaction' => $dtData['data'],
+            'next' => $next,
+        ]);
+    }
+
+    public function loadMoreTransaction(){
+        $current_page = $this->request->input('page');
+        $this->request->merge(['customer_search' => -1]);
+        $this->request->merge(['current_page' => $current_page]);
+        $this->request->merge(['per_page' => $this->per_page]);
+        $response = $this->fnbTransactionService->getListDataTransaction($this->request);
+        $data = $response->getData(true);
+        $dtData = collect($data['data']);
+        $next = !empty($dtData['links']['next']) ? 1 : 0;
+        return view('admin.service.list_transaction', [
+            'dtTransaction' => $dtData['data'],
+            'next' => $next,
+        ]);
     }
 }

@@ -167,8 +167,7 @@
                                             <div class="form-group">
                                                 <label for="wards_id">{{lang('dt_wards')}}</label>
                                                 <select class="wards_id select2" id="wards_id"
-                                                        data-placeholder="Chọn ..." name="wards_id"
-                                                        onchange="changeProvince(this)">
+                                                        data-placeholder="Chọn ..." name="wards_id">
                                                     @if(!empty($client['wards']))
                                                         <option value="{{$client['wards']['Id']}}" {{!empty($client) && $client['wards_id'] == $client['wards']['Id'] ? 'selected' : ''}}>{{$client['wards']['Name'] ?? ''}}</option>
                                                     @endif
@@ -199,9 +198,15 @@
                                                     <label for="active_limit_private2"> Chiết khấu theo hạng thành viên </label>
                                                 </div>
                                             </div>
-                                            <div class="form-group div-active_limit_private {{empty($client['active_limit_private']) ? 'hide' : ''}}">
-                                                <label for="invoice_limit_private">Hạn mức hóa đơn mỗi lần thanh toá</label>
-                                                <input type="text" name="invoice_limit_private" id="invoice_limit_private" value="{{!empty($client) ? $client['invoice_limit_private'] : ''}}" class="form-control invoice_limit_private">
+                                            <div class="div-active_limit_private {{empty($client['active_limit_private']) ? 'hide' : ''}}">
+                                                <div class="form-group">
+                                                    <label for="radio_discount_private">% Chiết khấu</label>
+                                                    <input type="text" name="radio_discount_private" id="radio_discount_private" value="{{!empty($client['radio_discount_private']) ? $client['radio_discount_private'] : ''}}" class="form-control radio_discount">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="invoice_limit_private">Hạn mức hóa đơn mỗi lần thanh toán</label>
+                                                    <input type="text" name="invoice_limit_private" id="invoice_limit_private" onchange="formatNumBerKeyChange(this)" value="{{!empty($client['invoice_limit_private']) ? number_format($client['invoice_limit_private']) : ''}}" class="form-control invoice_limit_private">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -232,7 +237,7 @@
         })
 
         var provinceNow = $('#province_id').val();
-            $(document).ready(function(){
+        $(document).ready(function(){
 
             searchAjaxSelect2('#province_id','api/category/getListProvince', 0,{
                 'select2':true

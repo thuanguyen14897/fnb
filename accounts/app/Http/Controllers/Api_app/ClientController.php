@@ -38,6 +38,13 @@ class ClientController extends AuthController
         $date_search = $this->request->input('date_search') ?? null;
         $type_client = $this->request->input('type_client') ?? 1;
 
+
+        $ares_permission = $this->request->input('ares_permission') ?? 0;
+        if(!empty($ares_permission)) {
+            $aresPer = $this->request->input('aresPer') ?? 0;
+        }
+
+
         $query = Clients::where('id','!=',0);
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
@@ -47,6 +54,37 @@ class ClientController extends AuthController
                     ->orWhere('email', 'like', "%$search%");
             });
         }
+        if($this->request->input('ares_search')) {
+            $dataAres = $this->fnbService->getWardsWhereAres($this->request, $this->request->input('ares_search'));
+            if(!empty($dataAres)) {
+                $WardSearch = $dataAres->getData(true);
+                if(!empty($WardSearch['result'])) {
+                    if(!empty($WardSearch['data'])) {
+                        $query->whereIn('wards_id', $WardSearch['data']);
+                    }
+                }
+            }
+        }
+        if(!empty($ares_permission)) {
+            if(!empty($aresPer)) {
+                $dataAres = $this->fnbService->getWardsWhereAres($this->request, $aresPer);
+                if (!empty($dataAres)) {
+                    $WardSearch = $dataAres->getData(true);
+                    if (!empty($WardSearch['result'])) {
+                        if (!empty($WardSearch['data'])) {
+                            $query->whereIn('wards_id', $WardSearch['data']);
+                        } else {
+                            $query->where('tbl_clients.id', 0);
+                        }
+                    } else {
+                        $query->where('tbl_clients.id', 0);
+                    }
+                }
+            }
+            else {
+                $query->where('tbl_clients.id', 0);
+            }
+        }
         if (($type_client_search)){
             $query->where('type_client', $type_client_search);
         }
@@ -54,6 +92,7 @@ class ClientController extends AuthController
             $query->where('active', $active_search);
         }
         $query->where('type_client',$type_client);
+
         if (!empty($date_search)){
             $date_search = explode(' - ',$date_search);
             $start_date = to_sql_date($date_search[0].' 00:00:00',true);
@@ -140,10 +179,39 @@ class ClientController extends AuthController
 
     public function getDetailCustomer(){
         $id = $this->request->input('id') ?? 0;
-        $client = Clients::with('representative')
-            ->with('image_cccd')
-            ->with('image_kd')
-            ->find($id);
+
+        $ares_permission = (int) ($this->request->input('ares_permission') ?? 0);
+        $query = Clients::with(['representative', 'image_cccd', 'image_kd']);
+        if ($ares_permission) {
+            $aresPer = $this->request->input('aresPer'); // có thể là null/0
+
+            if (empty($aresPer)) {
+                // Không có tham số quyền -> khóa kết quả
+                $query->where('tbl_clients.id', 0);
+            } else {
+                $resp = $this->fnbService->getWardsWhereAres($this->request, $aresPer);
+                $payload = $resp ? $resp->getData(true) : null;
+
+                $hasResult = !empty($payload['result']);
+                $wards     = !empty($payload['data']) ? $payload['data'] : [];
+
+                if ($hasResult && !empty($wards)) {
+                    // nếu $wards là list object -> $wards = collect($wards)->pluck('id_ward')->all();
+                    $query->whereIn('wards_id', $wards);
+                } else {
+                    $query->where('tbl_clients.id', 0);
+                }
+            }
+        }
+
+        $client = $query->find($id);
+
+
+
+//        $client = Clients::with('representative')
+//            ->with('image_cccd')
+//            ->with('image_kd');
+//        $client->find($id);
         if (!empty($client)){
             $dtImage = !empty($client->avatar) ? env('STORAGE_URL').'/'.$client->avatar : null;
             $client->avatar = $dtImage;
@@ -203,11 +271,31 @@ class ClientController extends AuthController
             $data['message'] = 'Không tồn tại khách hàng';
             return response()->json($data);
         }
+        $ClientRules = [];
+        if(filled($this->request->email)) {
+            $ClientRules['email'] = 'unique:tbl_clients,email,' . $id;
+        }
+        if(filled($this->request->phone)) {
+            $ClientRules['phone'] = 'unique:tbl_clients,phone,' . $id;
+        }
+        $clientMessages = [
+            'email.unique' => 'Email người đã tồn tại',
+            'phone.unique' => 'Số điện thoại đã tồn tại',
+        ];
+        $validatorClient = Validator::make($this->request->all(), $ClientRules, $clientMessages);
+        if ($validatorClient->fails()) {
+            $data['result'] = false;
+            $data['message'] = $validatorClient->errors()->all()[0];
+            echo json_encode($data);
+            die();
+        }
+
+
         DB::beginTransaction();
         try {
             $client->fullname = $this->request->fullname;
-            $client->phone = $this->request->phone;
-            $client->email = $this->request->email;
+            $client->phone = $this->request->phone ?? NULL;
+            $client->email = $this->request->email ?? NULL;
             $client->active = $this->request->active;
             $client->type_client = $this->request->type_client;
             $client->number_cccd = $this->request->number_cccd;
@@ -224,14 +312,16 @@ class ClientController extends AuthController
                 $client->password = encrypt($this->request->password);
             }
 
-            $client->province_id = $this->request->province_id;
-            $client->wards_id = $this->request->wards_id;
+            $client->province_id = $this->request->province_id ?? 0;
+            $client->wards_id = $this->request->wards_id ?? 0;
 
             $client->active_limit_private = $this->request->active_limit_private ?? 0;
             if($client->active_limit_private == 1) {
-                $client->invoice_limit_private = number_unformat($this->request->invoice_limit_private);
+                $client->invoice_limit_private = $this->request->invoice_limit_private;
+                $client->radio_discount_private = $this->request->radio_discount_private;
             }
             else {
+                $client->radio_discount_private = NULL;
                 $client->invoice_limit_private = NULL;
             }
 

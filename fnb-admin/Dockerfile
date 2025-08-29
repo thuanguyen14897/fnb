@@ -3,10 +3,9 @@ FROM php:8.1-apache
 # Cài tiện ích
 RUN apt-get update && apt-get install -y \
     libpng-dev zip unzip curl git libonig-dev libxml2-dev \
-    libjpeg-dev libfreetype6-dev \
+    libjpeg-dev libfreetype6-dev libzip-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
-
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

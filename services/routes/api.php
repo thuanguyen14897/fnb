@@ -82,4 +82,7 @@ Route::group(['prefix' => 'ares'], function () {
     Route::get('ChangeStatus', [AresController::class, 'ChangeStatus']);
     Route::get('getSetup', [AresController::class, 'getSetup']);
     Route::post('updateSetup', [AresController::class, 'updateSetup']);
+    Route::get('getDetailWhere', [AresController::class, 'getDetailWhere']);
+    Route::get('getWardsWhereAres', [AresController::class, 'getWardsWhereAres']);
+    Route::get('getListDataWhereName', [AresController::class, 'getListDataWhereName']);
 });

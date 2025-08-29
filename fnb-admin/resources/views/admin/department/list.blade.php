@@ -21,13 +21,13 @@
             <div class="card-box table-responsive">
                 <table id="table_department" class="table table-bordered">
                     <thead>
-                    <tr>
-                        <th class="text-center">{{lang('dt_stt')}}</th>
-                        <th class="text-center">{{lang('dt_code_department')}}</th>
-                        <th class="text-center">{{lang('dt_name_department')}}</th>
-                        <th class="text-center">{{lang('dt_check_transaction')}}</th>
-                        <th class="text-center">{{lang('dt_actions')}}</th>
-                    </tr>
+                        <tr>
+                            <th class="text-center">{{lang('dt_stt')}}</th>
+                            <th class="text-center">{{lang('dt_code_department')}}</th>
+                            <th class="text-center">{{lang('dt_name_department')}}</th>
+                            <th class="text-center">{{lang('dt_check_transaction')}}</th>
+                            <th class="text-center">{{lang('dt_actions')}}</th>
+                        </tr>
                     </thead>
                     <tbody>
                     </tbody>

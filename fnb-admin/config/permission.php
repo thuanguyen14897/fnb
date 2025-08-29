@@ -6,6 +6,10 @@ return [
             'name' => 'view',
         ],
         [
+            'id' => 'viewown',
+            'name' => 'viewown',
+        ],
+        [
             'id' => 'add',
             'name' => 'add',
         ],

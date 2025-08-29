@@ -395,6 +395,12 @@
       <path value="$PROJECT_DIR$/services/vendor/symfony/polyfill-uuid" />
       <path value="$PROJECT_DIR$/services/vendor/composer" />
       <path value="$PROJECT_DIR$/services/vendor/symfony/translation" />
+      <path value="$PROJECT_DIR$/fnb-admin/vendor/maatwebsite/excel" />
+      <path value="$PROJECT_DIR$/fnb-admin/vendor/maennchen/zipstream-php" />
+      <path value="$PROJECT_DIR$/fnb-admin/vendor/phpoffice/phpspreadsheet" />
+      <path value="$PROJECT_DIR$/fnb-admin/vendor/markbaker/complex" />
+      <path value="$PROJECT_DIR$/fnb-admin/vendor/markbaker/matrix" />
+      <path value="$PROJECT_DIR$/fnb-admin/vendor/ezyang/htmlpurifier" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.1" />

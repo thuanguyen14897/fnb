@@ -509,6 +509,7 @@
                                     <tr>
                                         <th>Hạng thành viên</th>
                                         <th>Hạn mức hóa đơn mỗi lần thanh toán</th>
+                                        <th>Chiết khấu</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -524,6 +525,16 @@
                                                         @endif
                                                     @else
                                                         Dưới <input name="membership_level[{{$value->id}}][invoice_limit]" type="text" class="input-num" value="{{number_format($value->invoice_limit)}}"/> VNĐ
+                                                    @endif
+                                                </td>
+                                                <td class="text-center">
+                                                    @if(count($membership_level) - 1 == $key)
+                                                        Có chiết khấu riêng
+                                                        @if(is_numeric($value->radio_discount))
+                                                            <input name="membership_level[{{$value->id}}][radio_discount]" type="hidden" class="input-num" value="{{number_format($value->radio_discount)}}"/>
+                                                        @endif
+                                                    @else
+                                                        <input name="membership_level[{{$value->id}}][radio_discount]" type="text" class="input-num" value="{{number_format($value->radio_discount)}}"/> %
                                                     @endif
                                                 </td>
                                             </tr>

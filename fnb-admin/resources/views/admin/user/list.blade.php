@@ -5,6 +5,7 @@
         <div class="col-sm-12">
             <div class="btn-group pull-right m-t-15">
                 <a type="button" class="btn btn-default waves-effect waves-light" href="admin/user/detail">{{lang('dt_create')}}</a>
+                <a type="button" class="btn btn-info waves-effect waves-light m-l-10" href="admin/user/import_excel"><i class="fa fa-upload" aria-hidden="true"></i> Import Excel</a>
             </div>
             <h4 class="page-title text-capitalize">{{lang('dt_user')}}</h4>
             <ol class="breadcrumb">
@@ -23,6 +24,30 @@
             @endif
             <div class="card-box table-responsive">
                 <div class="row m-b-10">
+                    <div class="col-md-3">
+                        <label for="department_search">{{lang('dt_department')}}</label>
+                        <select class="department_search select2" id="department_search"
+                                data-placeholder="Chọn ..." name="department_search">
+                            <option value="0">Tất cả</option>
+                            @if(!empty($department))
+                                @foreach($department as $key => $value)
+                                    <option value="{{$value->id}}">{{$value->name}}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="role_search">{{lang('dt_role')}}</label>
+                        <select class="role_search select2" id="role_search"
+                                data-placeholder="Chọn ..." name="role_search">
+                            <option value="0">Tất cả</option>
+                            @if(!empty($role))
+                                @foreach($role as $key => $value)
+                                    <option value="{{$value->id}}">{{$value->name}}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
                     <div class="col-md-3">
                         <label for="ares_search">{{lang('c_ares')}}</label>
                         <select class="ares_search select2" id="ares_search"
@@ -43,6 +68,7 @@
                         <th class="text-center">{{lang('dt_code_user')}}</th>
                         <th class="text-center">{{lang('dt_name_user')}}</th>
                         <th class="text-center">{{lang('dt_email_user')}}</th>
+                        <th class="text-center">{{lang('dt_phone_user')}}</th>
                         <th class="text-center">{{lang('dt_department')}}</th>
                         <th class="text-center">{{lang('dt_role')}}</th>
                         <th class="text-center">{{lang('c_ares')}}</th>
@@ -61,7 +87,9 @@
     <script>
         var oTable;
         var fnserverparams = {
-            "ares_search" : "#ares_search"
+            "ares_search" : "#ares_search",
+            "department_search" : "#department_search",
+            "role_search" : "#role_search",
         };
         $.each(fnserverparams, function(index, value) {
             $(value).change(function() {
@@ -90,6 +118,7 @@
                 {data: 'code', name: 'code'},
                 {data: 'name', name: 'name'},
                 {data: 'email', name: 'email'},
+                {data: 'phone', name: 'phone'},
                 {data: 'department', name: 'department'},
                 {data: 'role', name: 'role'},
                 {data: 'ares', name: 'ares'},

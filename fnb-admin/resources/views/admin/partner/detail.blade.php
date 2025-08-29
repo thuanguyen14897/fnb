@@ -156,22 +156,36 @@
 @endsection
 @section('script')
     <script>
-        function changeProvince(_this){
+        //function changeProvince(_this){
+            //var province_id = $(_this).val();
+            //searchAjaxSelect2('#wards_id','api/category/getListWard',0,{
+                //'select2':true,
+                //province_id: province_id,
+            //})
+            //$('select#wards_id').val(null).trigger('change.select2')
+        //}
+        var provinceNow = $('#province_id').val();
+
+        function changeProvince(_this) {
             var province_id = $(_this).val();
-            searchAjaxSelect2('#wards_id','api/category/getListWard',0,{
+            if(provinceNow != province_id) {
+                $('#wards_id').val(0);
+            }
+            searchAjaxSelect2Mutil(`#wards_id`,'api/category/getListWard',0,{
                 'select2':true,
-                province_id: province_id,
+                province_id :province_id
             })
-            $('select#wards_id').val(null).trigger('change.select2')
+            provinceNow = province_id;
         }
         $(document).ready(function(){
             searchAjaxSelect2('#province_id','api/category/getListProvince',0,{
                 'select2':true
             })
-            searchAjaxSelect2('#wards_id','api/category/getListWard',0,{
-                'select2':true,
-                province_id: {{!empty($dtData['province_id']) ? $dtData['province_id'] : -1}},
-            })
+            $('#province_id').trigger('change');
+            //searchAjaxSelect2('#wards_id','api/category/getListWard',0,{
+                //'select2':true,
+                //province_id: {{!empty($dtData['province_id']) ? $dtData['province_id'] : -1}},
+            //})
             $(`#type_client`).select2();
             $(".form-group a").click(function(){
                 var $this=$(this);

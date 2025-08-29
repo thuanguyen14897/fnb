@@ -2,41 +2,69 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ares;
 use App\Models\MemberShipLevel;
 use App\Models\Province;
+use App\Models\UserAres;
 use App\Traits\UploadFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\AccountService;
+use App\Services\AresService;
 use Yajra\DataTables\CollectionDataTable;
 
 class ClientsController extends Controller
 {
     protected $fnbAccount;
+    protected $fnbAres;
     use UploadFile;
-    public function __construct(Request $request,AccountService $accountService)
+    public function __construct(Request $request,AccountService $accountService,AresService $aresService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
         $this->per_page = 10;
         $this->fnbAccount = $accountService;
+        $this->fnbAres = $aresService;
     }
 
     public function get_list(){
-        if (!has_permission('clients','view')) {
+        if (!has_permission('clients','view') && !has_permission('clients','viewown')) {
             access_denied();
         }
-        return view('admin.clients.list',[]);
+        $this->request->merge([
+            'show_short' => 1
+        ]);//show chỉ thông tin cơ bản
+        $data_ares = $this->fnbAres->getListData($this->request);
+        if(!empty($data_ares->getData()->data->data)) {
+            $ares = $data_ares->getData()->data->data;
+        }
+        return view('admin.clients.list',[
+            'ares'=> $ares ?? []
+        ]);
     }
 
     public function get_detail($id = 0) {
         if (!has_permission('clients', 'edit')){
             access_denied();
         }
+        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+            $this->request->merge(['ares_permission' => 1]);
+            $aresPer = [];
+            foreach ($UserAres as $key => $item) {
+                $aresPer[] = $item->id_ares;
+            }
+            $this->request->merge(['aresPer' => $aresPer]);
+        }
         $this->request->merge(['id' => $id]);
         $response = $this->fnbAccount->getDetailCustomer($this->request);
         $data = $response->getData(true);
         $client = $data['client'] ?? [];
+        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+            if (!empty($id) && empty($client['id'])) {
+                access_denied();
+            }
+        }
         $title = lang('c_title_edit_client');
         return view('admin.clients.detail',[
             'id' => $id,
@@ -46,13 +74,33 @@ class ClientsController extends Controller
     }
 
     public function view($id = 0){
-        if (!has_permission('clients', 'view')){
-            access_denied();
+        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+            $this->request->merge(['ares_permission' => 1]);
+            $aresPer = [];
+            foreach ($UserAres as $key => $item) {
+                $aresPer[] = $item->id_ares;
+            }
+            $this->request->merge(['aresPer' => $aresPer]);
         }
+
         $this->request->merge(['id' => $id]);
         $response = $this->fnbAccount->getDetailCustomer($this->request);
         $data = $response->getData(true);
         $client = $data['client'] ?? [];
+        if(!empty($client['id'])) {
+            if ($client['active_limit_private'] == 0) {
+                $membership_level = MemberShipLevel::find($client['membership_level']);
+                $client['invoice_limit_member'] = $membership_level->invoice_limit;
+                $client['radio_discount_member'] = $membership_level->radio_discount;
+            }
+        }
+        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+            if (!empty($id) && empty($client['id'])) {
+                access_denied();
+            }
+        }
+
         $title = lang('dt_view_client');
         return view('admin.clients.view',[
             'title' => $title,
@@ -63,6 +111,16 @@ class ClientsController extends Controller
     public function getListCustomer()
     {
         $this->request->merge(['type_client' => 1]);
+        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+            $this->request->merge(['ares_permission' => 1]);
+            $aresPer = [];
+            foreach ($UserAres as $key => $item) {
+                $aresPer[] = $item->id_ares;
+            }
+            $this->request->merge(['aresPer' => $aresPer]);
+        }
+
         $response = $this->fnbAccount->getListCustomer($this->request);
         $data = $response->getData(true);
         if ($data['result'] == false){
@@ -104,17 +162,24 @@ class ClientsController extends Controller
             ->addColumn('img_membership_level', function ($client) {
                 $memberLevel = MemberShipLevel::find($client['membership_level']);
                 $dtImage = !empty($client['membership_level']) ? url('/upload/membership_level/'.$client['membership_level'].'.png') : null;
+                if($client['active_limit_private'] == 1) {
+                    $radio_discount = $client['radio_discount_private'];
+                }
+                else {
+                    $radio_discount = $memberLevel->radio_discount;
+                }
+
                 $str = '<div style="display: flex;justify-content:center;margin-top: 5px"
                      class="show_image">
                     <img src="' . $dtImage . '" alt="avatar"
                          class="img-responsive img-circle"
-                         style="width: 30px;height: 30px"><span class="m-t-5" style="color:'.$memberLevel->color.'">Hạng ' . $memberLevel->name. '</span>
+                         style="width: 30px;height: 30px"><span class="m-t-5" style="color:'.$memberLevel->color.'"><strong>Hạng ' . $memberLevel->name. '</strong> ('.$radio_discount.'%)</span>
                 </div>';
                 return $str;
             })
             ->addColumn('invoice_limit', function ($client) {
-                if(!empty($client->active_limit_private)) {
-                    return '<div class="text-center">'.(!empty($membership_level->invoice_limit_private) ? number_format($membership_level->invoice_limit_private) : 'Chưa đặt hạn mức').'</div>';
+                if(!empty($client['active_limit_private'])) {
+                    return '<div class="text-center">'.(!empty($client['invoice_limit_private']) ? number_format($client['invoice_limit_private']) : 'Chưa đặt hạn mức').'</div>';
                 }
                 else {
                     $membership_level = MemberShipLevel::find($client['membership_level']);
@@ -156,7 +221,27 @@ class ClientsController extends Controller
 
                 return $str;
             })
-            ->rawColumns(['options', 'active', 'avatar','img_membership_level', 'phone', 'created_at', 'fullname','referral_code','point_membership','ranking_date','invoice_limit'])
+            ->addColumn('ares', function ($client) {
+                $str = '';
+                if(!empty($client['province_id']) && !empty($client['wards_id'])) {
+                    $this->request->merge(['province' => $client['province_id']]);
+                    $this->request->merge(['ward' => $client['wards_id']]);
+                    $data_ares = $this->fnbAres->getDetailWhere($this->request);
+                    $_ares = $data_ares->getData(true);
+                    if(!empty($_ares['result'])){
+                        if(!empty($_ares['dtData'])) {
+                            foreach ($_ares['dtData'] as $k => $v) {
+                                $str .= "<div class='label label-success'>" . ($v['name'] ?? '') . "</div>" . ' ';
+                            }
+                        }
+                        else {
+                            $str = "<div class='label label-danger'>Chưa thiết lập</div>";
+                        }
+                    }
+                }
+                return $str;
+            })
+            ->rawColumns(['options', 'active', 'avatar','img_membership_level', 'phone', 'created_at', 'fullname','referral_code','point_membership','ranking_date','invoice_limit','ares'])
             ->setTotalRecords($data['recordsTotal']) // tổng số bản ghi
             ->setFilteredRecords($data['recordsFiltered']) // sau khi lọc
             ->with([
@@ -174,7 +259,10 @@ class ClientsController extends Controller
         return response()->json($data);
     }
 
-    public function detail(){
+    public function detail() {
+        if(!empty($this->request->invoice_limit_private)) {
+            $this->request->merge(['invoice_limit_private' => number_unformat($this->request->invoice_limit_private)]);
+        }
         $response = $this->fnbAccount->detailCustomer($this->request);
         $dataRes = $response->getData(true);
         $data = $dataRes['data'];

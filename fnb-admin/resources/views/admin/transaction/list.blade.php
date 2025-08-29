@@ -83,12 +83,24 @@
 @section('script')
     <script>
         $(document).ready(function (){
+            searchAjaxSelect2('#service_search','admin/category/searchService')
             searchAjaxSelect2('#customer_search','admin/category/searchCustomer')
-            searchAjaxSelect2('#customer_renter_search','admin/category/searchCustomer',0,{type_client:-1})
             search_daterangetimepicker('date_search');
             search_daterangetimepicker('date_search_end');
         })
+        // function formatRepo(repo){
+        //     if (repo.loading) {
+        //         return repo.text;
+        //     }
+        //     let html = `<div>${repo.text}</div>`;
+        //     category = JSON.parse(repo.category);
+        //     if (category) {
+        //         html += `<div style="font-size: 12px; color: gray;"><img src="${category.icon}" style="width: 20px">${category.name}</div>`;
+        //     }
+        //     return $(html);
+        // }
         var fnserverparams = {
+            'status_search': '#status_search',
             'partner_search': '#partner_search',
             'customer_search': '#customer_search',
             'service_search': '#service_search',
@@ -152,7 +164,6 @@
         });
 
         function getCountAll() {
-            return ;
             var data = {};
             $.each(fnserverparams, function(filterIndex, filterItem) {
                 data[filterIndex] = $(filterItem).val();

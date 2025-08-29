@@ -103,6 +103,7 @@ class ServiceController extends AuthController
             ->with('ward')
             ->with('day')
             ->with('image_store')
+            ->with('review')
             ->find($id);
         if (!empty($dtData)){
             $dtImage = !empty($dtData->image) ? env('STORAGE_URL').'/'.$dtData->image : null;
@@ -140,6 +141,8 @@ class ServiceController extends AuthController
                 $dtIcon = !empty($category_service->icon) ? env('STORAGE_URL').'/'.$category_service->icon : null;
                 $category_service->icon = $dtIcon;
             }
+
+            $dtData->total_star = $dtData->review->avg('star');
         }
         $data['result'] = true;
         $data['dtData'] = $dtData;

@@ -93,6 +93,16 @@
                                         <p class="text-dark member-info-detail">
                                             <span>{{lang('dt_wards')}}: </span><span>{{($client['wards']['Name'] ?? '')}}</span>
                                         </p>
+
+                                        <p class="text-dark member-info-detail">
+                                            <span>{{lang('Hạng mức hóa đơn')}}: </span><span>{!!(empty($client['active_limit_private']) ? '<a class="btn btn-xs btn-info">Chiết khấu theo hạng thành viên</a>' : '<a class="btn btn-xs btn-warning">Chiết khấu riêng</a>')!!}</span>
+                                        </p>
+                                        <p class="text-dark member-info-detail">
+                                            <span>{{lang('Chiết khấu')}}: </span><span>{{(!empty($client['active_limit_private']) ? $client['radio_discount_private'] : $client['radio_discount_member']) }} % </span>
+                                        </p>
+                                        <p class="text-dark member-info-detail">
+                                            <span>{{lang('Hạn mức hóa đơn mỗi lần thanh toán')}}: </span><span>{{(!empty($client['active_limit_private']) ? number_format($client['invoice_limit_private']) : number_format($client['invoice_limit_member']))}}</span>
+                                        </p>
                                     </div>
 
                                 </div>

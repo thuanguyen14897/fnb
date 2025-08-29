@@ -64,6 +64,9 @@ class MemberShipLevelController extends Controller
                 if(is_numeric($memberShipLevel->invoice_limit)) {
                     $memberShipLevel->invoice_limit = number_unformat($value['invoice_limit']);
                 }
+                if(is_numeric($memberShipLevel->radio_discount)) {
+                    $memberShipLevel->radio_discount = number_unformat($value['radio_discount']);
+                }
                 $memberShipLevel->save();
             }
             foreach ($membership_expense as $id => $value) {

@@ -299,4 +299,75 @@ class AresController extends AuthController
         ]);
     }
 
+
+    public function getDetailWhere() {
+        $province = $this->request->input('province') ?? 0;
+        $ward = $this->request->input('ward') ?? 0;
+        $dtData = AresWard::select('tbl_ares.*')
+            ->where('id_province','=',$province)
+            ->where('id_ward','=',$ward)
+            ->LeftJoin('tbl_ares','tbl_ares.id','=','tbl_ares_ward.id_ares')->get();
+        $data['result'] = true;
+        $data['dtData'] = $dtData;
+        $data['message'] = 'Lấy thông tin khu vực kinh doanh thành công';
+        return response()->json($data);
+    }
+
+    public function getWardsWhereAres() {
+        $id_ares = $this->request->input('id_ares') ?? 0;
+//        $dtData = AresWard::select('tbl_ares_ward.id_ward');
+//        if(is_array($id_ares)) {
+//            $dtData->whereIn('id_ares', $id_ares);
+//        }
+//        else {
+//            $dtData->where('id_ares','=', $id_ares);
+//        }
+//        $dtData->get();
+        $dtData = AresWard::select('id_ward')
+            ->when(is_array($id_ares), function ($q) use ($id_ares) {
+                return $q->whereIn('id_ares', $id_ares);
+            }, function ($q) use ($id_ares) {
+                return $q->where('id_ares', $id_ares);
+            })
+            ->get();
+
+
+        $dataWard = [];
+        foreach($dtData as $key => $value) {
+            $dataWard[] = $value->id_ward;
+        }
+        $data['result'] = true;
+        $data['data'] = $dataWard;
+        $data['message'] = 'Lấy thông tin khu vực kinh doanh thành công';
+        return response()->json($data);
+    }
+
+    public function getListDataWhereName(){
+        if ($this->request->client == null) {
+            $this->request->client = (object)['token' => Config::get('constant')['token_default']];
+        }
+        $list_name = $this->request->input('list_name') ?? null;
+        $orderBy = 'id desc';
+        $query = Ares::select('tbl_ares.*')
+            ->where('id','!=',0)
+            ->where('active','=',1);
+        if (!empty($list_name)) {
+            $query->where(function($q) use ($list_name) {
+                if(is_array($list_name)) {
+                    $q->whereIn('name', $list_name);
+                }
+                else {
+                    $q->where('name', '=', "$list_name");
+                }
+            });
+        }
+        $query->orderByRaw($orderBy);
+        $dtData = $query->get();
+        return response()->json([
+            'data' => $dtData,
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
+    }
+
 }

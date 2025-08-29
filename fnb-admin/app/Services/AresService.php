@@ -84,6 +84,37 @@ class AresService
         }
     }
 
+    public function getDetailWhere($request = [], $id = 0){
+        try {
+            if(!empty($id)) {
+                $request->merge(['id' => $id]);
+            }
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/ares/getDetailWhere",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
+                ], $response->status());
+            }
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'dtData' => $data['dtData'] ?? [],
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function detail($request){
         try {
             $response = $this->sendRequestToService(
@@ -232,6 +263,37 @@ class AresService
             ]);
         }
         catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getListDataWhereName($request)
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/ares/getListDataWhereName",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
+                    'data' => []
+                ], $response->status());
+            }
+
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'data' => $data['data'],
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'result' => false,
                 'message' => $e->getMessage(),
