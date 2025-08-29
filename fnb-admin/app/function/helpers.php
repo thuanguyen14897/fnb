@@ -1586,13 +1586,7 @@ if (!function_exists('menuHelper')) {
                         'name' => lang('Tiện nghi'),
                         'link' => 'admin/other_amenities_service/list',
                         'image' => '',
-                    ],
-                    [
-                        'id' => 'service',
-                        'name' => lang('Gian hàng'),
-                        'link' => 'admin/service/list',
-                        'image' => '',
-                    ],
+                    ]
                 ]
             ],
             [
@@ -1621,10 +1615,23 @@ if (!function_exists('menuHelper')) {
             [
                 'id' => 'manager_partner',
                 'name' => 'Đối tác',
-                'link' => 'admin/partner/list',
+                'link' => '',
                 'class' => 'doi_tac',
                 'image' => 'admin/assets/images/icon_menu/doi_tac.png',
-                'child' => [],
+                'child' => [
+                    [
+                        'id' => 'partner',
+                        'name' => lang('Danh sách đối tác'),
+                        'link' => 'admin/partner/list',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'service',
+                        'name' => lang('Danh sách gian hàng'),
+                        'link' => 'admin/service/list',
+                        'image' => '',
+                    ],
+                ],
             ],
             [
                 'id' => 'manager_app',

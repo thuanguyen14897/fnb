@@ -80,7 +80,7 @@
     }
 
     .modal-day:hover {
-        border-color: #667eea;
+        border-color: #ff912c;
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
     }
 
@@ -116,7 +116,6 @@
 
     .service-price {
         font-weight: 600;
-        color: #38b2ac;
     }
 
     .modal-total {
@@ -128,90 +127,94 @@
         text-align: center;
     }
 
-    .total-label {
-        font-size: 1.1rem;
-        margin-bottom: 10px;
+    .status {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
     }
-
-    .total-amount {
-        font-size: 2rem;
-        font-weight: 700;
+    .service-details{
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .service-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        object-fit: cover;
+        margin-right: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 </style>
-<div class="modal-dialog transaction-modal" style="width: 70%;">
+<div class="modal-dialog transaction-modal" style="width: 50%;">
     <div class="modal-content" >
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title">{{$title}}</h4>
+            <h4 class="modal-title">{{$dtData['reference_no']}} - {{$dtData['name']}}</h4>
         </div>
         <div class="modal-body">
             <div class="row">
                 <div class="modal-info">
                     <div class="info-item">
-                        <div class="info-label">Khách hàng</div>
-                        <div class="info-value">👤 Nguyễn Văn A</div>
+                        <div class="info-label">Thành viên</div>
+                        <div class="info-value">👤 {{!empty($dtData['customer']) ? $dtData['customer']['fullname'] : ''}}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Trạng thái</div>
-                        <div class="info-value"><span class="status completed">Hoàn thành</span></div>
+                        <div class="info-value"><span class="status" style="background: {{$dtData['status']['color']}}">{{$dtData['status']['name']}}</span></div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Ngày tạo</div>
-                        <div class="info-value">📅 14/09/2024</div>
+                        <div class="info-value">📅 {{_dt($dtData['date'])}}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Số ngày</div>
-                        <div class="info-value">🗓️ 2 ngày</div>
+                        <div class="info-value">🗓️ {{$dtData['day']['day']}}</div>
                     </div>
                 </div>
                 <div class="modal-days">
-                    <div class="modal-day">
-                        <div class="modal-day-header">
-                            <span>📅 Ngày 1: Thứ Bảy, 15/09/2024</span>
-                            <span>Tổng: 3,800,000đ</span>
-                        </div>
-                        <div class="modal-services">
-                            <div class="modal-service">
-                                <span class="service-name">🏨 Khách sạn Hilton - Phòng Deluxe</span>
-                                <span class="service-price">2,500,000đ</span>
+                    @if(!empty($dtData['transaction_day']))
+                        @foreach($dtData['transaction_day'] as $key => $value)
+                            <div class="modal-day">
+                                <div class="modal-day-header">
+                                    <span>📅 Ngày {{(++$key)}}: {{_dt_new($value['date'],false)}}</span>
+                                </div>
+                                <div class="modal-services">
+                                    @if(!empty($value['transaction_day_item']))
+                                        @foreach($value['transaction_day_item'] as $kk => $vv)
+                                            @php
+                                                $image_service = !empty($vv['service']['image_store']) ? $vv['service']['image_store'] : null;
+                                                $dtImage = null;
+                                                if (!empty($image_service)){
+                                                    $dtImage = !empty($image_service[0]) ? $image_service[0]['image'] : null;
+                                                }
+                                            @endphp
+                                            <div class="modal-service">
+                                                <a href="{{$dtImage}}" data-lightbox="customer-profile">
+                                                    <img src="{{$dtImage}}" alt="Hotel" class="service-image">
+                                                </a>
+                                                <div class="service-details">
+                                                    <div class="service-info">
+                                                        <div class="service-name">{{$vv['hour']}}</div>
+                                                        <div class="service-description">{{$vv['service']['name']}}</div>
+                                                    </div>
+                                                    <span class="service-price">
+                                                        <img src="{{$vv['service']['category_service']['icon']}}" style="width: 20px"> {{$vv['service']['category_service']['name']}}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @endif
+                                </div>
                             </div>
-                            <div class="modal-service">
-                                <span class="service-name">🍽️ Ăn trưa nhà hàng cao cấp</span>
-                                <span class="service-price">800,000đ</span>
-                            </div>
-                            <div class="modal-service">
-                                <span class="service-name">🚗 Xe đưa đón sân bay</span>
-                                <span class="service-price">500,000đ</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-day">
-                        <div class="modal-day-header">
-                            <span>📅 Ngày 2: Chủ Nhật, 16/09/2024</span>
-                            <span>Tổng: 1,500,000đ</span>
-                        </div>
-                        <div class="modal-services">
-                            <div class="modal-service">
-                                <span class="service-name">🎭 Tour Văn Miếu - Quốc Tử Giám</span>
-                                <span class="service-price">300,000đ</span>
-                            </div>
-                            <div class="modal-service">
-                                <span class="service-name">🍜 Ăn phở Hà Nội authentic</span>
-                                <span class="service-price">200,000đ</span>
-                            </div>
-                            <div class="modal-service">
-                                <span class="service-name">🛍️ Mua sắm phố cổ Hà Nội</span>
-                                <span class="service-price">1,000,000đ</span>
-                            </div>
-                        </div>
-                    </div>
+                        @endforeach
+                    @endif
             </div>
         </div>
         <div class="modal-footer">
-{{--            <a class="dt-modal hide click1"--}}
-{{--               href="admin/transaction/view/{{$transaction->id}}?type={{$transaction->type}}" data-toggle="modal"--}}
-{{--               data-target="#myModal"></a>--}}
             <button type="button" class="btn btn-default"
                     data-dismiss="modal">{{lang('dt_close')}}</button>
         </div>
@@ -219,125 +222,4 @@
     </div>
 </div>
 <script>
-    {{--expenseDropzone = initDropzone('.transaction_comment', '#comment-upload', {--}}
-    {{--    previewTemplate: $("#preview-template").html(),--}}
-    {{--    autoProcessQueue: false,--}}
-    {{--    addRemoveLinks: true,--}}
-    {{--    previewsContainer: '.dropzone-previews',--}}
-    {{--    clickable: '.transaction_comment',--}}
-    {{--    sending: function (file, xhr, formData) {--}}
-
-    {{--    },--}}
-    {{--    success: function (file, response) {--}}
-    {{--        if (this.getUploadingFiles().length === 0 && this.getQueuedFiles().length === 0) {--}}
-    {{--        }--}}
-    {{--    }--}}
-    {{--});--}}
-
-    {{--$("#comment-upload").validate({--}}
-    {{--    rules: {},--}}
-    {{--    messages: {},--}}
-    {{--    submitHandler: function (form) {--}}
-    {{--        var url = form.action;--}}
-    {{--        var form = $(form),--}}
-    {{--            formData = new FormData(),--}}
-    {{--            formParams = form.serializeArray();--}}
-
-    {{--        $.each(form.find('input[type="file"]'), function (i, tag) {--}}
-    {{--            $.each($(tag)[0].files, function (i, file) {--}}
-    {{--                formData.append(tag.name, file);--}}
-    {{--            });--}}
-    {{--        });--}}
-    {{--        $.each(formParams, function (i, val) {--}}
-    {{--            formData.append(val.name, val.value);--}}
-    {{--        });--}}
-    {{--        formData.append('transaction_id', {{$transaction->id}});--}}
-    {{--        $.each(expenseDropzone.files, function (index, value) {--}}
-    {{--            formData.append('file[]', value);--}}
-    {{--        })--}}
-
-    {{--        $.ajax({--}}
-    {{--            url: url,--}}
-    {{--            type: 'POST',--}}
-    {{--            dataType: 'JSON',--}}
-    {{--            cache: false,--}}
-    {{--            contentType: false,--}}
-    {{--            processData: false,--}}
-    {{--            data: formData,--}}
-    {{--        })--}}
-    {{--            .done(function (data) {--}}
-    {{--                if (data.result) {--}}
-    {{--                    $(".content").val(' ');--}}
-    {{--                    $(".dropzone-previews").html(' ');--}}
-    {{--                    expenseDropzone.files = [];--}}
-    {{--                    alert_float('success', data.message);--}}
-    {{--                } else {--}}
-    {{--                    alert_float('error', data.message);--}}
-    {{--                }--}}
-    {{--                $(".result_comment").html(data.html);--}}
-    {{--            })--}}
-    {{--            .fail(function (err) {--}}
-    {{--            });--}}
-    {{--        return false;--}}
-    {{--    }--}}
-    {{--});--}}
-
-    {{--function editComment(comment_id){--}}
-    {{--    $(`.edit_content_${comment_id}`).removeClass('hide');--}}
-    {{--    $(`.content_${comment_id}`).addClass('hide');--}}
-    {{--}--}}
-    {{--function submitEdit(comment_id){--}}
-    {{--    content = $(`.content_edit_${comment_id}`).val();--}}
-    {{--    $.ajax({--}}
-    {{--        url: 'admin/transaction/updateComment',--}}
-    {{--        type: 'POST',--}}
-    {{--        dataType: 'JSON',--}}
-    {{--        cache: false,--}}
-    {{--        data: {--}}
-    {{--            comment_id: comment_id,--}}
-    {{--            content: content--}}
-    {{--        },--}}
-    {{--    })--}}
-    {{--        .done(function (data) {--}}
-    {{--            if (data.result) {--}}
-    {{--                alert_float('success', data.message);--}}
-    {{--            } else {--}}
-    {{--                alert_float('error', data.message);--}}
-    {{--            }--}}
-    {{--            $(".result_comment").html(data.html);--}}
-    {{--        })--}}
-    {{--        .fail(function () {--}}
-
-    {{--        });--}}
-    {{--    return false;--}}
-    {{--}--}}
-    {{--function deleteComment(comment_id){--}}
-    {{--    var r = confirm("Bạn có chắc muốn xóa không ?");--}}
-    {{--    if (r == false) {--}}
-    {{--        return false;--}}
-    {{--    } else {--}}
-    {{--        $.ajax({--}}
-    {{--            url: 'admin/transaction/deleteComment',--}}
-    {{--            type: 'POST',--}}
-    {{--            dataType: 'JSON',--}}
-    {{--            cache: false,--}}
-    {{--            data: {--}}
-    {{--                comment_id: comment_id,--}}
-    {{--                transaction_id: {{$transaction->id}}--}}
-    {{--            },--}}
-    {{--        })--}}
-    {{--            .done(function (data) {--}}
-    {{--                if (data.result) {--}}
-    {{--                    alert_float('success', data.message);--}}
-    {{--                } else {--}}
-    {{--                    alert_float('error', data.message);--}}
-    {{--                }--}}
-    {{--                $(".result_comment").html(data.html);--}}
-    {{--            })--}}
-    {{--            .fail(function () {--}}
-
-    {{--            });--}}
-    {{--        return false;--}}
-    {{--    }--}}
-    {{--}--}}
 </script>

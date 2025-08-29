@@ -63,6 +63,7 @@ class Transaction extends JsonResource
                 'date_end' => $this->date_end,
             ],
             'total_service' => count($this->transaction_day_item),
+            'transaction_day' => TransactionDayResource::collection($this->whenLoaded('transaction_day')),
             'transaction_day_item' => TransactionDayItemResource::collection($this->whenLoaded('transaction_day_item')),
             'note' => $this->note,
             'status' => [

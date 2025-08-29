@@ -243,4 +243,35 @@ class TransactionService
             ], 500);
         }
     }
+
+    public function getListDetailTransaction($request)
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/transaction/getListDataDetail/{$request->id}",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
+                    'data' => []
+                ], $response->status());
+            }
+
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'data' => $data['data'],
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

@@ -455,6 +455,7 @@ class UserController extends Controller
                 $email = $row[3];
                 $phone = $row[4];
                 $password = !empty($row[6]) ? bcrypt($row[6]) : NULL;
+                $dataExcelRow[$key][6] = !empty($password) ? '******' : '';
                 $active = $row[8] ?? 0;
                 $dataExcelRow[$key][8] = !empty($active) ? 'Hoạt động' : 'Khóa';
                 $ares = $row[7];

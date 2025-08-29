@@ -340,6 +340,7 @@ class TransactionController extends AuthController
             $this->request->client = (object)['token' => Config::get('constant')['token_default']];
         }
         $dtData = Transaction::with('customer')
+            ->with('transaction_day')
             ->with('transaction_day_item')
             ->find($id);
         //gian hàng
@@ -353,6 +354,15 @@ class TransactionController extends AuthController
         $dtData->transaction_day_item->transform(function ($dayItem) use ($services) {
             $service = $services->where('id', $dayItem->service_id)->first();
             $dayItem->service = $service;
+            return $dayItem;
+        });
+        $dtData->transaction_day->transform(function ($dayItem) use ($services) {
+             $dayItem->transaction_day_item->transform(function ($item) use ($services) {
+                $service = $services->where('id', $item->service_id)->first();
+                $item->service = $service;
+                return $item;
+            });
+            $dayItem->transaction_day_item = $dayItem->transaction_day_item->filter();
             return $dayItem;
         });
         //end

@@ -67,6 +67,7 @@ class TransactionController extends Controller
                             <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu " role="menu" aria-labelledby="dropdownMenu1">
+                                <li style="cursor: pointer">' . $view . '</li>
                                 <li style="cursor: pointer">' . $delete . '</li>
                             </ul>
                         </div>';
@@ -244,10 +245,18 @@ class TransactionController extends Controller
         return response()->json($data);
     }
 
-    public function view($id){
+    public function view($id = 0){
         $title = lang('dt_view_transaction');
+        $this->request->merge(['id' => $id]);
+        $response = $this->fnbTransactionService->getListDetailTransaction($this->request);
+        $data = $response->getData(true);
+        if ($data['result'] == false){
+            return response()->json($data);
+        }
+        $dtData = collect($data['data']);
         return view('admin.transaction.view',[
             'title' => $title,
+            'dtData' => $dtData['data'] ?? [],
         ]);
     }
 }
