@@ -46,13 +46,14 @@ class PartnerController extends Controller
             access_denied();
         }
         if (!has_permission('clients','view') && has_permission('clients','viewown')) {
-            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+//            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
             $this->request->merge(['ares_permission' => 1]);
-            $aresPer = [];
-            foreach ($UserAres as $key => $item) {
-                $aresPer[] = $item->id_ares;
-            }
-            $this->request->merge(['aresPer' => $aresPer]);
+//            $aresPer = [];
+//            foreach ($UserAres as $key => $item) {
+//                $aresPer[] = $item->id_ares;
+//            }
+//            $this->request->merge(['aresPer' => $aresPer]);
+            $this->request->merge(['user_id' => get_staff_user_id()]);
         }
 
         $this->request->merge(['id' => $id]);
@@ -74,13 +75,15 @@ class PartnerController extends Controller
 
     public function view($id = 0){
         if (!has_permission('clients','view') && has_permission('clients','viewown')) {
-            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+//            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
             $this->request->merge(['ares_permission' => 1]);
-            $aresPer = [];
-            foreach ($UserAres as $key => $item) {
-                $aresPer[] = $item->id_ares;
-            }
-            $this->request->merge(['aresPer' => $aresPer]);
+//            $aresPer = [];
+//            foreach ($UserAres as $key => $item) {
+//                $aresPer[] = $item->id_ares;
+//            }
+//            $this->request->merge(['aresPer' => $aresPer]);
+
+            $this->request->merge(['user_id' => get_staff_user_id()]);
         }
 
         $this->request->merge(['id' => $id]);
@@ -105,13 +108,15 @@ class PartnerController extends Controller
         $this->request->merge(['type_client' => 2]);
 
         if (!has_permission('clients','view') && has_permission('clients','viewown')) {
-            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+//            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
             $this->request->merge(['ares_permission' => 1]);
-            $aresPer = [];
-            foreach ($UserAres as $key => $item) {
-                $aresPer[] = $item->id_ares;
-            }
-            $this->request->merge(['aresPer' => $aresPer]);
+//            $aresPer = [];
+//            foreach ($UserAres as $key => $item) {
+//                $aresPer[] = $item->id_ares;
+//            }
+//            $this->request->merge(['aresPer' => $aresPer]);
+
+            $this->request->merge(['user_id' => get_staff_user_id()]);
         }
 
         $response = $this->fnbAccount->getListCustomer($this->request);

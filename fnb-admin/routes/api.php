@@ -35,6 +35,9 @@ Route::group(['prefix' => 'category'], function () {
     Route::get('getListProvince/{id?}', [CategoryController::class, 'getListProvince']);
     Route::get('getListWard/{id?}', [CategoryController::class, 'getListWard']);
     Route::get('getListAddress', [CategoryController::class, 'getListAddress']);
+    Route::get('getListProvinceSixtyFour/{id?}', [CategoryController::class, 'getListProvinceSixtyFour']);
+    Route::get('getListWardToAres/{id?}', [CategoryController::class, 'getListWardToAres']);
+    Route::get('getListWardToUser/{id}', [CategoryController::class, 'getListWardToUser']);
 });
 
 Route::group(['prefix' => 'homepage'], function () {

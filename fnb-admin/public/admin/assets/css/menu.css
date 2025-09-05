@@ -597,6 +597,13 @@ File: Menu
 .has-submenu:hover img.cai_dat, .has-submenu.active img.cai_dat {
     content:url('/admin/assets/images/icon_menu/active/cai_dat.png')
 }
+
+.has-submenu:hover img.giao_dich, .has-submenu.active img.giao_dich {
+    content:url('/admin/assets/images/icon_menu/active/giao_dich.png')
+}
+.has-submenu:hover img.kpi, .has-submenu.active img.kpi {
+    content:url('/admin/assets/images/icon_menu/active/kpi.png')
+}
 .img-black {
     background-color: #36404a;
 }

@@ -65,4 +65,11 @@ class AdminService
             ], 500);
         }
     }
+
+
+    public function getWardUser($id_user = '') {
+        $response = Http::get("{$this->baseUrl}/api/category/getListWardToUser/{$id_user}");
+        $response = $response->json();
+        return $response;
+    }
 }

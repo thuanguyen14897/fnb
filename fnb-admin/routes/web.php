@@ -26,6 +26,7 @@ use App\Http\Controllers\AresController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\MemberShipLevelController;
+use App\Http\Controllers\KPIController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,33 +43,10 @@ Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web']], funct
     \UniSharp\LaravelFilemanager\Lfm::routes();
 });
 Route::group(['prefix' => 'cron'], function () {
-    Route::get('noti_remind_transaction', [CronController::class, 'noti_remind_transaction']);
-    Route::get('noti_one_hour_remind_transaction', [CronController::class, 'noti_one_hour_remind_transaction']);
+    Route::get('cancelTransactionTrip', [CronController::class, 'cancelTransactionTrip']);
     Route::get('updateCodeClient', [CronController::class, 'updateCodeClient']);
-    Route::get('sendSmsTransaction', [CronController::class, 'sendSmsTransaction']);
-    Route::get('addAutoReview', [CronController::class, 'addAutoReview']);
-    Route::get('remindFinishOwner', [CronController::class, 'remindFinishOwner']);
-    Route::get('autoFinishTransaction', [CronController::class, 'autoFinishTransaction']);
-    Route::get('cronCloseBalance', [CronController::class, 'cronCloseBalance']);
-    Route::get('cronCloseBalanceMonth', [CronController::class, 'cronCloseBalanceMonth']);
-    Route::get('getListBanks', [CronController::class, 'getListBanks']);
-    Route::get('cancelTransactionNotDepoist', [CronController::class, 'cancelTransactionNotDepoist']);
-    Route::get('cancelTransactionNotApprove', [CronController::class, 'cancelTransactionNotApprove']);
     Route::get('addGroupPermistionByPermission', [CronController::class, 'addGroupPermistionByPermission']);
-    Route::get('getListBankNew', [CronController::class, 'getListBankNew']);
-    Route::get('cancelTransactionDriverNotDriver', [CronController::class, 'cancelTransactionDriverNotDriver']);
-    Route::get('getCancelSystemTransactionDriver', [CronController::class, 'getCancelSystemTransactionDriver']);
     Route::get('sendNotificationModule', [CronController::class, 'sendNotificationModule']);
-    Route::get('noti_remind_transaction_driver_province', [CronController::class, 'noti_remind_transaction_driver_province']);
-    Route::get('noti_remind_use_point_client', [CronController::class, 'noti_remind_use_point_client']);
-    Route::get('noti_reset_use_point_client', [CronController::class, 'noti_reset_use_point_client']);
-    Route::get('moveFileToS3', [CronController::class, 'moveFileToS3']);
-    Route::get('sendNotiTransaction', [CronController::class, 'sendNotiTransaction']);
-    Route::get('cronCustomerRewardDay', [CronController::class, 'cronCustomerRewardDay']);
-    Route::get('cronCustomerClassDay', [CronController::class, 'cronCustomerClassDay']);
-    Route::get('getWarningWithDraw', [CronController::class, 'getWarningWithDraw']);
-    Route::get('updateStatusCustomerWarning', [CronController::class, 'updateStatusCustomerWarning']);
-    Route::get('createTransactionCertificate', [CronController::class, 'createTransactionCertificate']);
 });
 
 Route::get('/clear', function () {
@@ -321,6 +299,10 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
     Route::group(['prefix' => 'membership_level'], function () {
         Route::get('list', [MemberShipLevelController::class, 'get_list']);
         Route::post('updateMember', [MemberShipLevelController::class, 'updateMember']);
+    });
+
+    Route::group(['prefix' => 'kpi'], function () {
+        Route::get('kpi_user', [KPIController::class, 'kpi_user']);
     });
 
 });

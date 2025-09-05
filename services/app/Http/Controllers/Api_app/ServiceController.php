@@ -9,6 +9,7 @@ use App\Models\CategoryService;
 use App\Models\ReviewService;
 use App\Models\ServiceDay;
 use App\Models\Service;
+use App\Models\ServiceFavourite;
 use App\Models\ServiceImage;
 use App\Traits\UploadFile;
 use App\Services\AccountService;
@@ -34,6 +35,10 @@ class ServiceController extends AuthController
         $category_service_search = $this->request->input('category_service_search') ?? 0;
         $customer_search = $this->request->input('customer_search') ?? 0;
         $customer_id = $this->request->input('customer_id') ?? 0;
+        $customer_favourite = $this->request->input('customer_favourite') ?? 0;
+        $favourite = $this->request->input('favourite') ?? 0;
+        $province_search = $this->request->input('province_search') ?? 0;
+        $ward_search = $this->request->input('ward_search') ?? 0;
         $search = $this->request->input('search.value');
         $status_search = $this->request->input('status_search');
         $status_search = isset($status_search) ? $status_search : -1;
@@ -64,6 +69,17 @@ class ServiceController extends AuthController
         }
         if (!empty($customer_id)){
             $query->where('customer_id', $customer_id);
+        }
+        if (!empty($favourite)) {
+            $query->WhereHas('favourite', function ($q) use ($customer_favourite) {
+                $q->where('customer_id', $customer_favourite);
+            });
+        }
+        if (!empty($province_search)){
+            $query->where('province_id',$province_search);
+        }
+        if (!empty($ward_search)){
+            $query->where('wards_id',$ward_search);
         }
         if ($status_search != -1){
             $query->where('active',$status_search);
@@ -184,6 +200,26 @@ class ServiceController extends AuthController
             echo json_encode($data);
             die();
         }
+
+        if ($this->request->hasFile('image_store')){
+            if (count($this->request->file('image_store')) > 5){
+                if (empty($customer_id)){
+                    $data['result'] = false;
+                    $data['message'] = 'Chỉ được upload tối đã 5 hình cửa hàng';
+                    return response()->json($data);
+                }
+            }
+        }
+        if ($this->request->hasFile('image_menu')){
+            if (count($this->request->file('image_menu')) > 10){
+                if (empty($customer_id)){
+                    $data['result'] = false;
+                    $data['message'] = 'Chỉ được upload tối đã 10 hình menu';
+                    return response()->json($data);
+                }
+            }
+        }
+
         if (!empty($app)){
             $customer_id = !empty($this->request->client) ? $this->request->client->id : 0;
             if (empty($customer_id)){
@@ -481,6 +517,10 @@ class ServiceController extends AuthController
         //end
         $lat = !empty($this->request->input('lat')) ? $this->request->input('lat') : 0;
         $lon = !empty($this->request->input('lon')) ? $this->request->input('lon') : 0;
+
+        $favourite = $this->request->input('favourite') ?? 0;
+        $customer_id = $this->request->client->id ?? 0;
+
         if (!empty($lat) && !empty($lon)){
             $orderBy = 'distance asc';
         } else {
@@ -492,6 +532,7 @@ class ServiceController extends AuthController
             ->with('ward')
             ->with('other_amenities')
             ->with('image_store')
+            ->with('favourite')
             ->where('id','!=',0);
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
@@ -508,14 +549,23 @@ class ServiceController extends AuthController
         if (!empty($id)){
             $query->where('id','!=',$id);
         }
+        if (!empty($favourite)) {
+            $query->WhereHas('favourite', function ($q) use ($customer_id) {
+                $q->where('customer_id', $customer_id);
+            });
+        }
         if (!empty($category_service_search)){
             $category_service_search = is_array($category_service_search) ? ($category_service_search): [$category_service_search];
             $query->whereIn('category_service_id', $category_service_search);
         }
         if (!empty($lat) && !empty($lon)){
             $query->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),null)"),'!=',NULL);
-            $query->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),10000)"),'>=',0);
-            $query->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),10000)"),'<=',10);
+            if (empty($favourite)) {
+                $query->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),10000)"),
+                    '>=', 0);
+                $query->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),10000)"),
+                    '<=', 50);
+            }
         }
         $query->orderByRaw($orderBy);
         $dtData = $query->paginate($per_page, ['*'], '', $current_page);
@@ -553,6 +603,7 @@ class ServiceController extends AuthController
             ->with('image_store')
             ->with('image_menu')
             ->with('day')
+            ->with('favourite')
             ->with(['review' => function ($query) {
                 $query->latest()->limit(5);
             }])
@@ -606,6 +657,7 @@ class ServiceController extends AuthController
         $service_id = $this->request->input('service_id') ?? [0];
         $query = Service::with('category_service')
             ->with('image_store')
+            ->with('group_category_service')
             ->where('id','!=',0);
         if (!empty($service_id)){
             $service_id = is_array($service_id) ? ($service_id): [$service_id];
@@ -678,5 +730,58 @@ class ServiceController extends AuthController
             'result' => true,
             'message' => 'Lấy danh sách thành công'
         ]);
+    }
+
+    public function changeFavouriteService()
+    {
+        $data = [];
+        $service_id = !empty($this->request->input('service_id')) ? $this->request->input('service_id') : 0;
+        $customer_id = !empty($this->request->client) ? $this->request->client->id : 0;
+        $status = $this->request->input('status') ?? 0;
+        if (empty($customer_id)){
+            $data['result'] = false;
+            $data['message'] = 'Vui lòng đăng nhập để sử dụng tính năng này!';
+            return response()->json($data);
+        }
+        $dtData = Service::find($service_id);
+        if (empty($dtData)) {
+            $data['result'] = false;
+            $data['message'] = 'Không tồn gian hàng!';
+            return response()->json($data);
+        }
+        DB::beginTransaction();
+        try {
+            if ($status == 0){
+                $success = DB::table('tbl_favourite_service')->where([
+                    'service_id' => $service_id,
+                    'customer_id' => $customer_id,
+                ])->delete();
+                $success = true;
+            } else {
+                DB::table('tbl_favourite_service')->where([
+                    'service_id' => $service_id,
+                    'customer_id' => $customer_id,
+                ])->delete();
+                $success = DB::table('tbl_favourite_service')->insertGetId([
+                    'service_id' => $service_id,
+                    'customer_id' => $customer_id,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+            DB::commit();
+            if ($success){
+                $data['result'] = true;
+                $data['message'] = 'Thành công';
+            } else {
+                $data['result'] = false;
+                $data['message'] = 'Thất bại';
+            }
+            return response()->json($data);
+        }  catch (\Exception $exception){
+            DB::rollBack();
+            $data['result'] = false;
+            $data['message'] = $exception->getMessage();
+            return response()->json($data);
+        }
     }
 }

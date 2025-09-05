@@ -35,6 +35,9 @@
         .tag.district:hover {
             box-shadow: 0 4px 12px rgba(102, 187, 106, 0.4);
         }
+        .card-box {
+            padding-bottom: 50px;
+        }
     </style>
     <!-- Page-Title -->
     <div class="row">
@@ -83,6 +86,7 @@
                             <th class="text-center">{{lang('dt_stt')}}</th>
                             <th class="text-center">{{lang('c_name_ares')}}</th>
                             <th class="text-center">{{lang('dt_province')}}</th>
+                            <th class="text-center">{{lang('dt_user')}}</th>
                             <!--<th class="text-center">{{lang('c_ward')}}</th>-->
                             <th class="text-center">{{lang('dt_active')}}</th>
                             <th class="text-center">{{lang('dt_actions')}}</th>
@@ -147,6 +151,7 @@
                     data: 'id', name: 'DT_RowIndex',width: "80px" },
                 {data: 'name', name: 'name', orderable: false},
                 {data: 'data_province', name: 'data_province', orderable: false},
+                {data: 'data_user', name: 'data_user', orderable: false},
                 {data: 'active', name: 'active',width: "100px" , orderable: false},
                 {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px"},
 

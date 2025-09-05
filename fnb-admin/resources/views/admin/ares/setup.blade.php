@@ -28,6 +28,7 @@
                                     <tr>
                                         <th><a onclick="btnPlus()" class="btn btn-icon btn-primary"><i class="fa fa-plus"></i></a></th>
                                         <th>{{lang('dt_province')}}</th>
+                                        <th>{{lang('dt_province_old')}}</th>
                                         <th>{{lang('dt_wards')}}</th>
                                         <th></th>
                                     </tr>
@@ -38,9 +39,9 @@
                                     @endphp
                                     @if(!empty($ares->detail))
                                         @foreach($ares->detail as $key => $value)
-                                            <tr class="item" data-class="{{$value->id_province}}">
+                                            <tr class="item" data-class="{{$value->id_province}}" data-class-old="{{$value->id_province_old ?? 0}}">
                                                 <td class="SttITem" style="width: 5%">{{($sttKey + 1)}}</td>
-                                                <td style="width: 30%">
+                                                <td style="width: 20%">
                                                     <div class="form-group">
                                                         <select class="select_province_id province_id-{{$sttKey}} select2" id="province_id-{{$sttKey}}" data-key="{{$sttKey}}"
                                                                 data-placeholder="Chọn ..." name="item[{{$sttKey}}][province_id]"
@@ -49,20 +50,32 @@
                                                         </select>
                                                     </div>
                                                 </td>
+                                                <td style="width: 20%">
+                                                    <div class="form-group">
+                                                        <select class="select_province_old_id province_old_id-{{$sttKey}} select2" id="province_old_id-{{$sttKey}}" data-key="{{$sttKey}}"
+                                                                data-placeholder="Chọn ..." name="item[{{$sttKey}}][province_old_id]"
+                                                                onchange="changeProvinceOld(this)">
+                                                            <option value="0">Tất cả</option>
+                                                            @foreach($value->province_sixty_four as $k => $v)
+                                                                <option value="{{$v->provinceid}}" {{(!empty($value->id_province_old) && $value->id_province_old == $v->provinceid) ? 'selected' : ''}}>{{$v->name ?? ''}}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     <div class="form-group">
                                                         <select class="ward_id-{{$sttKey}} select2" id="ward_id-{{$sttKey}}" multiple
                                                                 data-placeholder="Chọn ..." name="item[{{$sttKey}}][ward_id][]">
-                                                            @if(!empty($value->item))
-                                                                @foreach($value->item as $key => $value)
-                                                                    <option value="{{$value->id_ward}}" selected>{{$value->name_ward}}</option>
+                                                            @if(!empty($value->items))
+                                                                @foreach($value->items as $k => $v)
+                                                                    <option value="{{$v->Id}}" {{is_numeric(array_search($v->Id, $value->list_id)) ? 'selected' : ''}}>{{$v->Name}}</option>
                                                                 @endforeach
                                                             @endif
                                                         </select>
                                                     </div>
                                                 </td>
                                                 <td class="text-center">
-                                                    <a class="btn btn-danger btn-icon" onclick="removeTr(this)""><i class="fa fa-remove"></i></a>
+                                                    <a class="btn btn-danger btn-icon" onclick="removeTr(this)"><i class="fa fa-remove"></i></a>
                                                 </td>
                                             </tr>
                                             @php
@@ -112,24 +125,60 @@
                 })
                 return false;
             }
+
             if($(tr).attr('data-class') != province_id) {
                 $(`#ward_id-${key}`).val([]);
             }
+
             $(tr).attr('data-class', province_id);
+            var province_id_old = $(`#province_old_id-${key}`).val(0);
+            province_id_old  = province_id_old ?? 0;
+            searchAjaxSelect2(`#province_old_id-${key}`,'api/category/getListProvinceSixtyFour',0,{
+                'select2':true,
+                id_province :province_id,
+            })
             searchAjaxSelect2Mutil(`#ward_id-${key}`,'api/category/getListWard',0,{
                 'select2':true,
-                province_id :province_id
+                province_id :province_id,
+                province_id_old :province_id_old
+            })
+        }
+
+
+        function changeProvinceOld(_this) {
+            var key = $(_this).attr('data-key');
+            var tr = $(_this).parents('tr');
+            var province_id_old = $(_this).val();
+            var province_id = $(tr).find('.select_province_id').val();
+
+            if($(tr).attr('data-class-old') != province_id_old) {
+                $(`#ward_id-${key}`).val([]);
+            }
+            $(tr).attr('data-class-old', province_id_old);
+            searchAjaxSelect2Mutil(`#ward_id-${key}`,'api/category/getListWard',0,{
+                'select2':true,
+                province_id :province_id,
+                province_id_old :province_id_old
             })
         }
 
         function btnPlus() {
             $(`#table-setup-ares`).find('tbody').append(`<tr class="item">
                                             <td class="SttITem" style="width: 5%"></td>
-                                            <td style="width: 30%">
+                                            <td style="width: 20%">
                                                 <div class="form-group">
-                                                    <select class="province_id-${countKey} select2" id="province_id-${countKey}" data-key="${countKey}"
+                                                    <select class="select_province_id province_id-${countKey} select2" id="province_id-${countKey}" data-key="${countKey}"
                                                             data-placeholder="Chọn ..." name="item[${countKey}][province_id]"
                                                             onchange="changeProvince(this)">
+                                                        <option></option>
+                                                    </select>
+                                                </div>
+                                            </td>
+                                            <td style="width: 20%">
+                                                <div class="form-group">
+                                                    <select class="select_province_old_id province_old_id-${countKey} select2" id="province_old_id-${countKey}" data-key="${countKey}"
+                                                            data-placeholder="Chọn ..." name="item[${countKey}][province_old_id]"
+                                                            onchange="changeProvinceOld(this)">
                                                         <option></option>
                                                     </select>
                                                 </div>
@@ -149,6 +198,7 @@
             searchAjaxSelect2(`.province_id-${countKey}`,'api/category/getListProvince',0,{
                 'select2':true
             })
+            $(`select.province_old_id-${countKey}`).select2();
             $(`select.ward_id-${countKey}`).select2();
             countKey++;
             ChangeStt();

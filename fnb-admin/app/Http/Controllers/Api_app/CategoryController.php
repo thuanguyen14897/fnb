@@ -66,16 +66,68 @@ class CategoryController extends AuthController
         if ($select2){
             $search = $this->request->input('term');
             $province_id = $params['province_id'] ?? 0;
+            $province_id_old = $params['province_id_old'] ?? 0;
+            $id_ares = $params['id_ares'] ?? 0;
         } else {
             $search = $this->request->input('search') ?? null;
             $id = $this->request->input('id') ?? 0;
             $province_id = $this->request->input('province_id') ?? 0;
+            $province_id_old = $this->request->input('province_id_old') ?? 0;
+            $id_ares = $this->request->input('id_ares') ?? 0;
         }
         $this->request->merge(['search' => $search]);
         $this->request->merge(['limit' => $limit]);
         $this->request->merge(['id' => $id]);
         $this->request->merge(['province_id' => $province_id]);
+        $this->request->merge(['province_id_old' => $province_id_old ?? 0]);
+        $this->request->merge(['id_ares' => $id_ares ?? 0]);
         $response = $this->fnbCategorySystemService->getListWard($this->request);
+        $data = $response->getData(true);
+        if ($data['result'] == false){
+            return response()->json($data);
+        }
+        $dtData = ($data['data']) ?? [];
+        if ($select2){
+            $results = [];
+            foreach ($dtData as $key => $value) {
+                $results[] = [
+                    'id' => $value['Id'],
+                    'text' =>$value['Name'],
+                ];
+            }
+            $data = [
+                'items' => $results
+            ];
+        } else {
+            $data = [
+                'data' => $dtData
+            ];
+        }
+        return response()->json($data);
+    }
+
+
+    public function getListWardToAres($id = 0)
+    {
+        $limit = $this->request->input('limit') ?? 150;
+        $params = $this->request->input('paramsCus');
+        $select2 = !empty($params['select2']) ? $params['select2'] : false;
+        if ($select2){
+            $search = $this->request->input('term');
+            $id_ares = $params['id_ares'] ?? 0;
+        } else {
+            $search = $this->request->input('search') ?? null;
+            $id = $this->request->input('id') ?? 0;
+            $id_ares = $this->request->input('id_ares') ?? 0;
+        }
+        if($limit < 0) {
+            $limit = PHP_INT_MAX;
+        }
+        $this->request->merge(['search' => $search]);
+        $this->request->merge(['limit' => $limit]);
+        $this->request->merge(['id' => $id]);
+        $this->request->merge(['id_ares' => $id_ares ?? 0]);
+        $response = $this->fnbCategorySystemService->getListWardToAres($this->request);
         $data = $response->getData(true);
         if ($data['result'] == false){
             return response()->json($data);
@@ -140,6 +192,62 @@ class CategoryController extends AuthController
             })
             ->orderByRaw('id desc')->get();
         $data['data'] = $dtPaymentMode;
+        return response()->json($data);
+    }
+
+
+    public function getListProvinceSixtyFour($id = 0)
+    {
+        $params = $this->request->input('paramsCus');
+        $select2 = !empty($params['select2']) ? $params['select2'] : false;
+        if ($select2){
+            $search = $this->request->input('term');
+        } else {
+            $search = $this->request->input('search') ?? null;
+        }
+
+        $id_province = $params['id_province'] ?? 0;
+        $limit = 50;
+        $this->request->merge(['search' => $search]);
+        $this->request->merge(['limit' => $limit]);
+        $this->request->merge(['id_province' => $id_province]);
+        $response = $this->fnbCategorySystemService->getListProvinceSixtyFour($this->request);
+        $data = $response->getData(true);
+        if ($data['result'] == false){
+            return response()->json($data);
+        }
+        $dtData = ($data['data']) ?? [];
+        if ($select2){
+            $results = [];
+            foreach ($dtData as $key => $value) {
+                $results[] = [
+                    'id' => $value['provinceid'],
+                    'text' => $value['type'].' '.$value['name'],
+                ];
+            }
+            $data = [
+                'items' => $results
+            ];
+        } else {
+            $data = [
+                'data' => $dtData
+            ];
+        }
+        return response()->json($data);
+    }
+
+    public function getListWardToUser($id_user = 0)
+    {
+        $data = DB::table('tbl_user_ares_ward')->where('id_user', $id_user)->get();
+        $dataWard = [];
+        foreach($data as $key => $value) {
+            $dataWard[] = $value->id_ward;
+        }
+        return response()->json([
+            'data' => array_unique($dataWard),
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
         return response()->json($data);
     }
 }

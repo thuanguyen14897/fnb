@@ -662,31 +662,24 @@ function getListStatusTransaction()
         ],
         [
             'id' => 1,
-            'name' => 'Đang xử lý',
-            'color' => '#B43403',
-            'background' => '#FEECDC',
-            'index' => 1,
-        ],
-        [
-            'id' => 2,
             'name' => 'Đang trong hành trình',
             'color' => '#052E5C',
             'background' => '#DBEEFF',
+            'index' => 11,
+        ],
+        [
+            'id' => 2,
+            'name' => 'Kết thúc',
+            'color' => '#03401F',
+            'background' => '#D7FAE0',
             'index' => 2,
         ],
         [
             'id' => 3,
-            'name' => 'Hoàn thành',
-            'color' => '#03401F',
-            'background' => '#D7FAE0',
-            'index' => 3,
-        ],
-        [
-            'id' => 4,
             'name' => 'Hủy chuyến',
             'color' => '#BF1D28',
             'background' => '#FFDBDE',
-            'index' => 4,
+            'index' => 3,
         ],
     ];
 }
@@ -694,32 +687,86 @@ function getListStatusTransaction()
 function getValueStatusTransaction($id, $type = 'name')
 {
     $option[0]['name'] = lang('Đã khởi tạo');
-    $option[1]['name'] = lang('Đang xử lý');
-    $option[2]['name'] = lang('Đang trong hành trình');
-    $option[3]['name'] = lang('Hoàn thành');
-    $option[4]['name'] = lang('Hủy');
+    $option[1]['name'] = lang('Đang trong hành trình');
+    $option[2]['name'] = lang('Kết thúc');
+    $option[3]['name'] = lang('Hủy chuyến');
 
     $option[0]['color'] = '#371585';
-    $option[1]['color'] = '#B43403';
-    $option[2]['color'] = '#052E5C';
-    $option[3]['color'] = '#03401F';
-    $option[4]['color'] = '#BF1D28';
+    $option[1]['color'] = '#052E5C';
+    $option[2]['color'] = '#03401F';
+    $option[3]['color'] = '#BF1D28';
 
     $option[0]['background'] = '#E9E1FD';
-    $option[1]['background'] = '#FEECDC';
-    $option[2]['background'] = '#DBEEFF';
-    $option[3]['background'] = '#D7FAE0';
-    $option[4]['background'] = '#FFDBDE';
+    $option[1]['background'] = '#DBEEFF';
+    $option[2]['background'] = '#D7FAE0';
+    $option[3]['background'] = '#FFDBDE';
 
     $option[0]['index'] = 0;
     $option[1]['index'] = 1;
     $option[2]['index'] = 2;
-    $option[3]['index'] = 2;
-    $option[4]['index'] = 2;
+    $option[3]['index'] = 3;
 
     return $option[$id][$type];
 }
 
+function getListStatusTransactionItem()
+{
+    return [
+        [
+            'id' => 0,
+            'name' => 'Đã gửi yêu cầu',
+            'color' => '#371585',
+            'background' => '#E9E1FD',
+            'index' => 0,
+        ],
+        [
+            'id' => 1,
+            'name' => 'Đã xác nhận',
+            'color' => '#052E5C',
+            'background' => '#DBEEFF',
+            'index' => 2,
+        ],
+        [
+            'id' => 2,
+            'name' => 'Hoàn thành',
+            'color' => '#03401F',
+            'background' => '#D7FAE0',
+            'index' => 2,
+        ],
+        [
+            'id' => 3,
+            'name' => 'Hủy',
+            'color' => '#BF1D28',
+            'background' => '#FFDBDE',
+            'index' => 3,
+        ],
+    ];
+}
+
+function getValueStatusTransactionItem($id, $type = 'name')
+{
+    $option[0]['name'] = lang('Đã gửi yêu cầu');
+    $option[1]['name'] = lang('Đã xác nhận');
+    $option[2]['name'] = lang('Hoàn thành');
+    $option[3]['name'] = lang('Hủy');
+
+    $option[0]['color'] = '#371585';
+    $option[1]['color'] = '#052E5C';
+    $option[2]['color'] = '#03401F';
+    $option[3]['color'] = '#BF1D28';
+
+    $option[0]['background'] = '#E9E1FD';
+    $option[1]['background'] = '#DBEEFF';
+    $option[2]['background'] = '#D7FAE0';
+    $option[3]['background'] = '#FFDBDE';
+
+    $option[0]['index'] = 0;
+    $option[1]['index'] = 1;
+    $option[2]['index'] = 2;
+    $option[3]['index'] = 3;
+
+    return $option[$id][$type];
+}
 
 //Hình ảnh mặc định
 function imgDefault()

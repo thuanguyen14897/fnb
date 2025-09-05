@@ -56,6 +56,7 @@ Route::group(['prefix' => 'transaction','middleware' => \App\Http\Middleware\Che
     Route::post('delete', [TransactionController::class, 'delete']);
     Route::get('getListStatusTransaction', [TransactionController::class, 'getListStatusTransaction']);
     Route::post('countTransaction', [TransactionController::class, 'countTransaction']);
+    Route::post('changeStatus', [TransactionController::class, 'changeStatus']);
 });
 
 

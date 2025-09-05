@@ -1,4 +1,13 @@
 @extends('admin.layouts.index')
+<style>
+    .wrap_image_car{
+        justify-content:unset !important;
+    }
+    .wrap_image_car_item{
+        width: 12%;
+        margin-right: 5px
+    }
+</style>
 @section('content')
     <div class="row">
         <div class="col-sm-12">
@@ -142,7 +151,11 @@
                             <div class="wrap_image_car">
                                 @if(!empty($dtData['image_store']))
                                     @foreach($dtData['image_store'] as $key => $value)
-                                        {!! loadImageNew($value['image'],'300px','img-rounded',$value['name'],false,'250px','image_parrot_old') !!}
+                                        <div class="wrap_image_car_item">
+                                            <a href="{{$value['image']}}" data-lightbox="customer-profile" class="display-block mbot5" >
+                                                <img src="{{$value['image']}}" style="width: 100px;height: 100px">
+                                            </a>
+                                        </div>
                                     @endforeach
                                 @endif
                             </div>
@@ -152,7 +165,9 @@
                             <div class="wrap_image_car">
                                 @if(!empty($dtData['image_menu']))
                                     @foreach($dtData['image_menu'] as $key => $value)
-                                        {!! loadImageNew($value['image'],'300px','img-rounded',$value['name'],false,'250px','image_parrot_old') !!}
+                                        <a href="{{$value['image']}}" data-lightbox="customer-profile" class="display-block mbot5">
+                                            <div class="wrap_image_car_item"><img src="{{$value['image']}}" style="width: 100px;height: 100px"></div>
+                                        </a>
                                     @endforeach
                                 @endif
                             </div>
@@ -163,6 +178,7 @@
                     <input type="hidden" name="count_transaction" class="count_transaction"
                            value="{{!empty($dtData['transaction']['total_all']) ? $dtData['transaction']['total_all'] : 0}}">
                     <input type="hidden" name="next" class="next" value="">
+                    <input type="hidden" name="service_search" id="service_search" class="service_search" value="{{$dtData['id']}}">
                     <div class="row m-b-10">
                         <div class="col-md-3">
                             <label for="status_search">{{lang('dt_status')}}</label>
@@ -186,8 +202,27 @@
                         </div>
                     </div>
                     <div class="row m-b-10">
-                        <div class="col-md-12 result_transaction">
+                        <div class="col-md-12">
+                            <div class="">
+                                <table id="table_transaction" class="table table-bordered table_transaction">
+                                    <thead>
+                                    <tr>
+                                        <th class="text-center">{{lang('dt_stt')}}</th>
+                                        <th class="text-center">{{lang('dt_reference_no')}}</th>
+                                        <th class="text-center">{{lang('dt_date')}}</th>
+                                        <th class="text-center">{{lang('Khách hàng')}}</th>
+                                        <th class="text-center">{{lang('dt_start')}}</th>
+                                        <th class="text-center">{{lang('dt_end')}}</th>
+                                        <th class="text-center">{{lang('dt_status')}}</th>
+                                        <th class="text-center">Nhân viên CSKH</th>
+                                        <th class="text-center">{{lang('dt_actions')}}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
 
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -306,20 +341,68 @@
             });
         });
         var fnserverparamsNew = {
-            'type_report_search': '#type_report_search'
+            'service_search': '#service_search',
+            'status_search': '#status_search',
+            'date_search': '#date_search',
+            'date_search_end': '#date_search_end',
         };
-        var oTableReport;
+        var oTableTransaction;
 
         $.each(fnserverparamsNew, function (filterIndex, filterItem) {
             $('' + filterItem).on('change', function () {
-                oTableReport.draw('page')
+                oTableTransaction.draw('page')
             });
         });
+
+        function table_transaction() {
+            oTableTransaction = InitDataTable('#table_transaction', 'admin/transaction/getList', {
+                'order': [
+                    [0, 'desc']
+                ],
+                'responsive': true,
+                "ajax": {
+                    "type": "POST",
+                    "url": "admin/transaction/getList",
+                    "data": function (d) {
+                        for (var key in fnserverparamsNew) {
+                            d[key] = $(fnserverparamsNew[key]).val();
+                        }
+                    },
+                    "dataSrc": function (json) {
+                        if(json.result == false){
+                            alert_float('error',json.message);
+                        }
+                        return json.data;
+                    }
+                },
+                columnDefs: [
+                    {
+                        "render": function (data, type, row) {
+                            return `<div class="text-center">${data}</data>`;
+                        },
+                        data: 'id', name: 'id',width: "50px"
+                    },
+                    {data: 'reference_no', name: 'reference_no',width: "100px" },
+                    {data: 'date', name: 'date',width: "100px" },
+                    {data: 'customer', name: 'customer',width: "140px",orderable: false},
+                    {data: 'date_start', name: 'date_start'},
+                    {data: 'date_end', name: 'date_end'},
+                    {
+                        "render": function (data, type, row) {
+                            return `<div class="text-center">${data}</data>`;
+                        },
+                        data: 'status', name: 'status'},
+                    {data: 'user_id', name: 'user_id'},
+                    {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px" },
+                ]
+            });
+        }
+
         $(document).on('shown.bs.tab', 'a[href="#review"]', function () {
             table_review_service();
         });
         $(document).on('shown.bs.tab', 'a[href="#transaction"]', function () {
-            loadTransaction();
+            table_transaction();
         });
         pageTransaction = 1;
         $(document).ready(function () {

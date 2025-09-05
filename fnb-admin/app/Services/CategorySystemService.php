@@ -104,7 +104,75 @@ class CategorySystemService
             }
 
             $data = $response->json();
-            dd($data);
+            return response()->json([
+                'result' => $data['result'],
+                'data' => $data['data'],
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getListProvinceSixtyFour($request)
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/category/getListProvinceSixtyFour",
+                $request,
+                [
+                    'token' => 'fnb'
+                ]
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
+                    'data' => []
+                ], $response->status());
+            }
+
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'data' => $data['data'],
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function getListWardToAres($request)
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/category/getListWardToAres",
+                $request,
+                [
+                    'token' => 'fnb'
+                ]
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
+                    'data' => []
+                ], $response->status());
+            }
+
+            $data = $response->json();
             return response()->json([
                 'result' => $data['result'],
                 'data' => $data['data'],

@@ -29,6 +29,9 @@ class AresController extends AuthController
         $search = $this->request->input('search.value');
         $start = $this->request->input('start', 0);
         $length = $this->request->input('length', 10);
+        if($length < 0) {
+            $length = PHP_INT_MAX;
+        }
         $province_search = $this->request->input('province_search');
         $ward_search = $this->request->input('ward_search');
 
@@ -62,16 +65,21 @@ class AresController extends AuthController
         }
         $filtered = $query->count();
         $query->orderBy($orderBy, $orderDir);
-        $data = $query->skip($start)->take($length)->get();
+        $data = $query->skip($start)->take($length)
+            ->get();
         if (!empty($data)){
             foreach ($data as $key => $value){
-                $data_province = AresDetail::select('id', 'id_ares', 'id_province')
+                $data_province = AresDetail::select('id', 'id_ares', 'id_province', 'id_province_old')
                     ->where('id_ares', $value->id)->with('province')->get();
                 foreach($data_province as $kItem => $vItem) {
                     $data_province[$kItem]->data_ward = AresWard::select('id', 'id_ward')
                         ->where('id_ares', $value->id)
                         ->where('id_province', $vItem->id_province)
                         ->with('ward')->get();
+                    if(!empty($vItem->id_province_old)) {
+                        $data_province[$kItem]->name_province_old = DB::table('tbl_province_sixty_four')->select(DB::raw('CONCAT(type, " ", name) as name'))
+                            ->where('provinceid', $vItem->id_province_old)->first()->name;
+                    }
                 }
                 $data[$key]->data_province = $data_province;
             }
@@ -151,12 +159,22 @@ class AresController extends AuthController
             ->join('tbl_province', 'tbl_province.Id', '=', 'tbl_ares_detail.id_province')
             ->where('tbl_ares_detail.id_ares', '=', $id)->get();
         foreach($data_detail as $key => $value) {
-            $data_detail[$key]->item = DB::table('tbl_ares_ward')
-                ->select('tbl_ares_ward.*', 'tbl_wards.Name as name_ward')
+            $id_province_old = $value->id_province_old ?? 0;
+            $list_ward = DB::table('tbl_ares_ward')
+//                ->select('tbl_ares_ward.*', 'tbl_wards.Name as name_ward')
+                ->select(DB::raw('GROUP_CONCAT(DISTINCT tbl_ares_ward.id_ward) as list_ward'))
                 ->join('tbl_wards', 'tbl_wards.Id', '=', 'tbl_ares_ward.id_ward')
                 ->where('tbl_ares_ward.id_ares', '=', $value->id_ares)
                 ->where('tbl_ares_ward.id_province', '=', $value->id_province)
-                ->get();
+                ->first();
+            $data_detail[$key]->list_id = explode(',', $list_ward->list_ward);
+            $data_detail[$key]->items = Ward::where('ProvinceId', $value->id_province)
+                ->where(function($q) use ($id_province_old) {
+                if(!empty($id_province_old)) {
+                    $q->where('ProvinceId_old', '=', "$id_province_old");
+                }
+            })->get();
+            $data_detail[$key]->province_sixty_four = DB::table('tbl_province_sixty_four')->where('province_new', $value->id_province)->get();
         }
         $dtData->detail = $data_detail;
         $data['result'] = true;
@@ -173,12 +191,14 @@ class AresController extends AuthController
             $ares_ward = [];
             DB::beginTransaction();
             foreach ($items as $key => $value) {
-                $id_province = $value['province_id'] ?? [];
+                $id_province = $value['province_id'] ?? 0;
+                $id_province_old = $value['province_old_id'] ?? 0;
                 $id_ward = $value['ward_id'] ?? [];
                 if(!empty($id_province) && !empty($id_ward)) {
                     $ares_detail[] = [
                         'id_ares' => $id,
                         'id_province' => $id_province,
+                        'id_province_old' => $id_province_old ?? 0,
                         'list_wards' => implode(',', $id_ward),
                     ];
                     foreach ($id_ward as $k => $v) {
@@ -267,7 +287,12 @@ class AresController extends AuthController
             $current_page = $this->request->query('current_page');
         }
         if ($this->request->query('per_page')) {
-            $per_page =$this->request->query('per_page');
+            $per_page = $this->request->query('per_page');
+        }
+
+        if ($this->request->query('limit_all')) {
+            $current_page = 1;
+            $per_page = PHP_INT_MAX;
         }
         $show_short = $this->request->query('show_short');
         $search = $this->request->input('search') ?? null;
@@ -328,8 +353,7 @@ class AresController extends AuthController
                 return $q->whereIn('id_ares', $id_ares);
             }, function ($q) use ($id_ares) {
                 return $q->where('id_ares', $id_ares);
-            })
-            ->get();
+            })->get();
 
 
         $dataWard = [];
@@ -347,10 +371,11 @@ class AresController extends AuthController
             $this->request->client = (object)['token' => Config::get('constant')['token_default']];
         }
         $list_name = $this->request->input('list_name') ?? null;
+        $ward_ares = $this->request->input('ward_ares') ?? null;
         $orderBy = 'id desc';
         $query = Ares::select('tbl_ares.*')
-            ->where('id','!=',0)
-            ->where('active','=',1);
+            ->where('id','!=',0);
+//            ->where('active','=',1);
         if (!empty($list_name)) {
             $query->where(function($q) use ($list_name) {
                 if(is_array($list_name)) {
@@ -363,11 +388,117 @@ class AresController extends AuthController
         }
         $query->orderByRaw($orderBy);
         $dtData = $query->get();
+        if(!empty($ward_ares)) {
+            foreach ($dtData as $key => $value) {
+                $dtData[$key]->ward = Ward::select('tbl_wards.Id', 'tbl_wards.Name')->whereIn('Name', $ward_ares)
+                    ->join('tbl_ares_ward', 'tbl_ares_ward.id_ward', '=', 'tbl_wards.Id')
+                    ->where('tbl_ares_ward.id_ares', '=', $value->id)
+                    ->get();
+            }
+        }
+        else {
+            foreach ($dtData as $key => $value) {
+                $dtData[$key]->ward = Ward::select('tbl_wards.Id', 'tbl_wards.Name')->join('tbl_ares_ward', 'tbl_ares_ward.id_ward', '=', 'tbl_wards.Id')
+                    ->where('tbl_ares_ward.id_ares', '=', $value->id)
+                    ->get();
+                $dtData[$key]->all_ward = 1;
+            }
+        }
         return response()->json([
             'data' => $dtData,
             'result' => true,
             'message' => 'Lấy danh sách thành công'
         ]);
     }
+
+//    public function create_auto_ares() {
+//        $arr = [
+//            "bến tre",
+//            "trà vinh",
+//            "vĩnh long",
+//            "bình phước",
+//            "đồng nai",
+//            "bạc liêu",
+//            "cà mau",
+//            "tiền giang",
+//            "đồng tháp",
+//            "sóc trăng",
+//            "hậu giang",
+//            "cần thơ",
+//            "kiên giang",
+//            "an giang",
+//            "long an",
+//            "tây ninh",
+//            "bến tre",
+//            "daknong",
+//            "lâm đồng",
+//            "bình thuận",
+//            "daklak",
+//            "phú yên",
+//            "gia lai",
+//            "bình định",
+//            "quảng ngãi",
+//            "kon tum",
+//            "ninh thuận",
+//            "khánh hòa",
+//            "đà nẵng",
+//            "quảng nam",
+//            "huế",
+//            "vũng tàu",
+//            "bình dương",
+//            "quận 1",
+//            "quận 3",
+//            "quận 4",
+//            "quận 5",
+//            "quận 6",
+//            "quận 7",
+//            "quận 8",
+//            "quận 10",
+//            "quận 11",
+//            "quận 12",
+//            "thủ đức",
+//            "bình thạnh",
+//            "quận phú nhuận",
+//            "quận tân bình",
+//            "quận gò vấp",
+//            "quận tân phú",
+//            "hóc môn _ hcm",
+//            "cần giờ _ hcm",
+//            "củ chi _ hcm",
+//            "bình chánh _ hcm",
+//            "nhà bè _ hcm",
+//            "Hồ Chí Minh",
+//            "Bà Rịa - Vũng Tàu",
+//        ];
+//
+//       $province_sixty_four = DB::table('tbl_province_sixty_four')
+//           ->where(function($q) use ($arr) {
+//               foreach($arr as $value) {
+//                   $q->where('name', '!=', "$value");
+//               }
+//        })->get();
+//       foreach($province_sixty_four as $key => $value) {
+//           $ares = new Ares();
+//           $ares->name = $value->name;
+//           $ares->active = 0;
+//           $ares->save();
+//           $province = Province::find($value->province_new);
+//            $wards = Ward::where('ProvinceId', $value->province_new)->where('ProvinceId_old', $value->provinceid)->get();
+//            $listWard = [];
+//            foreach($wards as $k => $v) {
+//                $ares_ward = new AresWard();
+//                $ares_ward->id_ares = $ares->id;
+//                $ares_ward->id_province = $province->Id;
+//                $ares_ward->id_ward = $v->Id;
+//                $ares_ward->save();
+//                $listWard[] = $v->Id;
+//            }
+//            $aresDetail = new AresDetail();
+//            $aresDetail->id_ares = $ares->id;
+//            $aresDetail->id_province = $province->Id;
+//            $aresDetail->list_wards = implode(',', $listWard);
+//           $aresDetail->save();
+//       }
+//    }
 
 }

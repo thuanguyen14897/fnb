@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserAres;
 use App\Services\AresService;
+use App\Services\CategorySystemService;
 use App\Traits\UploadFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
@@ -21,11 +22,12 @@ class UserController extends Controller
 {
     protected $fnbAres;
     use UploadFile;
-    public function __construct(Request $request, AresService $aresService)
+    public function __construct(Request $request, AresService $aresService, CategorySystemService $categorySystemService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
         $this->fnbAres = $aresService;
+        $this->fnbCategorySystemService = $categorySystemService;
     }
 
     public function get_list(){
@@ -33,7 +35,8 @@ class UserController extends Controller
             access_denied();
         }
         $this->request->merge([
-            'show_short' => 1
+            'show_short' => 1,
+            'limit_all' => 1,
         ]);//show chỉ thông tin cơ bản
         $data_ares = $this->fnbAres->getListData($this->request);
         if(!empty($data_ares->getData()->data->data)) {
@@ -169,14 +172,35 @@ class UserController extends Controller
         $department = Department::all();
         $user = User::find($id);
         $this->request->merge([
-            'show_short' => 1
+            'show_short' => 0,
+            'limit_all' => 1
         ]);//show chỉ thông tin cơ bản
         $data_ares = $this->fnbAres->getListData($this->request);
-        if(!empty($data_ares->getData()->data->data)) {
-            $ares = $data_ares->getData()->data->data;
+        $CountAresWard = [];
+        if(!empty($data_ares->getData(true)['data']['data'])) {
+            $ares = $data_ares->getData(true)['data']['data'];
+            foreach($ares as $key => $value) {
+                $CountAresWard[$value['id']] = count($value['ares_ward']);
+            }
         }
         if(!empty($user->id)) {
             $user->ares = UserAres::where('id_user', $user->id)->get();
+            foreach($user->ares as $key => $value) {
+                $this->request->merge(['id_ares' => $value->id_ares ?? 0]);
+                $this->request->merge(['limit' => -1]);
+                $response = $this->fnbCategorySystemService->getListWardToAres($this->request);
+                $data = $response->getData(true)['data'];
+                $user->ares[$key]->item = $data;
+                $itemActive = DB::table('tbl_user_ares_ward')
+                    ->select(DB::raw("GROUP_CONCAT(id_ward) as listID"))
+                    ->where('id_user', $user->id)->where('id_ares', $value->id_ares)->first();
+                $user->ares[$key]->itemActive = explode(',', $itemActive->listID);
+                if(!empty($CountAresWard[$value->id_ares]) && $CountAresWard[$value->id_ares] <= count($user->ares[$key]->itemActive)) {
+                    $user->ares[$key]->itemActive = [];
+                }
+
+            }
+
         }
         return view('admin.user.detail',[
             'id' => $id,
@@ -196,6 +220,8 @@ class UserController extends Controller
         } else {
             $user = User::find($id);
         }
+
+        $ward_ares = $this->request->ward_ares;
         $user->code = $this->request->code;
         $user->name = $this->request->name;
         $user->phone = $this->request->phone;
@@ -231,14 +257,50 @@ class UserController extends Controller
             $list_ares = $this->request->list_ares;
             UserAres::where('id_user', $user->id)
                 ->delete();
+            DB::table('tbl_user_ares_ward')->where('id_user', $user->id)->delete();
             if(!empty($list_ares)) {
                 foreach ($list_ares as $key => $value) {
                     $UserAres = new UserAres();
                     $UserAres->id_user = $user->id;
                     $UserAres->id_ares = $value;
+                    if(!empty($ward_ares[$value])) {
+                        $UserAres->is_all = 0;
+                    }
+                    else {
+                        $UserAres->is_all = 1;
+                    }
                     $UserAres->save();
+                    if(!empty($ward_ares[$value])) {
+                        $UserAres->is_all = 0;
+                        foreach($ward_ares[$value] as $k => $v) {
+                            DB::table('tbl_user_ares_ward')->insert([
+                                'id_user' => $user->id,
+                                'id_ares' => $value,
+                                'id_ward' => $v,
+                            ]);
+                        }
+                    }
+                    else {
+
+                        $UserAres->save();
+                        $this->request->merge(['id_ares' => $value ?? 0]);
+                        $this->request->merge(['limit' => -1]);
+                        $response = $this->fnbCategorySystemService->getListWardToAres($this->request);
+                        $dataWard = $response->getData(true);
+                        if ($dataWard['result'] != false) {
+                            $dtData = ($dataWard['data']) ?? [];
+                            foreach ($dtData as $k => $v) {
+                                DB::table('tbl_user_ares_ward')->insert([
+                                    'id_user' => $user->id,
+                                    'id_ares' => $value,
+                                    'id_ward' => $v['Id'],
+                                ]);
+                            }
+                        }
+                    }
                 }
             }
+
 
             $department = $this->request->department;
             $user->department()->detach();
@@ -443,216 +505,271 @@ class UserController extends Controller
             // Nếu có header, bỏ qua dòng đầu tiên
             $header = array_map('strtolower', $rows[0]);
             unset($rows[0]);
-
+            $idUserBefore = '';
             foreach ($rows as $key => $row) {
-                if(empty($row[2])) {
-                    $dataExcelRow[$key]['result'] = '<span class="label label-warning">Tên nhân viên không được để trống</span>';
-                    continue;
-                }
-
                 $code = !empty($row[1]) ? $row[1] : ('NS-' . time(). rand(1000, 9999));
-                $name = $row[2];
-                $email = $row[3];
-                $phone = $row[4];
-                $password = !empty($row[6]) ? bcrypt($row[6]) : NULL;
-                $dataExcelRow[$key][6] = !empty($password) ? '******' : '';
-                $active = $row[8] ?? 0;
-                $dataExcelRow[$key][8] = !empty($active) ? 'Hoạt động' : 'Khóa';
-                $ares = $row[7];
-                $department = $row[5];
-//
-//                $arrayDataAppend = [
-//                    'gender' => 9,
-//                    'birthday' => 10,
-//                    'place_of_birth' => 11,
-//                    'national_id' => 12,
-//                    'date_of_issue' => 13,
-//                    'place_of_issue' => 14,
-//                    'marital_status' => 15,
-//                    'nationality' => 16,
-//                    'ethnicity' => 17,
-//                    'religion' => 18,
-//                    'address' => 19,
-//                    'current_address' => 20,
-//                    'emergency_contact_name' => 21,
-//                    'emergency_contact_phone' => 22,
-//                    'relationship_with_emergency' => 23,
-//                    'education_level' => 24,
-//                    'major' => 25,
-//                    'university' => 26,
-//                    'graduation_year' => 27,
-//                    'certificates' => 28,
-//                    'employment_type' => 29,
-//                    'start_date_work' => 30,
-//                    'contract_number' => 31,
-//                    'bank_account' => 32,
-//                    'bank_name' => 33,
-//                    'address_bank_account' => 34,
-//                    'social_insurance_number' => 35,
-//                    'tax_code' => 36,
-//                    'area' => 37,
-//                ];
-                $arrayDataAppend = [];
-//                if(!empty($row[$arrayDataAppend['gender']])) {
-//                    if(mb_strtolower($row[$arrayDataAppend['gender']], 'UTF-8') == 'nam') {
-//                        $row[$arrayDataAppend['gender']] = 1;
-//                    }
-//                    else if(mb_strtolower($row[$arrayDataAppend['gender']], 'UTF-8') == 'nữ'){
-//                        $row[$arrayDataAppend['gender']] = 2;
-//                    }
-//                    else {
-//                        $row[$arrayDataAppend['gender']] = 0;
-//                    }
-//                }
-//                if(!empty($row[$arrayDataAppend['birthday']])) {
-//                    $row[$arrayDataAppend['birthday']] = dateExcelToDatime($row[$arrayDataAppend['birthday']], true);
-//                    $dataExcelRow[$key][$arrayDataAppend['birthday']] = _dt($row[$arrayDataAppend['birthday']]);
-//                }
-//                if(!empty($row[$arrayDataAppend['date_of_issue']])) {
-//                    $row[$arrayDataAppend['date_of_issue']] = dateExcelToDatime($row[$arrayDataAppend['date_of_issue']]);
-//                    $dataExcelRow[$key][$arrayDataAppend['date_of_issue']] = _dthuan($row[$arrayDataAppend['date_of_issue']]);
-//                }
-//                if(!empty($row[$arrayDataAppend['start_date_work']])) {
-//                    $row[$arrayDataAppend['start_date_work']] = dateExcelToDatime($row[$arrayDataAppend['start_date_work']]);
-//                    $dataExcelRow[$key][$arrayDataAppend['start_date_work']] = _dthuan($row[$arrayDataAppend['start_date_work']]);
-//                }
-//                if(!empty($row[$arrayDataAppend['area']])) {
-//                    $area = Province::where('name', 'like', ('%' . $row[$arrayDataAppend['area']].'%'))->first();
-//                    $row[$arrayDataAppend['area']] = $area->province_id ?? NULL;
-//                    $dataExcelRow[$key][$arrayDataAppend['area']] = $area->name ?? '';
-//                }
+                if(empty($row[1]) && empty($row[2]) && !empty($idUserBefore) && !empty($row[7])) {
+
+                    $dataExcelRow[$key][0] = '';
+                    $dataExcelRow[$key][1] = '';
+                    $dataExcelRow[$key][2] = '';
+                    $dataExcelRow[$key][3] = '';
+                    $dataExcelRow[$key][4] = '';
+                    $dataExcelRow[$key][5] = '';
+                    $dataExcelRow[$key][6] = '';
+                    $dataExcelRow[$key][9] = '';
 
 
-                $ares = explode(',', $ares);
-                $department = explode(',', $department);
-                $listDeparment = Department::where(function ($query) use ($department) {
-                    foreach($department as $item) {
-                        $query->orWhere('name', '=', trim($item));
-                    }
-                })->get();
-                if($listDeparment->isEmpty() && !empty($department)) {
-                    $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm thấy phòng ban</span>';
-                    continue;
-                }
-                else if(count($department) > count($listDeparment)) {
-                    $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm thấy phòng ban</span>';
-                    continue;
-                }
-
-                $this->request->merge(['list_name' => $ares]);
-                $listAres = $this->fnbAres->getListDataWhereName($this->request);
-                if(!empty($listAres->getData(true))) {
-                    $listAres = $listAres->getData(true)['data'];
-                    if(empty($listAres)) {
-                        $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm khu vực</span>';
-                        continue;
-                    }
-                    else if(count($ares) > count($listAres)) {
-                        $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm khu vực</span>';
-                        continue;
-                    }
-                }
-
-
-                $listDeparmentID = [];
-                if(!empty($listDeparment)) {
-                    foreach ($listDeparment as $item) {
-                        $listDeparmentID[] = $item->id;
-                    }
-                }
-
-                $listAresID = [];
-                if(!empty($listAres)) {
-                    foreach ($listAres as $item) {
-                        $listAresID[] = $item['id'];
-                    }
-                }
-
-                $user = User::where('code', '=', $code)->first();
-                if(!empty($user->id) && $user->admin == 1) {
-                    $dataExcelRow[$key]['result'] = '<span class="label label-danger">Không thể cập nhật tài khoản quản trị viên</span>';
-                    continue;
-
-                }
-                if(empty($user->id)) {
-                    $dataInsert = [
-                        'code' => $code,
-                        'name' => $name,
-                        'email' => $email,
-                        'phone' => $phone,
-                        'password' => $password,
-                        'active' => $active ?? 0,
-                    ];
-
-                    foreach($arrayDataAppend as $kd => $vd) {
-                        $dataInsert[$kd] = $row[$vd] ?? NULL;
+                    $ares = $row[7];
+                    $ward_ares = $row[8] ?? NULL;
+                    $ares = explode(',', $ares);
+                    if(!empty($ward_ares)) {
+                        $ward_ares = explode(',', $ward_ares);
                     }
 
-                    $idUser = DB::table('tbl_users')->insertGetId($dataInsert);
-                    if(!empty($idUser)) {
-                        if(!empty($listDeparmentID)) {
-                            foreach($listDeparmentID as $listDeparmentIDItem) {
-                                DB::table('tbl_user_department')->insert([
-                                    'user_id' => $idUser,
-                                    'department_id' => $listDeparmentIDItem,
-                                ]);
+                    $this->request->merge(['list_name' => $ares]);
+                    $this->request->merge(['ward_ares' => $ward_ares]);
+                    $listAres = $this->fnbAres->getListDataWhereName($this->request);
+                    if (!empty($listAres->getData(true))) {
+                        $listAres = $listAres->getData(true)['data'];
+                        if (empty($listAres)) {
+                            $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm khu vực</span>';
+                            continue;
+                        } else if (count($ares) > count($listAres)) {
+                            $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm khu vực</span>';
+                            continue;
+                        }
+                    }
+
+                    $listAresID = [];
+                    $listWard = [];
+                    $CountListWard = [];
+                    $AresALL = [];
+                    if (!empty($listAres)) {
+                        foreach ($listAres as $item) {
+                            $listAresID[] = $item['id'];
+                            if(!empty($item['ward'])) {
+                                foreach ($item['ward'] as $kW => $vW) {
+                                    $listWard[$item['id']][] = $vW['Id'];
+                                    $CountListWard[] = $vW['Id'];
+                                }
+                                if(!empty($item['all_ward'])) {
+                                    $AresALL[$item['id']] = 1;
+                                }
                             }
                         }
-                        if(!empty($listAresID)) {
-                            foreach($listAresID as $listAresIDItem) {
-                                DB::table('tbl_user_ares')->insert([
-                                    'id_user' => $idUser,
-                                    'id_ares' => $listAresIDItem,
-                                ]);
+                    }
+
+                    if (!empty($listAresID)) {
+                        foreach ($listAresID as $listAresIDItem) {
+                            DB::table('tbl_user_ares')->insert([
+                                'id_user' => $idUserBefore,
+                                'id_ares' => $listAresIDItem,
+                                'is_all' => !empty($AresALL[$listAresIDItem]) ?? 0
+                            ]);
+                            if(!empty($listWard[$listAresIDItem])) {
+                                foreach($listWard[$listAresIDItem] as $vWard) {
+                                    DB::table('tbl_user_ares_ward')->insert([
+                                        'id_user' => $idUserBefore,
+                                        'id_ares' => $listAresIDItem,
+                                        'id_ward' => $vWard,
+                                    ]);
+                                }
                             }
                         }
-                        $dataExcelRow[$key]['result'] = '<span class="label label-success">Thêm Thành công</span>';
+                        if (count($CountListWard) < count($ward_ares)) {
+                            $dataExcelRow[$key]['result'] = '<span class="label label-warning">Có xã phường không tìm thấy</span>';
+                        }
                     }
-                    else {
-                        $dataExcelRow[$key]['result'] = '<span class="label label-danger">Thêm thất bại</span>';
-                    }
+
                 }
                 else {
-                    $dataUpdate = [
-                        'name' => $name,
-                        'email' => $email,
-                        'phone' => $phone,
-                        'password' => $password,
-                        'active' => $active ?? 0,
-                    ];
 
-                    foreach($arrayDataAppend as $kd => $vd) {
-                        $dataUpdate[$kd] = $row[$vd] ?? NULL;
+                    if (empty($row[2])) {
+                        $dataExcelRow[$key]['result'] = '<span class="label label-warning">Tên nhân viên không được để trống</span>';
+                        continue;
+                    }
+
+                    $name = $row[2];
+                    $email = $row[3];
+                    $phone = $row[4];
+                    $password = !empty($row[6]) ? bcrypt($row[6]) : NULL;
+                    $dataExcelRow[$key][6] = !empty($password) ? '******' : '';
+
+                    $ares = $row[7];
+                    $ward_ares = $row[8] ?? NULL;
+
+                    $department = $row[5];
+
+                    $active = $row[9] ?? 0;
+                    $dataExcelRow[$key][9] = !empty($active) ? 'Hoạt động' : 'Khóa';
+                    $arrayDataAppend = [];
+                    $ares = explode(',', $ares);
+                    if(!empty($ward_ares)) {
+                        $ward_ares = explode(',', $ward_ares);
+                    }
+                    $department = explode(',', $department);
+                    $listDeparment = Department::where(function ($query) use ($department) {
+                        foreach ($department as $item) {
+                            $query->orWhere('name', '=', trim($item));
+                        }
+                    })->get();
+
+
+                    if ($listDeparment->isEmpty() && !empty($department)) {
+                        $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm thấy phòng ban</span>';
+                        continue;
+                    } else if (count($department) > count($listDeparment)) {
+                        $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm thấy phòng ban</span>';
+                        continue;
+                    }
+
+                    $this->request->merge(['list_name' => $ares]);
+                    $this->request->merge(['ward_ares' => $ward_ares]);
+
+                    $listAres = $this->fnbAres->getListDataWhereName($this->request);
+                    if (!empty($listAres->getData(true))) {
+                        $listAres = $listAres->getData(true)['data'];
+                        if (empty($listAres)) {
+                            $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm khu vực</span>';
+                            continue;
+                        } else if (count($ares) > count($listAres)) {
+                            $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm khu vực</span>';
+                            continue;
+                        }
                     }
 
 
-                    $success = User::where('id', '=', $user->id)
-                        ->update($dataUpdate);
-                    if(!empty($success)) {
-                        if(!empty($listDeparmentID)) {
-                            DB::table('tbl_user_department')->where('user_id', '=', $user->id)->delete();
-                            foreach($listDeparmentID as $listDeparmentIDItem) {
-                                DB::table('tbl_user_department')->insert([
-                                    'user_id' => $user->id,
-                                    'department_id' => $listDeparmentIDItem,
-                                ]);
-                            }
+                    $listDeparmentID = [];
+                    if (!empty($listDeparment)) {
+                        foreach ($listDeparment as $item) {
+                            $listDeparmentID[] = $item->id;
                         }
-
-                        if(!empty($listAresID)) {
-                            DB::table('tbl_user_ares')->where('id_user', '=', $user->id)->delete();
-                            foreach($listAresID as $listAresIDItem) {
-                                DB::table('tbl_user_ares')->insert([
-                                    'id_user' => $user->id,
-                                    'id_ares' => $listAresIDItem,
-                                ]);
-                            }
-                        }
-
-                        $dataExcelRow[$key]['result'] = '<span class="label label-success">Cập nhật Thành công</span>';
                     }
-                    else {
-                        $dataExcelRow[$key]['result'] = '<span class="label label-danger">Cập nhật thất bại</span>';
+
+                    $listAresID = [];
+                    $listWard = [];
+                    $AresALL = [];
+                    if (!empty($listAres)) {
+                        foreach ($listAres as $item) {
+                            $listAresID[] = $item['id'];
+                            if(!empty($item['ward'])) {
+                                foreach ($item['ward'] as $kW => $vW) {
+                                    $listWard[$item['id']][] = $vW['Id'];
+                                }
+                                if(!empty($item['all_ward'])) {
+                                    $AresALL[$item['id']] = 1;
+                                }
+                            }
+                        }
+                    }
+
+                    $user = User::where('code', '=', $code)->first();
+                    if (!empty($user->id) && $user->admin == 1) {
+                        $dataExcelRow[$key]['result'] = '<span class="label label-danger">Không thể cập nhật tài khoản quản trị viên</span>';
+                        continue;
+
+                    }
+                    if (empty($user->id)) {
+                        $dataInsert = [
+                            'code' => $code,
+                            'name' => $name,
+                            'email' => $email,
+                            'phone' => $phone,
+                            'password' => $password,
+                            'active' => $active ?? 0,
+                        ];
+
+                        foreach ($arrayDataAppend as $kd => $vd) {
+                            $dataInsert[$kd] = $row[$vd] ?? NULL;
+                        }
+
+                        $idUser = DB::table('tbl_users')->insertGetId($dataInsert);
+                        if (!empty($idUser)) {
+                            $idUserBefore = $idUser;
+                            if (!empty($listDeparmentID)) {
+                                foreach ($listDeparmentID as $listDeparmentIDItem) {
+                                    DB::table('tbl_user_department')->insert([
+                                        'user_id' => $idUser,
+                                        'department_id' => $listDeparmentIDItem,
+                                    ]);
+                                }
+                            }
+                            if (!empty($listAresID)) {
+                                foreach ($listAresID as $listAresIDItem) {
+                                    DB::table('tbl_user_ares')->insert([
+                                        'id_user' => $idUser,
+                                        'id_ares' => $listAresIDItem,
+                                        'is_all' => !empty($AresALL[$listAresIDItem]) ?? 0
+                                    ]);
+                                    if(!empty($listWard[$listAresIDItem])) {
+                                        foreach($listWard[$listAresIDItem] as $vWard) {
+                                            DB::table('tbl_user_ares_ward')->insert([
+                                                'id_user' => $idUser,
+                                                'id_ares' => $listAresIDItem,
+                                                'id_ward' => $vWard,
+                                            ]);
+                                        }
+                                    }
+                                }
+                            }
+                            $dataExcelRow[$key]['result'] = '<span class="label label-success">Thêm Thành công</span>';
+                        } else {
+                            $dataExcelRow[$key]['result'] = '<span class="label label-danger">Thêm thất bại</span>';
+                        }
+                    } else {
+                        $dataUpdate = [
+                            'name' => $name,
+                            'email' => $email,
+                            'phone' => $phone,
+                            'password' => $password,
+                            'active' => $active ?? 0,
+                        ];
+
+                        foreach ($arrayDataAppend as $kd => $vd) {
+                            $dataUpdate[$kd] = $row[$vd] ?? NULL;
+                        }
+
+
+                        $success = User::where('id', '=', $user->id)
+                            ->update($dataUpdate);
+                        if (!empty($success)) {
+                            $idUserBefore = $user->id;
+                            if (!empty($listDeparmentID)) {
+                                DB::table('tbl_user_department')->where('user_id', '=', $user->id)->delete();
+                                foreach ($listDeparmentID as $listDeparmentIDItem) {
+                                    DB::table('tbl_user_department')->insert([
+                                        'user_id' => $user->id,
+                                        'department_id' => $listDeparmentIDItem,
+                                    ]);
+                                }
+                            }
+
+                            if (!empty($listAresID)) {
+                                DB::table('tbl_user_ares')->where('id_user', '=', $user->id)->delete();
+                                DB::table('tbl_user_ares_ward')->where('id_user', '=', $user->id)->delete();
+                                foreach ($listAresID as $listAresIDItem) {
+                                    DB::table('tbl_user_ares')->insert([
+                                        'id_user' => $user->id,
+                                        'id_ares' => $listAresIDItem,
+                                        'is_all' => !empty($AresALL[$listAresIDItem]) ?? 0
+                                    ]);
+                                    if(!empty($listWard[$listAresIDItem])) {
+                                        foreach($listWard[$listAresIDItem] as $vWard) {
+                                            DB::table('tbl_user_ares_ward')->insert([
+                                                'id_user' => $user->id,
+                                                'id_ares' => $listAresIDItem,
+                                                'id_ward' => $vWard,
+                                            ]);
+                                        }
+                                    }
+                                }
+                            }
+
+                            $dataExcelRow[$key]['result'] = '<span class="label label-success">Cập nhật Thành công</span>';
+                        } else {
+                            $dataExcelRow[$key]['result'] = '<span class="label label-danger">Cập nhật thất bại</span>';
+                        }
                     }
                 }
             }

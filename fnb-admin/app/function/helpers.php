@@ -703,31 +703,24 @@ function getListStatusTransaction()
         ],
         [
             'id' => 1,
-            'name' => 'Đang xử lý',
-            'color' => '#B43403',
-            'background' => '#FEECDC',
-            'index' => 1,
-        ],
-        [
-            'id' => 2,
             'name' => 'Đang trong hành trình',
             'color' => '#052E5C',
             'background' => '#DBEEFF',
+            'index' => 11,
+        ],
+        [
+            'id' => 2,
+            'name' => 'Kết thúc',
+            'color' => '#03401F',
+            'background' => '#D7FAE0',
             'index' => 2,
         ],
         [
             'id' => 3,
-            'name' => 'Hoàn thành',
-            'color' => '#03401F',
-            'background' => '#D7FAE0',
-            'index' => 3,
-        ],
-        [
-            'id' => 4,
             'name' => 'Hủy chuyến',
             'color' => '#BF1D28',
             'background' => '#FFDBDE',
-            'index' => 4,
+            'index' => 3,
         ],
     ];
 }
@@ -735,22 +728,19 @@ function getListStatusTransaction()
 function getValueStatusTransaction($id, $type = 'name')
 {
     $option[0]['name'] = lang('Đã khởi tạo');
-    $option[1]['name'] = lang('Đang xử lý');
-    $option[2]['name'] = lang('Đang trong hành trình');
-    $option[3]['name'] = lang('Hoàn thành');
-    $option[4]['name'] = lang('Hủy');
+    $option[1]['name'] = lang('Đang trong hành trình');
+    $option[2]['name'] = lang('Kết thúc');
+    $option[3]['name'] = lang('Hủy chuyến');
 
     $option[0]['color'] = '#371585';
-    $option[1]['color'] = '#B43403';
-    $option[2]['color'] = '#052E5C';
-    $option[3]['color'] = '#03401F';
-    $option[4]['color'] = '#BF1D28';
+    $option[1]['color'] = '#052E5C';
+    $option[2]['color'] = '#03401F';
+    $option[3]['color'] = '#BF1D28';
 
     $option[0]['index'] = 0;
     $option[1]['index'] = 1;
     $option[2]['index'] = 2;
     $option[3]['index'] = 3;
-    $option[4]['index'] = 4;
 
     return $option[$id][$type];
 }
@@ -1560,6 +1550,18 @@ if (!function_exists('menuHelper')) {
                         'link' => 'admin/ares/list',
                         'image' => '',
                     ],
+                    [
+                        'id' => 'homepage',
+                        'name' => 'Trang chủ App',
+                        'link' => 'admin/admin_website/homepage',
+                        'image' => '',
+                    ]
+//                    [
+//                        'id' => 'kpi_user',
+//                        'name' => lang('KPI Nhân viên'),
+//                        'link' => 'admin/kpi/kpi_user',
+//                        'image' => '',
+//                    ],
                 ]
             ],
             [
@@ -1634,21 +1636,6 @@ if (!function_exists('menuHelper')) {
                 ],
             ],
             [
-                'id' => 'manager_app',
-                'name' => 'Quản lý App',
-                'link' => '',
-                'class' => 'quan_ly_app',
-                'image' => 'admin/assets/images/icon_menu/quan_ly_app.png',
-                'child' => [
-                    [
-                        'id' => 'homepage',
-                        'name' => 'Trang chủ',
-                        'link' => 'admin/admin_website/homepage',
-                        'image' => '',
-                    ],
-                ],
-            ],
-            [
                 'id' => 'transaction',
                 'name' => 'Chuyến đi',
                 'link' => 'admin/transaction/list',
@@ -1656,6 +1643,35 @@ if (!function_exists('menuHelper')) {
                 'image' => 'admin/assets/images/icon_menu/chuyen_di.png',
                 'child' => [
                 ],
+            ],
+            [
+                'id' => 'manage_transaction_bill',
+                'name' => 'Giao dịch',
+                'link' => '',
+                'class' => 'giao_dich',
+                'image' => 'admin/assets/images/icon_menu/giao_dich.png',
+                'child' => [
+                    [
+                        'id' => 'transaction_bill',
+                        'name' => lang('Hóa đơn'),
+                        'link' => '',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'payment',
+                        'name' => lang('Phiếu thu'),
+                        'link' => '',
+                        'image' => '',
+                    ],
+                ],
+            ],
+            [
+                'id' => 'kpi',
+                'name' => 'KPI',
+                'link' => '',
+                'class' => 'kpi',
+                'image' => 'admin/assets/images/icon_menu/kpi.png',
+                'child' => [],
             ],
             [
                 'id' => 'blog',
@@ -1749,6 +1765,29 @@ function loadTableService()
         </table>';
 }
 
+function loadTableServiceFavourite()
+{
+    return ' <table id="table_service_favourite" class="table table-bordered table_service_favourite">
+            <thead>
+            <tr>
+                <th class="text-center">' . lang('dt_stt') . '</th>
+                <th class="text-center">' . lang('dt_image') . '</th>
+                <th class="text-center">' . lang('dt_name_service') . '</th>
+                <th class="text-center">' . lang('dt_province_district') . '</th>
+                <th class="text-center">' . lang('dt_customer') . '</th>
+                <th class="text-center">' . lang('Nhóm danh mục') . '</th>
+                <th class="text-center">' . lang('Danh mục') . '</th>
+                <th class="text-center">' . lang('Đơn giá') . '</th>
+                <th class="text-center">' . lang('dt_status') . '</th>
+                <th class="text-center">' . lang('Nổi bật') . '</th>
+                <th class="text-center">' . lang('dt_actions') . '</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>';
+}
+
 function getListStatusService($id = -1,$type = 'name')
 {
     $data = [
@@ -1813,4 +1852,20 @@ function getListTypeBusiness($id = 0)
     } else {
         return $data;
     }
+}
+
+function formatTimeAMPM($time) {
+    if (empty($time)) {
+        return '';
+    }
+    $dt = DateTime::createFromFormat('H:i:s', $time);
+    if (!$dt) {
+        return $time;
+    }
+    $hour = $dt->format('h:i A');
+    $hour = explode(' ',$hour);
+    return [
+        'hour' => $hour[0],
+        'type' => $hour[1]
+    ];
 }

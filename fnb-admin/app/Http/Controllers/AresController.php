@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ares;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -49,7 +50,7 @@ class AresController extends Controller
             ->addColumn('options', function ($dtData) {
                 $id = $dtData['id'];
                 $edit = "<a class='dt-modal' href='admin/ares/detail/$id'><i class='fa fa-pencil'></i> " . lang('c_edit_ares_short') . "</a>";
-                $setup = "<a href='admin/ares/setup/$id'><i class='fa fa-pencil'></i> " . lang('c_setup_ares') . "</a>";
+                $setup = "<a href='admin/ares/setup/$id'><i class='fa fa-cog'></i> " . lang('c_setup_ares') . "</a>";
                 $delete = '<a type="button" class="po-delete" data-container="body" data-html="true" data-toggle="popover" data-placement="left" data-content="
                 <button href=\'admin/ares/delete/' . $id. '\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
                 <button class=\'btn btn-default po-close\'>' . lang('dt_close') . '</button>
@@ -74,18 +75,39 @@ class AresController extends Controller
             ->editColumn('data_province', function ($dtData) {
                 $data_province = $dtData['data_province'];
                 $viewProvice = '';
+                $countWard = [];
+                $countProvice = [];
                 foreach($data_province as $key => $value) {
-                    if($key > 0) {
-                        $viewProvice .= '<hr class="m-t-10 m-b-10"/>';
-                    }
-                    $viewProvice .= '<div class="city-name">'.$value['province']['Name'].'</div>';
-                    $viewProvice .= '<div class="districts">';
+                    $countProvice[] = $value['province']['Id'];
                     foreach($value['data_ward'] as $k => $v) {
-                        $viewProvice .= '<span class="tag district">'.$v['ward']['Name'].'</span>';
+                        $countWard[] = $v['ward']['Id'];
                     }
-                    $viewProvice .= '</div>';
+//                    $viewProvice .= '<div class="city-name">'.$value['province']['Name'] . (!empty($value['name_province_old']) ? (' - <i style="font-size:12px;">' . $value['name_province_old'] .'</i>') : '').'
+//                    <span class="tag district"> ' . count($value['data_ward']) . ' Phường/Xã</span></div>';
+////                    $viewProvice .= '<div class="districts"><span class="tag district"> ' . count($value['data_ward']) . ' Phường/Xã</span>';
+////                    foreach($value['data_ward'] as $k => $v) {
+////                        $viewProvice .= '<span class="tag district">'.$v['ward']['Name'].'</span>';
+////                    }
+//                    $viewProvice .= '</div>';
                 }
+                $viewProvice = '<div class="text-center"><span class="tag district"><b>' . count(array_unique($countProvice)) . '</b> Tỉnh/Thành Phố & ' . count(array_unique($countWard)) . ' Phường/Xã</span></div>';
                 return $viewProvice;
+            })
+            ->addColumn('data_user', function ($dtData) {
+                $viewUser = '';
+                $ListUserAres = User::join('tbl_user_ares', 'tbl_user_ares.id_user', '=', 'tbl_users.id')
+                    ->where('tbl_user_ares.id_ares', '=', $dtData['id'])->get();
+                if(!empty($ListUserAres)) {
+                    foreach($ListUserAres as $UserAres) {
+                        $dtImage = !empty($UserAres->image) ? asset('storage/'.$UserAres->image) : 'admin/assets/images/users/avatar-1.jpg';
+                        $viewUser .= '<div class="m-t-5" style="display: flex;">
+                                        <img src="'.$dtImage.'" alt="image" title="'.$UserAres->name.'"
+                                             class="img-responsive img-circle"
+                                             style="width: 25px;height: 25px"><span style="padding-top: 2px;padding-left: 2px;"> '.$UserAres->name.'</span>
+                                    </div>';
+                    }
+                }
+                return '<div>'.$viewUser.'</div>';
             })
             ->editColumn('name', function ($dtData) {
                 $str = '<div>' . $dtData['name'] . '</div>';
@@ -94,10 +116,10 @@ class AresController extends Controller
             ->editColumn('active', function ($dtData) {
                 $checked = $dtData['active'] == 1 ? 'checked' : '';
                 $status = $dtData['active'] == 1 ? '0' : '1';
-                $str = '<div><input type="checkbox" '.$checked.' name="active" class="active dt-active"  data-plugin="switchery" data-color="#5fbeaa" data-href="admin/ares/changeStatus/'.$dtData['id'].'" data-status="'.$status.'"></div>';
+                $str = '<div class="text-center"><input type="checkbox" '.$checked.' name="active" class="active dt-active"  data-plugin="switchery" data-color="#5fbeaa" data-href="admin/ares/changeStatus/'.$dtData['id'].'" data-status="'.$status.'"></div>';
                 return $str;
             })
-            ->rawColumns(['options', 'active', 'name', 'data_province', 'ward','id'])
+            ->rawColumns(['options', 'active', 'name', 'data_province', 'ward', 'id','data_user'])
             ->setTotalRecords($data['recordsTotal'])
             ->setFilteredRecords($data['recordsFiltered'])
             ->with([

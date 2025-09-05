@@ -298,15 +298,8 @@
     var notificationsCountElem = $('.navbar-c-items').find('a > span[data-count]');
     var notificationsCount = parseInt(notificationsCountElem.data('count'));
     var notifications = notificationsWrapper.find('div.div-data-noti');
-    pusher_key = "{{get_option('pusher')}}";
-    Pusher.logToConsole = true;
 
-    var pusher = new Pusher(`${pusher_key}`, {
-        cluster: 'ap1'
-    });
-    var channel = pusher.subscribe('notifications-channel-<?php echo get_staff_user_id(); ?>-staff');
-    channel.bind('notification', function (data) {
-        // loadNoti();
+    function dataTest(data){
         var classes = '';
         var href = '';
         json_data = JSON.parse(data.json_data);
@@ -356,101 +349,8 @@
                 };
             }
         }
-    });
-    channel.bind('reward_day', function (data) {
-        console.log(1);
-    });
-    // test app driver
-    {{--var channelNew = pusher.subscribe('notifications-channel-<?php echo get_staff_user_id() == 1 ? 1 : 2; ?>-driver');--}}
-    {{--channelNew.bind('booking-driver', function(data) {--}}
-    {{--    getListTransactionNotDriver(<?php echo get_staff_user_id() == 1 ? 1 : 2; ?>);--}}
-    {{--});--}}
-    {{--channelNew.bind('accpet-driver', function(data) {--}}
-    {{--    getListTransactionNotDriver(<?php echo get_staff_user_id() == 1 ? 1 : 2; ?>);--}}
-    {{--});--}}
-    {{--channelNew.bind('auto-accpet-driver', function(data) {--}}
-    {{--    $("#draggable-driver").find('.card-call-center').removeClass('hide');--}}
-    {{--    html = `<div onclick="startTrip(${data.id},${data.driver_id})">Khởi hành chuyến ${data.reference_no}</div>--}}
-    {{--            <div onclick="cancelTrip(${data.id},${data.driver_id})">Hủy chuyến chuyến ${data.reference_no}</div>`;--}}
-    {{--    $("#draggable-driver").find('.card-call-center').find('.btn_xac_nhan').html(html);--}}
-    {{--});--}}
-
-    function cancelTrip(transaction_id = 0,driver_id = 0){
-        $.ajax({
-            type: "POST",
-            url: 'api/transaction_driver/changeStatus',
-            data: {
-                status : 4,
-                type_driver:1,
-                transaction_id:transaction_id,
-                driver_id:driver_id,
-                note:"Tài xế có việc bận"
-            },
-            headers: {
-                "Cache-Control": "no-cache",
-                "Authorization": "Bearer " + 'kanow',
-            },
-            dataType: "json",
-            success: function (data) {
-                if (data.result) {
-                    alert_float('success', data.message);
-                    $("#draggable-driver").find('.card-call-center').addClass('hide');
-                } else {
-                    alert_float('error', data.message);
-                }
-            }
-        });
     }
 
-    function confirmTrip(transaction_id,driver_id){
-        $.ajax({
-            type: "POST",
-            url: 'api/driver/confirmTrip',
-            data: {
-                transaction_id: transaction_id,
-                driver_id: driver_id,
-            },
-            headers: {
-                "Cache-Control": "no-cache",
-                "Authorization": "Bearer " + 'NTN8fHxleUpwZGlJNklsVktkbkYwZWxselZDdFhORFZ5UXpWdFdtaFpaRkU5UFNJc0luWmhiSFZsSWpvaU9XeFJWekpKTWtaelkwVnFNVlZUYlU1RlNHZHVNaXRvVkdWR2NUZDNUSE15WldaVmVHUldURVI1U1QwaUxDSnRZV01pT2lKbE9Ua3hPRGM0TmpBd056bG1OREV4TWpBNU9HSXhOalE1WVdGa05UQXlZVGN5WkdZNVpUUTFZbVEzTVdKaU4yTmtObVF4WWpNMk1HWXdOV05sWXpSa0lpd2lkR0ZuSWpvaUluMD18fHwyMDI0LTA3LTMxIDE1OjM4OjExfHx8fHx8fHx8',
-            },
-            dataType: "json",
-            success: function (data) {
-                if (data.result) {
-                    alert_float('success', data.message);
-                } else {
-                    alert_float('error', data.message);
-                }
-            }
-        });
-    }
-
-    function getListTransactionNotDriver(driver_id){
-        $.ajax({
-            type: "GET",
-            url: 'api/driver/getListTransactionNotDriver',
-            data: {
-                driver_id: driver_id,
-            },
-            headers: {
-                "Cache-Control": "no-cache",
-                "Authorization": "Bearer " + 'NTN8fHxleUpwZGlJNklsVktkbkYwZWxselZDdFhORFZ5UXpWdFdtaFpaRkU5UFNJc0luWmhiSFZsSWpvaU9XeFJWekpKTWtaelkwVnFNVlZUYlU1RlNHZHVNaXRvVkdWR2NUZDNUSE15WldaVmVHUldURVI1U1QwaUxDSnRZV01pT2lKbE9Ua3hPRGM0TmpBd056bG1OREV4TWpBNU9HSXhOalE1WVdGa05UQXlZVGN5WkdZNVpUUTFZbVEzTVdKaU4yTmtObVF4WWpNMk1HWXdOV05sWXpSa0lpd2lkR0ZuSWpvaUluMD18fHwyMDI0LTA3LTMxIDE1OjM4OjExfHx8fHx8fHx8',
-            },
-            dataType: "json",
-            success: function (data) {
-                if (data.data.length > 0) {
-                    $("#draggable-driver").find('.card-call-center').removeClass('hide');
-                    html = '';
-                    $.each(data.data,function (k,v){
-                        html += `<div onclick="confirmTrip(${v.id},<?php echo get_staff_user_id() == 1 ? 1 : 2; ?>)">Nhận chuyến ${v.reference_no}</div>`;
-                    });
-                    $("#draggable-driver").find('.card-call-center').find('.btn_xac_nhan').html(html);
-                } else {
-                    $("#draggable-driver").find('.card-call-center').addClass('hide');
-                }
-            }
-        });
-    }
     //end
     pageNoti = 1;
     isCall = 1;
@@ -569,118 +469,6 @@
                 window.open('{{asset('')}}admin/transaction/list?type=1');
             };
         }
-    }
-</script>
-<script>
-    // const pusherNew = new Pusher(
-    //     pusher_key,
-    //     {
-    //         cluster: 'ap1', // Replace with 'cluster' from dashboard
-    //         forceTLS: true,
-    //         channelAuthorization: {
-    //             endpoint: "http://192.168.1.178:8080/api/channel/authorize?type=web",
-    //         }
-    //     }
-    // );
-    // const hashCode = (s) =>
-    //     s.split("").reduce((a, b) => {
-    //         a = (a << 5) - a + b.charCodeAt(0);
-    //         return a & a;
-    //     }, 0);
-    // function addMemberToUserList(memberId) {
-    //     userEl = document.createElement("div");
-    //     userEl.id = "user_" + memberId;
-    //     userEl.innerText = memberId;
-    //     userEl.style.backgroundColor =
-    //         "hsl(" + (hashCode(memberId) % 360) + ",70%,60%)";
-    //     document.getElementById("user_list").appendChild(userEl);
-    // }
-    // const channelNew = pusherNew.subscribe("presence-quickstart");
-    // channelNew.bind("pusher:subscription_succeeded", () =>
-    //     channelNew.members.each((member) => addMemberToUserList(member.id))
-    // );
-    // channelNew.bind("pusher:member_added", (member) => {
-    //     addMemberToUserList(member.id);
-    // });
-    // channelNew.bind("pusher:member_removed", (member) => {
-    //     const userEl = document.getElementById("user_" + member.id);
-    //     userEl.parentNode.removeChild(userEl);
-    // });
-    // var pusher_presence = new Pusher(pusher_key, {
-    //     authEndpoint: 'http://192.168.1.178:8080/api/channel/authorize',
-    //     authTransport: 'jsonp',
-    //     'cluster': 'ap1',
-    // });
-    // var presenceChannel = pusher_presence.subscribe('presence-mychanel');
-    // /*--------------- Pusher Trigger user connected ---------------*/
-    // presenceChannel.bind('pusher:member_added', function (data) {
-    //    console.log(data);
-    // });
-    // /*--------------- Pusher Trigger user logout ---------------*/
-    // presenceChannel.bind('pusher:member_removed', function (data) {
-    // });
-
-</script>
-{{--<script src="https://capi.caresoft.vn/js/embed/jssip-3.2.10.js" type="text/javascript"></script>--}}
-{{--<script src="https://capi.caresoft.vn/js/embed/init-3.0.7.js" type="text/javascript"></script>--}}
-{{--<script src="https://capi.caresoft.vn/js/embed/web.push.js" type="text/javascript"></script>--}}
-{{--<script src="https://capi.caresoft.vn/js/embed/cs_const.js" type="text/javascript"></script>--}}
-{{--<script src="https://capi.caresoft.vn/js/embed/cs_voice.js" type="text/javascript"></script>--}}
-{{--<script src="https://capi.caresoft.vn/js/embed/custom.js" type="text/javascript"></script>--}}
-
-{{--<script src="admin/assets/js/handle_voice_script.js?v=1.0"></script>--}}
-<script type="text/javascript">
-    var interval;
-    let tokenVoice = localStorage.getItem('tokenVoice');
-    tokenVoice = $.parseJSON(tokenVoice);
-    token = tokenVoice != null ? tokenVoice.token : null;
-    if(token != null) {
-        // csInit(token, 'kanow');
-    }
-    function onTransferCallSurvey() {
-        transferSurvey({id: 'survey_id', sipurl: 'surveySipURL'});
-    }
-
-    function transferCall() {
-        getTransferAgent();
-        csTransferCallAgent('5000');
-    }
-
-    function transferCallToAcd() {
-        csTransferCallAcd('QUEUE_ID');
-    }
-
-
-    function onCallout(_this) {
-        phone_customer = $(_this).find('.phone_customer').html();
-        // phone_customer = '0772818495';
-        const calloutId = document.getElementById('select-call-out-id').value;
-        if(csVoice.enableVoice == true){
-
-        } else {
-            alert_float('error','Vui lòng kích hoạt thoại !');
-            return;
-        }
-        $.ajax({
-            url: 'admin/call_center/updateContactCallCenter',
-            type: 'POST',
-            dataType: 'JSON',
-            cache: false,
-            data: {
-                phone_customer: phone_customer
-            },
-        })
-            .done(function (data) {
-                if (calloutId) {
-                    console.log('calling with callout service: ', calloutId);
-                    csCallout(phone_customer, calloutId);
-
-                } else {
-                    console.log('calling with default callout service');
-                    csCallout(phone_customer);
-                }
-            })
-
     }
 </script>
 @yield('script')

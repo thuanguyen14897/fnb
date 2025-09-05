@@ -47,7 +47,6 @@ trait NotificationTrait
                 DB::table('tbl_notification_staff')->insert($arrStaffNoti);
             }
             $notification->created_at_new = _dt_new($notification->created_at);
-            ConnectPusher($notification, $data['arr_object_id'], 'notification');
             if (!empty($data['player_id'])) {
                 static::sendNotiOnesignal($notification_id, $data, $type);
             }

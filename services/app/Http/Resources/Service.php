@@ -26,6 +26,7 @@ class Service extends JsonResource
         $dtImage = !empty($this->image) ? env('STORAGE_URL').'/'.$this->image : null;
         $total_review = ReviewService::where('service_id', $this->id)->count();
         $star = ReviewService::where('service_id', $this->id)->avg('star');
+        $customer_id = $request->client->id ?? 0;
         if (!empty($this->homepage)){
             return [
                 'id' => $this->id,
@@ -47,6 +48,9 @@ class Service extends JsonResource
                     'longitude' => $this->longitude,
                 ],
                 'other_amenities' => OtherAmenitis::collection($this->whenLoaded('other_amenities')),
+                'favourite' => $this->whenLoaded('favourite', function () use ($customer_id) {
+                    return $this->favourite->contains('customer_id', $customer_id);
+                }),
             ];
         } elseif(!empty($this->check_transaction)){
             return [
@@ -82,6 +86,7 @@ class Service extends JsonResource
                     'longitude' => $this->longitude,
                 ],
                 'category_service' => CategoryService::make($this->whenLoaded('category_service')),
+                'group_category_service' => GroupCategoryService::make($this->whenLoaded('group_category_service')),
             ];
         } else {
             $dtReview = null;
@@ -181,6 +186,9 @@ class Service extends JsonResource
                 'other_amenities' => OtherAmenitis::collection($this->whenLoaded('other_amenities')),
                 'other_amenities_detail' => !empty($this->check_detail) ? OtherAmenitis::collection($other_amenities_detail) : null,
                 'customer' => $this->customer ?? null,
+                'favourite' => $this->whenLoaded('favourite', function () use ($customer_id) {
+                    return $this->favourite->contains('customer_id', $customer_id);
+                }),
             ];
         }
     }

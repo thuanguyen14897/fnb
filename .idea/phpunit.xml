@@ -4,8 +4,8 @@
     <option name="directories">
       <list>
         <option value="$PROJECT_DIR$/services/tests" />
-        <option value="$PROJECT_DIR$/accounts/tests" />
         <option value="$PROJECT_DIR$/fnb-admin/tests" />
+        <option value="$PROJECT_DIR$/accounts/tests" />
       </list>
     </option>
   </component>

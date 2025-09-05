@@ -31,6 +31,12 @@
                     </a>
                 </li>
                 <li class="">
+                    <a href="#favourite" data-toggle="tab" aria-expanded="false">
+                        <span class="visible-xs"></span>
+                        <span class="hidden-xs">Gian hàng yêu thích</span>
+                    </a>
+                </li>
+                <li class="">
                     <a href="#service" data-toggle="tab" aria-expanded="false">
                         <span class="visible-xs"></span>
                         <span class="hidden-xs">Quản lý gian hàng</span>
@@ -80,7 +86,7 @@
                                             <span>Tỉnh/ Thành phố : </span><span>{{!empty($client['province']) ? $client['province']['Type'].' '.$client['province']['Name'] : ''}}</span>
                                         </p>
                                         <p class="text-dark member-info-detail">
-                                            <span>Phường/ Thị Trấn/ Xã : </span><span>{{!empty($client['wards']) ? $client['wards']['Type'].' '.$client['wards']['Name'] : ''}}</span>
+                                            <span>Phường/ Thị Trấn/ Xã : </span><span>{{!empty($client['wards']) ? $client['wards']['Name'] : ''}}</span>
                                         </p>
                                         <p class="text-dark member-info-detail">
                                             <span>Địa chỉ : </span><span>{{$client['address']}}</span>
@@ -262,6 +268,45 @@
                         </div>
                     </div>
                 </div>
+                <div class="tab-pane" id="favourite">
+                    <div class="row">
+                        <div class="row m-b-10">
+                            <div class="col-md-2">
+                                <label for="group_category_service_search_favourite">{{lang('Nhóm danh mục')}}</label>
+                                <select class="group_category_service_search_favourite select2" id="group_category_service_search_favourite"
+                                        data-placeholder="Chọn ..." name="group_category_service_search_favourite">
+                                    <option></option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="category_service_search_favourite">{{lang('Danh mục')}}</label>
+                                <select class="category_service_search_favourite select2" id="category_service_search_favourite"
+                                        data-placeholder="Chọn ..." name="category_service_search_favourite">
+                                    <option></option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="status_search_favourite">Trạng thái</label>
+                                <select class="status_search_favourite select2" id="status_search_favourite"
+                                        data-placeholder="Chọn ..." name="status_search_favourite">
+                                    <option></option>
+                                    <option value="-1">Tất cả</option>
+                                    @foreach(getListStatusService() as $key => $value)
+                                        <option value="{{$value['id']}}">{{$value['name']}}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="customer_search_favourite">Đối tác</label>
+                                <select class="customer_search_favourite select2" id="customer_search_favourite"
+                                        data-placeholder="Chọn ..." name="customer_search_favourite">
+                                    <option></option>
+                                </select>
+                            </div>
+                        </div>
+                        {!! loadTableServiceFavourite() !!}
+                    </div>
+                </div>
                 <div class="tab-pane" id="service">
                     <input type="hidden" name="customer_id" class="customer_id" id="customer_id"
                            value="{{$client['id']}}">
@@ -388,6 +433,69 @@
                     });
                 return false;
             }
+        });
+        var fnserverparamsNew = {
+            'customer_favourite': '#customer_id',
+            'group_category_service_search': '#group_category_service_search_favourite',
+            'category_service_search': '#category_service_search_favourite',
+            'status_search': '#status_search_favourite',
+            'customer_search': '#customer_search_favourite',
+        };
+        var oTableFavourite;
+        function loadTable() {
+            oTableFavourite = InitDataTable('#table_service_favourite', 'admin/service/getList', {
+                'order': [
+                    [0, 'desc']
+                ],
+                'responsive': true,
+                "ajax": {
+                    "type": "POST",
+                    "url": "admin/service/getList",
+                    "data": function (d) {
+                        for (var key in fnserverparamsNew) {
+                            d[key] = $(fnserverparamsNew[key]).val();
+                        }
+                        d['favourite'] = 1;
+                    },
+                    "dataSrc": function (json) {
+                        return json.data;
+                    }
+                },
+                columnDefs: [
+                    {   "render": function (data, type, row) {
+                            return `<div class="text-center">${data}</data>`;
+                        },
+                        data: 'id', name: 'id',width: "50px"
+                    },
+                    {data: 'image', name: 'image',width: "120px" , orderable: false},
+                    {data: 'name', name: 'name',width: "250px" },
+                    {data: 'province_id', name: 'province_id',width: "150px"},
+                    {data: 'customer_id', name: 'customer_id',width: "150px"},
+                    {data: 'group_category_service_id', name: 'group_category_service_id',width: "100px"},
+                    {data: 'category_service_id', name: 'category_service_id',width: "100px"},
+                    {data: 'price', name: 'price',width: "100px"},
+                    {
+                        "render": function (data, type, row) {
+                            return `<div class="text-center">${data}</div>`;
+                        },
+                        data: 'active', name: 'active',width: "100px"},
+                    {
+                        "render": function (data, type, row) {
+                            return `<div class="text-center">${data}</div>`;
+                        },
+                        data: 'hot', name: 'hot',width: "100px"
+                    },
+                    {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px" },
+                ]
+            });
+        }
+        $.each(fnserverparamsNew, function(filterIndex, filterItem) {
+            $('' + filterItem).on('change', function() {
+                oTableFavourite.draw('page')
+            });
+        });
+        $(document).on('shown.bs.tab', 'a[href="#favourite"]', function () {
+            loadTable();
         });
     </script>
 @endsection

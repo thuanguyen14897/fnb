@@ -8,7 +8,6 @@
     </div>
 
     <!-- end row -->
-
 @endsection
 @section('script')
     <script src="admin/assets/pages/jquery.dashboard.js"></script>

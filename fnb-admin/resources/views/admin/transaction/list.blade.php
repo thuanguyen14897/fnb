@@ -13,8 +13,8 @@
     </div>
     <div class="row">
         <div class="col-sm-12">
-            <ul class="nav nav-tabs slick-responsive">
-                <li class="H-search active-menu cursor"><a data-toggle="tab" data-id="-1">Tất cả (<b class="count_all">0</b>)</a></li>
+            <ul class="nav nav-tabs">
+                <li class="H-search active cursor"><a data-toggle="tab" data-id="-1">Tất cả (<b class="count_all">0</b>)</a></li>
                 <li class="H-search cursor"><a style="color: red !important;" data-toggle="tab" data-id="-2">Đang theo dõi (<b class="count_follow">0</b>)</a></li>
                 @foreach (getListStatusTransaction() as $key => $value)
                     <li class="H-search cursor"><a style="color: {{$value['color']}} !important;" data-toggle="tab" data-id="{{$value['id']}}">{{$value['name']}}  (<b class="count_{{$value['id']}}">0</b>)</a></li>
@@ -122,6 +122,9 @@
                     }
                 },
                 "dataSrc": function (json) {
+                    if(json.result == false){
+                        alert_float('error',json.message);
+                    }
                     return json.data;
                 }
             },

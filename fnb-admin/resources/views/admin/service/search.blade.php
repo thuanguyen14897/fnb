@@ -31,4 +31,18 @@
             <option></option>
         </select>
     </div>
+    <div class="col-md-2">
+        <label for="province_search">Tỉnh/Thành phố</label>
+        <select onchange="changeProvince(this)" class="province_search select2" id="province_search"
+                data-placeholder="Chọn ..." name="customer_search">
+            <option></option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label for="ward_search">Phường/Xã</label>
+        <select class="ward_search select2" id="ward_search"
+                data-placeholder="Chọn ..." name="customer_search">
+            <option></option>
+        </select>
+    </div>
 </div>

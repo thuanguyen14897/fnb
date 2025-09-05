@@ -64,12 +64,15 @@ Route::group(['prefix' => 'service','middleware' => App\Http\Middleware\CheckLog
     Route::get('getListReview', [ServiceController::class, 'getListReview']);
     Route::post('addService', [ServiceController::class, 'addService']);
     Route::get('getReviewService', [ServiceController::class, 'getReviewService']);
+    Route::post('changeFavouriteService', [ServiceController::class, 'changeFavouriteService']);
 });
 
 Route::group(['prefix' => 'category'], function () {
     Route::get('getListProvince/{id?}', [CategoryController::class, 'getListProvince']);
     Route::get('getListWard', [CategoryController::class, 'getListWard']);
     Route::get('getListAddress', [CategoryController::class, 'getListAddress']);
+    Route::get('getListProvinceSixtyFour/{id?}', [CategoryController::class, 'getListProvinceSixtyFour']);
+    Route::get('getListWardToAres', [CategoryController::class, 'getListWardToAres']);
 });
 
 Route::group(['prefix' => 'ares'], function () {
@@ -85,4 +88,5 @@ Route::group(['prefix' => 'ares'], function () {
     Route::get('getDetailWhere', [AresController::class, 'getDetailWhere']);
     Route::get('getWardsWhereAres', [AresController::class, 'getWardsWhereAres']);
     Route::get('getListDataWhereName', [AresController::class, 'getListDataWhereName']);
+    Route::get('create_auto_ares', [AresController::class, 'create_auto_ares']);
 });

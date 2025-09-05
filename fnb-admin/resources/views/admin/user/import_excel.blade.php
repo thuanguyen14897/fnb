@@ -25,7 +25,7 @@
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <a target="_blank" href="upload/template/import_user.xlsx" class="btn btn-info m-t-30">
+                                <a target="_blank" href="upload/template/import_user.xlsx?1" class="btn btn-info m-t-30">
                                     <i class="fa fa-download" aria-hidden="true"></i> Download Template
                                 </a>
                             </div>

@@ -46,6 +46,12 @@ class TransactionController extends Controller
 
     public function getList()
     {
+        if (!has_permission('transaction', 'view')) {
+            $data['result'] = false;
+            $data['message'] = lang('Không có quyền xem!');
+            $data['data'] = [];
+            return response()->json($data);
+        }
         $response = $this->fnbTransactionService->getList($this->request);
         $data = $response->getData(true);
         if ($data['result'] == false){

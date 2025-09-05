@@ -10,18 +10,21 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use App\Services\ServiceService;
+use App\Services\AdminService;
 use Illuminate\Support\Facades\Validator;
 
 class ClientController extends AuthController
 {
     protected $fnService;
+    protected $fnbAdmin;
     use UploadFile;
-    public function __construct(Request $request,ServiceService $ServiceService)
+    public function __construct(Request $request,ServiceService $ServiceService, AdminService $AdminService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
 
         $this->fnbService = $ServiceService;
+        $this->fnbAdmin = $AdminService;
     }
 
     public function getListCustomer(){
@@ -41,7 +44,8 @@ class ClientController extends AuthController
 
         $ares_permission = $this->request->input('ares_permission') ?? 0;
         if(!empty($ares_permission)) {
-            $aresPer = $this->request->input('aresPer') ?? 0;
+            $aresPer = $this->request->input('aresPer') ?? 0;//tạm không dùng nưữa
+            $user_id = $this->request->input('user_id') ?? 0;
         }
 
 
@@ -66,25 +70,41 @@ class ClientController extends AuthController
             }
         }
         if(!empty($ares_permission)) {
-            if(!empty($aresPer)) {
-                $dataAres = $this->fnbService->getWardsWhereAres($this->request, $aresPer);
-                if (!empty($dataAres)) {
-                    $WardSearch = $dataAres->getData(true);
-                    if (!empty($WardSearch['result'])) {
-                        if (!empty($WardSearch['data'])) {
-                            $query->whereIn('wards_id', $WardSearch['data']);
-                        } else {
-                            $query->where('tbl_clients.id', 0);
-                        }
-                    } else {
+            if(!empty($user_id)) {
+                $ListWard = $this->fnbAdmin->getWardUser($user_id);
+                if (!empty($ListWard['result'])) {
+                    if (!empty($ListWard['data'])) {
+                        $query->whereIn('wards_id', $ListWard['data']);
+                    }
+                    else {
                         $query->where('tbl_clients.id', 0);
                     }
+                } else {
+                    $query->where('tbl_clients.id', 0);
                 }
             }
-            else {
-                $query->where('tbl_clients.id', 0);
-            }
+
+
+//            if(!empty($aresPer)) {
+//                $dataAres = $this->fnbService->getWardsWhereAres($this->request, $aresPer);
+//                if (!empty($dataAres)) {
+//                    $WardSearch = $dataAres->getData(true);
+//                    if (!empty($WardSearch['result'])) {
+//                        if (!empty($WardSearch['data'])) {
+//                            $query->whereIn('wards_id', $WardSearch['data']);
+//                        } else {
+//                            $query->where('tbl_clients.id', 0);
+//                        }
+//                    } else {
+//                        $query->where('tbl_clients.id', 0);
+//                    }
+//                }
+//            }
+//            else {
+//                $query->where('tbl_clients.id', 0);
+//            }
         }
+
         if (($type_client_search)){
             $query->where('type_client', $type_client_search);
         }
@@ -185,22 +205,38 @@ class ClientController extends AuthController
         if ($ares_permission) {
             $aresPer = $this->request->input('aresPer'); // có thể là null/0
 
-            if (empty($aresPer)) {
-                // Không có tham số quyền -> khóa kết quả
-                $query->where('tbl_clients.id', 0);
-            } else {
-                $resp = $this->fnbService->getWardsWhereAres($this->request, $aresPer);
-                $payload = $resp ? $resp->getData(true) : null;
+//            if (empty($aresPer)) {
+//                // Không có tham số quyền -> khóa kết quả
+//                $query->where('tbl_clients.id', 0);
+//            } else {
+//                $resp = $this->fnbService->getWardsWhereAres($this->request, $aresPer);
+//                $payload = $resp ? $resp->getData(true) : null;
+//
+//                $hasResult = !empty($payload['result']);
+//                $wards     = !empty($payload['data']) ? $payload['data'] : [];
+//
+//                if ($hasResult && !empty($wards)) {
+//                    // nếu $wards là list object -> $wards = collect($wards)->pluck('id_ward')->all();
+//                    $query->whereIn('wards_id', $wards);
+//                } else {
+//                    $query->where('tbl_clients.id', 0);
+//                }
+//            }
 
-                $hasResult = !empty($payload['result']);
-                $wards     = !empty($payload['data']) ? $payload['data'] : [];
-
+            $user_id = $this->request->input('user_id');
+            if(!empty($user_id)) {
+                $ListWard = $this->fnbAdmin->getWardUser($user_id);
+                $hasResult = !empty($ListWard['result']);
+                $wards     = !empty($ListWard['data']) ? $ListWard['data'] : [];
                 if ($hasResult && !empty($wards)) {
                     // nếu $wards là list object -> $wards = collect($wards)->pluck('id_ward')->all();
                     $query->whereIn('wards_id', $wards);
                 } else {
                     $query->where('tbl_clients.id', 0);
                 }
+            }
+            else {
+                $query->where('tbl_clients.id', 0);
             }
         }
 

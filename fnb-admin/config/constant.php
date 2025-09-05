@@ -31,19 +31,6 @@ return [
     'status_price_busy' => 2,
     'status_price_customzie' => 1,
     'status_car_create' => 0,
-    'noti_approve_auto' => 0,
-    'noti_approve' => 1,
-    'noti_cancel_guest' => 2,
-    'noti_cancel_system' => 3,
-    'noti_cancel_owen' => 4,
-    'noti_remind' => 5,
-    'noti_remind_one' => 55,
-    'noti_remind_finish' => 555,
-    'noti_setup_holiday' => 123,
-    'noti_finish' => 6,
-    'noti_book_car' => 7,
-    'noti_depoist' => 8,
-    'noti_start' => 9,
     'noti_transaction' => [0,1,2,3,4,5,6,7,8,9,55,555,123],
     'noti_license_no_accuracy' => 10, //không xác thực gplx
     'noti_license_accuracy' => 11, //xác thực gplx
@@ -120,4 +107,6 @@ return [
     'noti_send_warning' => 701,
 
     'payment_mode_bank' => 1,
+    'token_default' => 'fnb',
+    'noti_transaction_end' => 2,
 ];

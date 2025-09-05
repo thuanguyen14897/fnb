@@ -212,7 +212,7 @@ class GroupCategoryServiceController extends AuthController
     public function getListData(){
         $search = $this->request->input('search') ?? null;
         $limit = $this->request->input('limit') ?? 50;
-        $query = GroupCategoryService::where('id','!=',0);
+        $query = GroupCategoryService::with('category_service')->where('id','!=',0);
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%$search%");
@@ -227,6 +227,10 @@ class GroupCategoryServiceController extends AuthController
                 $data[$key]['image'] = $dtImage;
                 $background = !empty($value->background) ? env('STORAGE_URL').'/'.$value->background : null;
                 $data[$key]['background'] = $background;
+                $value->category_service->map(function ($item){
+                    $item->icon = !empty($item->icon) ? env('STORAGE_URL').'/'.$item->icon : null;;
+                    return $item;
+                });
             }
         }
         return response()->json([
@@ -243,6 +247,7 @@ class GroupCategoryServiceController extends AuthController
         $query->with(['service' => function ($q) use($lat,$lon) {
             $q->select('*',DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),null) as distance"));
             $q->with('other_amenities');
+            $q->with('favourite');
             $q->where('hot', 1);
             $q->latest()->limit(5);
         }]);

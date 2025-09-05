@@ -55,4 +55,9 @@ class Service extends Model
     {
         return $this->hasMany('App\Models\ReviewService', 'service_id', 'id');
     }
+
+    function favourite()
+    {
+        return $this->hasMany('App\Models\ServiceFavourite', 'service_id', 'id');
+    }
 }

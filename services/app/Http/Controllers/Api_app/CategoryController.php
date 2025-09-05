@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api_app;
 
+use App\Models\AresWard;
 use App\Services\AdminService;
 use App\Models\CategoryService;
 use App\Models\Province;
@@ -52,6 +53,7 @@ class CategoryController extends AuthController
     public function getListWard(){
         $search = $this->request->input('search') ?? null;
         $province_id = $this->request->input('province_id') ?? 0;
+        $province_id_old = $this->request->input('province_id_old') ?? 0;
         $limit = $this->request->input('limit') ?? 50;
         $id = $this->request->input('id') ?? 0;
         $query = Ward::where('Id','!=',0);
@@ -62,6 +64,9 @@ class CategoryController extends AuthController
         }
         if (!empty($id)){
             $query->where('Id', $id);
+        }
+        if (!empty($province_id_old)){
+            $query->where('ProvinceId_old', $province_id_old);
         }
         $query->where('ProvinceId', $province_id);
         $data = $query->limit($limit)->get();
@@ -123,5 +128,67 @@ class CategoryController extends AuthController
             'message' => 'Lấy danh sách thành công'
         ]);
     }
+
+
+    //lấy thông tin thành phố cũ
+    public function getListProvinceSixtyFour($id = 0){
+        $search = $this->request->input('search') ?? null;
+        $limit = $this->request->input('limit') ?? 50;
+        if(empty($id)) {
+            $id = $this->request->input('id') ?? 0;
+        }
+        $id_province = $this->request->input('id_province') ?? 0;
+        $query = DB::table('tbl_province_sixty_four');
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%");
+            });
+        }
+        if (!empty($id_province)){
+            $query->where('province_new', $id_province);
+        }
+        if (!empty($id)){
+            $query->where('provinceid', $id);
+        }
+        $query->orderBy('name', 'asc');
+        $data = $query->limit($limit)->get();
+        return response()->json([
+            'data' => $data,
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
+    }
+    public function getListWardToAres(){
+        $search = $this->request->input('search') ?? null;
+        $limit = $this->request->input('limit') ?? 50;
+        $id = $this->request->input('id') ?? 0;
+        $id_ares = $this->request->input('id_ares') ?? [];
+        if(!is_array($id_ares)) {
+            $id_ares = explode(',', $id_ares);
+        }
+        $query = AresWard::where('tbl_ares_ward.id','!=',0);
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('Name', 'like', "%$search%");
+            });
+        }
+        $query->Join('tbl_wards', 'tbl_wards.id', '=', 'tbl_ares_ward.id_ward');
+        if (!empty($id)){
+//            $query->where('Id', $id);
+        }
+        $query->whereIn('id_ares', $id_ares);
+        $data = $query->limit($limit)->get();
+        if (!empty($data)){
+            foreach ($data as $key => $value) {
+                $data[$key]->Name = $value->Type.' '.$value->Name;
+            }
+        }
+        return response()->json([
+            'data' => $data,
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
+    }
+
 
 }

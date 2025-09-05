@@ -114,26 +114,8 @@
                                                 <input type="password" class="form-control password" id="password" name="password">
                                                 <a style="position: absolute; top:54%;right: 25px" href="javascript:;void(0)" ><i class="fa fa-eye"></i></a>
                                             </div>
-                                            <div class="form-group">
-                                                <label for="list_ares">{{lang('c_ares')}}</label>
-                                                <select multiple class="list_ares select2 select2-multiple" id="list_ares" data-placeholder="Chọn ..." name="list_ares[]">
-                                                    @foreach($ares as $detailAres)
-                                                        <option value="{{$detailAres->id ?? ''}}"
-                                                                @php
-                                                                    $selected = '';
-                                                                        if(!empty($user->ares)) {
-                                                                            foreach($user->ares as $k => $v) {
-                                                                                if($v['id_ares'] == $detailAres->id) {
-                                                                                    $selected = 'selected';
-                                                                                    break;
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                @endphp
-                                                        {{$selected}}>{{$detailAres->name ?? ''}}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
+
+
                                             <div class="form-group">
                                                 <label for="">{{lang('dt_active_user')}}</label>
                                                 <div class="radio radio-custom radio-inline">
@@ -157,7 +139,64 @@
                                                     <label for="active2"> Khoá </label>
                                                 </div>
                                             </div>
+                                            <hr/>
+                                            <div class="form-group">
+                                                <label for="list_ares">{{lang('c_ares')}}</label>
+                                                <select multiple class="list_ares select2 select2-multiple" id="list_ares" data-placeholder="Chọn ..." name="list_ares[]">
+                                                    @php
+                                                        $listNameAres = [];
+                                                    @endphp
+                                                    @foreach($ares as $detailAres)
+                                                        <option value="{{$detailAres['id'] ?? ''}}"
+                                                            @php
+                                                                $selected = '';
+                                                                    if(!empty($user->ares)) {
+                                                                        foreach($user->ares as $k => $v) {
+                                                                            if($v['id_ares'] == $detailAres['id']) {
+                                                                                $selected = 'selected';
+                                                                                break;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    $listNameAres[$detailAres['id']] =  $detailAres['name'];
+                                                            @endphp
+                                                            {{$selected}} data-name="{{$detailAres['name'] ?? ''}}">{{$detailAres['name'] ?? ''}}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                                <table class="table" id="table-ares">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>STT</th>
+                                                        <th>Khu vực</th>
+                                                        <th>Phường/xã</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    @if(!empty($user->ares))
+                                                        @foreach($user->ares as $keyAres => $valueAres)
+                                                            <tr class="item" data-key="{{$keyAres}}" data-ares="{{$valueAres->id_ares}}">
+                                                                <td class="SttITem" style="width: 5%">{{$keyAres + 1}}</td>
+                                                                <td style="width: 20%">{{$listNameAres[$valueAres->id_ares]}}</td>
+                                                                <td>
+                                                                    <div class="form-group">
+                                                                        <select class="ward_id-{{$keyAres}} select2" id="ward_id-{{$keyAres}}" multiple
+                                                                                data-placeholder="Tất cả" name="ward_ares[{{$valueAres['id_ares']}}][]">
+                                                                            @if(!empty($valueAres->item))
+                                                                                @foreach($valueAres->item as $keyWard => $valueWard)
+                                                                                    <option value="{{$valueWard['Id']}}" {{is_numeric(array_search($valueWard['Id'], $valueAres->itemActive)) ? 'selected' : ''}}>{{$valueWard['Name']}}</option>
+                                                                                @endforeach
+                                                                            @endif
+                                                                        </select>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    @endif
+                                                    </tbody>
+                                                </table>
                                         </div>
+
                                     </div>
                                 </div>
                         </div>
@@ -216,6 +255,70 @@
                 }
             });
         });
+
+        $('#list_ares').change(function(e) {
+            var list_ares = $(this).val();
+            if(list_ares) {
+                $.each(list_ares, function (index, value) {
+                    if ($(`#table-ares`).find(`tr.item[data-ares="${value}"]`).length > 0) {
+                        $(`#table-ares`).find('tbody').find(`tr.item[data-ares="${value}"]`).addClass('isset');
+                    } else {
+                        name = $('#list_ares').find(`option[value="${value}"]`).attr('data-name');
+                        pushAres({id: value, name: name});
+                    }
+                })
+            }
+            $(`#table-ares`).find('tbody').find(`tr.item:not(.isset)`).remove();
+            $(`#table-ares`).find('tbody').find(`tr.item.isset`).removeClass('isset');
+            ChangeStt();
+        })
+
+
+
+
+        var countKey = {{!empty($user->ares) ? count($user->ares) : 0}};
+        var data_list_ares = {!! json_encode($ares) !!};
+        function pushAres(items) {
+            $(`#table-ares`).find('tbody').append(`<tr class="item isset" data-key="${countKey}" data-ares="${items.id}">
+                                                        <td class="SttITem" style="width: 5%"></td>
+                                                        <td style="width: 20%">${items.name}</td>
+                                                        <td>
+                                                            <div class="form-group">
+                                                                <select class="ward_id-${countKey} select2" id="ward_id-${countKey}" multiple
+                                                                        data-placeholder="Tất cả" name="ward_ares[${items.id}][]">
+                                                                    <option></option>
+                                                                </select>
+                                                            </div>
+                                                        </td>
+                                                    </tr>`);
+
+            searchAjaxSelect2Mutil(`#ward_id-${countKey}`,'api/category/getListWardToAres',0,{
+                'select2':true,
+                id_ares :items.id,
+            })
+            countKey++;
+            ChangeStt();
+        }
+
+        function ChangeStt() {
+            var listSTT = $('.SttITem');
+            $.each(listSTT, function(index, value) {
+                $(value).text(index + 1);
+            })
+        }
+
+        function changeAres(_this) {
+            var id_ares = $(_this).val();
+            var tr = $(_this).parents('.item');
+            var keyCount = $(tr).attr('data-key');
+
+            searchAjaxSelect2Mutil(`#ward_id-${keyCount}`,'api/category/getListWardToAres',0,{
+                'select2':true,
+                id_ares :id_ares,
+            })
+
+        }
+
 
         $(".delete_image").click(function () {
             $(".show_image").addClass('hide');

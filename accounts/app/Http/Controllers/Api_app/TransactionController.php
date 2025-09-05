@@ -44,6 +44,7 @@ class TransactionController extends AuthController
         $status_search = $this->request->input('status_search');
         $service_search = $this->request->input('service_search');
 
+
         if (!empty($date_search)){
             $date_search = explode(' - ',$date_search);
             $start_date = to_sql_date($date_search[0],true);
@@ -77,7 +78,6 @@ class TransactionController extends AuthController
             if ($status_search == -2){
                 $query->whereIn('status', [
                     Config::get('constant')['status_request'],
-                    Config::get('constant')['status_process'],
                     Config::get('constant')['status_start'],
                 ]);
             } else {
@@ -158,7 +158,6 @@ class TransactionController extends AuthController
         }
         $query->whereIn('status', [
             Config::get('constant')['status_request'],
-            Config::get('constant')['status_process'],
             Config::get('constant')['status_start'],
         ]);
         if (!empty($service_search)){
@@ -273,6 +272,10 @@ class TransactionController extends AuthController
             $end_date_end = null;
         }
         //end
+        //cron
+        $check_cancel = $this->request->input('check_cancel') ?? 0;
+        $cron = $this->request->input('cron') ?? 0;
+        //
         $query = Transaction::with('customer')
             ->with('transaction_day_item')
             ->where('id','!=',0);
@@ -281,18 +284,21 @@ class TransactionController extends AuthController
                 $q->where('reference_no', 'like', "%$search%");
             });
         }
-        $query->where(function ($q) use ($status_search,$customer_search,$customer_id,$service_id,$start_date,$end_date,$start_date_end,$end_date_end,$date_search,$date_search_end){
+        $query->where(function ($q) use ($status_search,$customer_search,$customer_id,$service_id,$start_date,$end_date,$start_date_end,$end_date_end,$date_search,$date_search_end,$check_cancel,$cron){
             if ($status_search != -1) {
                 $status_search = is_array($status_search) ? $status_search : [$status_search];
                 $q->whereIn('status', $status_search);
             }
             if (empty($customer_search)) {
-                $q->where(function($q) use ($customer_id){
-                    $q->where('customer_id',$customer_id);
+                //trong admin không cần lọc theo customer id
+                if (empty($cron)) {
+                    $q->where(function ($q) use ($customer_id) {
+                        $q->where('customer_id', $customer_id);
 //                    $q->orWhereHas('transaction_day_item',  function ($instance) use ($customer_id){
 //                        $instance->where('s',$customer_id);
 //                    });
-                });
+                    });
+                }
             }
             if (!empty($service_id)){
                 $q->whereHas('transaction_day_item',  function ($instance) use ($service_id){
@@ -304,6 +310,10 @@ class TransactionController extends AuthController
             }
             if (!empty($date_search_end)){
                 $q->whereBetween('date_end', [$start_date_end, $end_date_end]);
+            }
+            if (!empty($check_cancel)){
+                $q->whereDate('date_end', '<', now()->toDateString());
+                $q->where('status', '!=',Config::get('constant')['status_transaction_finish']);
             }
         });
         $query->orderByRaw("id desc");
@@ -326,6 +336,7 @@ class TransactionController extends AuthController
             });
             return $item;
         });
+
         //end
         $collection = new TransactionCollection($dtData);
         return response()->json([
@@ -359,6 +370,13 @@ class TransactionController extends AuthController
         $dtData->transaction_day->transform(function ($dayItem) use ($services) {
              $dayItem->transaction_day_item->transform(function ($item) use ($services) {
                 $service = $services->where('id', $item->service_id)->first();
+                $item->status = [
+                    'status' => $item->status,
+                    'name' => getValueStatusTransactionItem($item->status,'name'),
+                    'color' => getValueStatusTransactionItem($item->status,'color'),
+                    'date_status' => $item->date_status,
+                    'note' => $item->note_status,
+                ];
                 $item->service = $service;
                 return $item;
             });
@@ -451,54 +469,66 @@ class TransactionController extends AuthController
                 $data['message'] = 'Chi tiết ngày không được để trống!';
                 return response()->json($data);
             }
-            if (empty($dayItem)){
-                $data['result'] = false;
-                $data['data'] = [];
-                $data['message'] = 'Vui lòng chọn dịch vụ cho ngày: '.$date. '!';
-                return response()->json($data);
-            }
+//            if (empty($dayItem)){
+//                $data['result'] = false;
+//                $data['data'] = [];
+//                $data['message'] = 'Vui lòng chọn dịch vụ cho ngày: '.$date. '!';
+//                return response()->json($data);
+//            }
             $date = to_sql_date($date);
             $arrDayItem = [];
-            foreach ($dayItem as $k => $v){
-                $service_id = $v['service_id'] ?? 0;
-                $hour = $v['hour'] ?? null;
-                $note = $v['note'] ?? null;
-                $this->requestService = new Request();
-                $this->requestService->merge(['id' => $service_id]);
-                $this->requestService->merge(['client' => $this->request->client]);
-                $responseService = $this->fnbServiceService->getDetail($this->requestService);
-                $dataService = $responseService->getData(true);
-                $dtService = collect($dataService['dtData']);
-                if (empty($dtService)){
-                    $data['result'] = false;
-                    $data['data'] = [];
-                    $data['message'] = 'Gian hàng không tồn tại!';
-                    return response()->json($data);
+            if (!empty($dayItem)) {
+                foreach ($dayItem as $k => $v) {
+                    $service_id = $v['service_id'] ?? 0;
+                    $hour = $v['hour'] ?? null;
+                    $note = $v['note'] ?? null;
+                    $lat_location = $v['lat_location'] ?? null;
+                    $lon_location = $v['lon_location'] ?? null;
+                    $this->requestService = new Request();
+                    $this->requestService->merge(['id' => $service_id]);
+                    $this->requestService->merge(['client' => $this->request->client]);
+                    $responseService = $this->fnbServiceService->getDetail($this->requestService);
+                    $dataService = $responseService->getData(true);
+                    $dtService = collect($dataService['dtData']);
+                    if (count($dtService) <= 0) {
+                        $data['result'] = false;
+                        $data['data'] = [];
+                        $data['message'] = 'Gian hàng không tồn tại!';
+                        return response()->json($data);
+                    }
+                    if (empty($hour)) {
+                        $data['result'] = false;
+                        $data['data'] = [];
+                        $data['message'] = 'Vui lòng chọn giờ cho gian hàng: ' . $dtService['name'] . '!';
+                        return response()->json($data);
+                    }
+                    if (strtotime($hour) < strtotime(date('H:i'))) {
+                        $data['result'] = false;
+                        $data['data'] = [];
+                        $data['message'] = 'Giờ không thể nhỏ hơn giờ hiện tại - gian hàng: ' . $dtService['name'] . '!';
+                        return response()->json($data);
+                    }
+                    $latitude = $dtService['latitude'] ?? null;
+                    $longitude = $dtService['longitude'] ?? null;
+                    $partner_id = $dtService['customer_id'] ?? 0;
+                    $arrDayItem[] = [
+                        'service_id' => $service_id,
+                        'hour' => $hour,
+                        'note' => $note,
+                        'latitude' => $latitude,
+                        'longitude' => $longitude,
+                        'partner_id' => $partner_id,
+                        'lat_location' => $lat_location,
+                        'lon_location' => $lon_location,
+                    ];
                 }
-                if (empty($hour)){
-                    $data['result'] = false;
-                    $data['data'] = [];
-                    $data['message'] = 'Vui lòng chọn giờ cho gian hàng: '.$dtService['name']. '!';
-                    return response()->json($data);
-                }
-                $latitude = $dtService['latitude'] ?? null;
-                $longitude = $dtService['longitude'] ?? null;
-                $partner_id = $dtService['customer_id'] ?? 0;
-                $arrDayItem[]= [
-                    'service_id' => $service_id,
-                    'hour' => $hour,
-                    'note' => $note,
-                    'latitude' => $latitude,
-                    'longitude' => $longitude,
-                    'partner_id' => $partner_id,
-                ];
             }
-            if (empty($arrDayItem)){
-                $data['result'] = false;
-                $data['data'] = [];
-                $data['message'] = 'Không tồn tại dữ liệu gian hàng cho ngày: '._dthuan($date). '!';
-                return response()->json($data);
-            }
+//            if (empty($arrDayItem)){
+//                $data['result'] = false;
+//                $data['data'] = [];
+//                $data['message'] = 'Không tồn tại dữ liệu gian hàng cho ngày: '._dthuan($date). '!';
+//                return response()->json($data);
+//            }
             $arrItems[] = [
                 'date' => $date,
                 'items' => $arrDayItem
@@ -543,6 +573,8 @@ class TransactionController extends AuthController
                             $transactionDayItem->latitude = $value['latitude'] ?? null;
                             $transactionDayItem->longitude = $value['longitude'] ?? null;
                             $transactionDayItem->partner_id = $value['partner_id'] ?? 0;
+                            $transactionDayItem->lat_location = $value['lat_location'] ?? null;
+                            $transactionDayItem->lon_location = $value['lon_location'] ?? null;
                             $transactionDayItem->save();
                         }
                     }
@@ -596,5 +628,52 @@ class TransactionController extends AuthController
         $data['message'] = 'Thành công';
         $data['data'] = $total;
         return response()->json($data);
+    }
+
+    public function changeStatus(){
+        $transaction_id = $this->request->input('transaction_id');
+        $status = $this->request->input('status');
+        $noteStatus = $this->request->input('note');
+
+        $transaction = Transaction::with('customer')->find($transaction_id);
+        $index = getValueStatusTransaction($transaction->status,'index');
+        $index_current = getValueStatusTransaction($status,'index');
+        $status_current = $transaction->status;
+        $arr = [Config::get('constant')['status_transaction_cancel']];
+        if ($index_current < $index){
+            if (!in_array($status,$arr)) {
+                $data['result'] = false;
+                $data['message'] = 'Không thể thay đổi trạng thái nhỏ hơn trạng thái hiện tại';
+                return response()->json($data);
+            }
+        }
+
+        if ($transaction->status == $this->request->status){
+            $data['result'] = false;
+            $data['message'] = 'Trạng thái đã được cập nhập vui lòng kiểm tra lại!';
+            return response()->json($data);
+        }
+        $customer_id = $transaction->customer_id;
+        DB::beginTransaction();
+        try
+        {
+            $transaction->status = $status;
+            $transaction->note_status = !empty($noteStatus) ? $noteStatus : null;
+            $transaction->date_status = date('Y-m-d H:i:s');
+            $transaction->staff_status = $this->request->input('staff_status');
+            $transaction->cancel_end = $this->request->input('cancel_end') ?? 0;
+            $transaction->save();
+            DB::commit();
+            $data['result'] = true;
+            $data['data'] = $transaction;
+            $data['message'] = lang('dt_success');
+            return response()->json($data);
+        } catch (\Exception $exception){
+            DB::rollBack();
+            $data['result'] = false;
+            $data['data'] = [];
+            $data['message'] = $exception->getMessage();
+            return response()->json($data);
+        }
     }
 }

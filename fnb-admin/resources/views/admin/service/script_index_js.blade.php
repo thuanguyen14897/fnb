@@ -3,7 +3,24 @@
         searchAjaxSelect2('#customer_search', 'admin/category/searchCustomer')
         searchAjaxSelect2('#group_category_service_search', 'admin/category/searchGroupCategoryService')
         searchAjaxSelect2('#category_service_search', 'admin/category/searchCategoryService')
+        searchAjaxSelect2('#province_search', 'api/category/getListProvince',0,{
+            'select2':true
+        })
+        searchAjaxSelect2('#ward_search', 'api/category/getListWard',0,{
+            'select2':true
+        })
+
+        searchAjaxSelect2('#customer_search_favourite', 'admin/category/searchCustomer')
+        searchAjaxSelect2('#group_category_service_search_favourite', 'admin/category/searchGroupCategoryService')
+        searchAjaxSelect2('#category_service_search_favourite', 'admin/category/searchCategoryService')
     })
+    function changeProvince(_this){
+        var province_id = $(_this).val();
+        searchAjaxSelect2('#ward_search', 'api/category/getListWard',0,{
+            'select2':true,
+            'province_id':province_id
+        })
+    }
     arrSearch = [];
     arrSearchObject = [];
     var fnserverparams = {
@@ -12,6 +29,8 @@
         'status_search': '#status_search',
         'customer_search': '#customer_search',
         'customer_id': '#customer_id',
+        'province_search': '#province_search',
+        'ward_search': '#ward_search',
     };
     var oTable;
     oTable = InitDataTable('#table_service', 'admin/service/getList', {

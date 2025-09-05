@@ -127,5 +127,6 @@
         'c_import' => 'Import',
         'c_import_user' => 'Nhập nhân viên từ file Excel',
         'c_user' => 'Nhân viên',
+        'dt_province_old' => 'Tỉnh/ Thành phố (Cũ)',
     ];
     return $array_c_message;

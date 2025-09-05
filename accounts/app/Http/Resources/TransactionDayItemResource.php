@@ -21,6 +21,13 @@ class TransactionDayItemResource extends JsonResource
             'id' => $this->id,
             'hour' => $this->hour,
             'note' => $this->note,
+            'status' => [
+                'status' => $this->status,
+                'name' => getValueStatusTransactionItem($this->status,'name'),
+                'color' => getValueStatusTransactionItem($this->status,'color'),
+                'date_status' => $this->date_status,
+                'note' => $this->note_status,
+            ],
             'service' => $this->service
         ];
     }

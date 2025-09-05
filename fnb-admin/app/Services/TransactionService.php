@@ -106,6 +106,28 @@ class TransactionService
         }
     }
 
+    public function changeStatus($request){
+        try {
+            $response = $this->sendRequestToService(
+                'POST',
+                "{$this->baseUrl}/api/transaction/changeStatus",
+                $request
+            );
+            $data = $response->json();
+            return response()->json([
+                'data' => $data,
+                'result' => $data['result'] ?? false,
+                'message' => $data['message']
+            ]);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function delete($request){
         try {
             $response = $this->sendRequestToService(

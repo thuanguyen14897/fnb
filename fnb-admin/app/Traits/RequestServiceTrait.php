@@ -52,7 +52,7 @@ trait RequestServiceTrait
                         if ($f->isValid()) {
                             $multipart[] = [
                                 'name' => $name.'[]',
-                                'contents' => fopen($f->getRealPath(), 'r'),
+                                'contents' => file_get_contents($f->getRealPath()),
                                 'filename' => $f->getClientOriginalName(),
                             ];
                         }
@@ -62,7 +62,7 @@ trait RequestServiceTrait
                     if ($file->isValid()) {
                         $multipart[] = [
                             'name' => $name,
-                            'contents' => fopen($file->getRealPath(), 'r'),
+                            'contents' => file_get_contents($file->getRealPath()),
                             'filename' => $file->getClientOriginalName(),
                         ];
                     }
