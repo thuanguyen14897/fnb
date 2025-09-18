@@ -36,10 +36,6 @@ return [
     'noti_license_accuracy' => 11, //xác thực gplx
     'noti_license_not_accuracy' => 12, //chưa xác thực gplx
     'noti_license' => [10,11,12],
-    'noti_approve_car_active' => 13,
-    'noti_approve_car_refuse' => 14,
-    'noti_approve_car_pause' => 15,
-    'noti_approve_car' => [13,14,15],//noti duyệt xe
     'arr_province_id' => [1,20,31,32,50],//tỉnh thành
     'noti_change_balance' => 97,
     'status_request_driver' => 0,
@@ -109,4 +105,18 @@ return [
     'payment_mode_bank' => 1,
     'token_default' => 'fnb',
     'noti_transaction_end' => 2,
+    'noti_transaction_start' => 1,
+
+    'noti_remind_payment' => 333,
+
+    'noti_transaction_package_payment' => 222,
+
+    'noti_approve_service_active' => 13,
+    'noti_approve_service_refuse' => 14,
+    'noti_approve_service_pause' => 15,
+    'noti_approve_service' => [13,14,15],
+
+    'status_transaction_bill_request' => 0,
+    'status_transaction_bill_approve' => 1,
+    'status_transaction_bill_cancel' => 2,
 ];

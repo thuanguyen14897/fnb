@@ -6,13 +6,17 @@ use App\Http\Resources\ReviewResource;
 use App\Http\Resources\Service as ServiceResource;
 use App\Http\Resources\ServiceCollection;
 use App\Models\CategoryService;
+use App\Models\Province;
 use App\Models\ReviewService;
 use App\Models\ServiceDay;
 use App\Models\Service;
 use App\Models\ServiceFavourite;
 use App\Models\ServiceImage;
+use App\Models\Ward;
+use App\Services\NotiService;
 use App\Traits\UploadFile;
 use App\Services\AccountService;
+use App\Services\AdminService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -21,15 +25,22 @@ use Illuminate\Support\Facades\Validator;
 class ServiceController extends AuthController
 {
     use UploadFile;
+
     public $fnbCustomerService;
-    public function __construct(Request $request,AccountService $accountService)
+    public $fnbAdminService;
+    public $fnbNoti;
+
+    public function __construct(Request $request, AccountService $accountService, AdminService $adminService,NotiService $notiService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
         $this->fnbCustomerService = $accountService;
+        $this->fnbAdminService = $adminService;
+        $this->fnbNoti = $notiService;
     }
 
-    public function getList(){
+    public function getList()
+    {
         $customer_search_value = $this->request->input('customer_search_value') ?? [];
         $group_category_service_search = $this->request->input('group_category_service_search') ?? 0;
         $category_service_search = $this->request->input('category_service_search') ?? 0;
@@ -45,15 +56,20 @@ class ServiceController extends AuthController
         $start = $this->request->input('start', 0);
         $length = $this->request->input('length', 10);
         $orderColumnIndex = $this->request->input('order.0.column');
-        $orderBy = $this->request->input("columns.$orderColumnIndex.data",'id');
+        $orderBy = $this->request->input("columns.$orderColumnIndex.data", 'id');
         $orderDir = $this->request->input('order.0.dir', 'desc');
+
+        $ares_permission = $this->request->input('ares_permission') ?? 0;
+        if (!empty($ares_permission)) {
+            $user_id = $this->request->input('user_id') ?? 0;
+        }
         $query = Service::with('group_category_service')
             ->with('category_service')
             ->with('province')
             ->with('ward')
-            ->where('id','!=',0);
+            ->where('id', '!=', 0);
         if (!empty($search)) {
-            $query->where(function($q) use ($search,$customer_search_value) {
+            $query->where(function ($q) use ($search, $customer_search_value) {
                 $q->where('name', 'like', "%$search%");
                 $q->orWhereHas('group_category_service', function ($subQuery) use ($search) {
                     $subQuery->where('name', 'like', "%$search%");
@@ -64,10 +80,25 @@ class ServiceController extends AuthController
                 $q->orWhereIn('customer_id', $customer_search_value);
             });
         }
-        if (!empty($customer_search)){
+        if (!empty($ares_permission)) {
+            if (!empty($user_id)) {
+                $this->requestWard = clone $this->request;
+                $ListWard = $this->fnbAdminService->getWardUser($this->requestWard);
+                if (!empty($ListWard['result'])) {
+                    if (!empty($ListWard['data'])) {
+                        $query->whereIn('tbl_service.wards_id', $ListWard['data']);
+                    } else {
+                        $query->where('tbl_service.id', 0);
+                    }
+                } else {
+                    $query->where('tbl_service.id', 0);
+                }
+            }
+        }
+        if (!empty($customer_search)) {
             $query->where('customer_id', $customer_search);
         }
-        if (!empty($customer_id)){
+        if (!empty($customer_id)) {
             $query->where('customer_id', $customer_id);
         }
         if (!empty($favourite)) {
@@ -75,27 +106,27 @@ class ServiceController extends AuthController
                 $q->where('customer_id', $customer_favourite);
             });
         }
-        if (!empty($province_search)){
-            $query->where('province_id',$province_search);
+        if (!empty($province_search)) {
+            $query->where('province_id', $province_search);
         }
-        if (!empty($ward_search)){
-            $query->where('wards_id',$ward_search);
+        if (!empty($ward_search)) {
+            $query->where('wards_id', $ward_search);
         }
-        if ($status_search != -1){
-            $query->where('active',$status_search);
+        if ($status_search != -1) {
+            $query->where('active', $status_search);
         }
-        if (!empty($group_category_service_search)){
+        if (!empty($group_category_service_search)) {
             $query->where('group_category_service_id', $group_category_service_search);
         }
-        if (!empty($category_service_search)){
+        if (!empty($category_service_search)) {
             $query->where('category_service_id', $category_service_search);
         }
         $filtered = $query->count();
         $query->orderBy($orderBy, $orderDir);
         $data = $query->skip($start)->take($length)->get();
-        if (!empty($data)){
-            foreach ($data as $key => $value){
-                $dtImage = !empty($value->image) ? env('STORAGE_URL').'/'.$value->image : null;
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
+                $dtImage = !empty($value->image) ? env('STORAGE_URL') . '/' . $value->image : null;
                 $data[$key]['image'] = $dtImage;
             }
         }
@@ -110,51 +141,64 @@ class ServiceController extends AuthController
         ]);
     }
 
-    public function getDetail(){
+    public function getDetail()
+    {
         $id = $this->request->input('id') ?? 0;
-        $dtData = Service::with('group_category_service')
-            ->with('category_service')
-            ->with('other_amenities')
-            ->with('province')
-            ->with('ward')
-            ->with('day')
-            ->with('image_store')
-            ->with('review')
-            ->find($id);
-        if (!empty($dtData)){
-            $dtImage = !empty($dtData->image) ? env('STORAGE_URL').'/'.$dtData->image : null;
+        $ares_permission = $this->request->input('ares_permission') ?? 0;
+        if (!empty($ares_permission)) {
+            $user_id = $this->request->input('user_id') ?? 0;
+        }
+        $query = Service::with(['group_category_service', 'category_service', 'other_amenities', 'province', 'ward', 'day', 'image_store', 'review']);
+        if (!empty($ares_permission)) {
+            if (!empty($user_id)) {
+                $this->requestWard = clone $this->request;
+                $ListWard = $this->fnbAdminService->getWardUser($this->requestWard);
+                if (!empty($ListWard['result'])) {
+                    if (!empty($ListWard['data'])) {
+                        $query->whereIn('tbl_service.wards_id', $ListWard['data']);
+                    } else {
+                        $query->where('tbl_service.id', 0);
+                    }
+                } else {
+                    $query->where('tbl_service.id', 0);
+                }
+            }
+        }
+        $dtData = $query->find($id);
+        if (!empty($dtData)) {
+            $dtImage = !empty($dtData->image) ? env('STORAGE_URL') . '/' . $dtData->image : null;
             $dtData->image = $dtImage;
 
             $image_store = !empty($dtData->image_store) ? $dtData->image_store : [];
-            if (!empty($image_store)){
-                foreach ($image_store as $k => $v){
+            if (!empty($image_store)) {
+                foreach ($image_store as $k => $v) {
                     $name = $v->image;
-                    $dtImageStore = !empty($v->image) ? env('STORAGE_URL').'/'.$v->image : null;
+                    $dtImageStore = !empty($v->image) ? env('STORAGE_URL') . '/' . $v->image : null;
                     $image_store[$k]['image'] = $dtImageStore;
                     $image_store[$k]['name'] = $name;
                 }
             }
 
             $image_menu = !empty($dtData->image_menu) ? $dtData->image_menu : [];
-            if (!empty($image_menu)){
-                foreach ($image_menu as $k => $v){
+            if (!empty($image_menu)) {
+                foreach ($image_menu as $k => $v) {
                     $name = $v->image;
-                    $dtImageMenu = !empty($v->image) ? env('STORAGE_URL').'/'.$v->image : null;
+                    $dtImageMenu = !empty($v->image) ? env('STORAGE_URL') . '/' . $v->image : null;
                     $image_menu[$k]['image'] = $dtImageMenu;
                     $image_menu[$k]['name'] = $name;
                 }
             }
 
             $other_amenities = !empty($dtData->other_amenities) ? $dtData->other_amenities : [];
-            if (!empty($other_amenities)){
-                foreach ($other_amenities as $k => $v){
-                    $dtImage = !empty($v->image) ? env('STORAGE_URL').'/'.$v->image : null;
+            if (!empty($other_amenities)) {
+                foreach ($other_amenities as $k => $v) {
+                    $dtImage = !empty($v->image) ? env('STORAGE_URL') . '/' . $v->image : null;
                     $other_amenities[$k]['image'] = $dtImage;
                 }
             }
             $category_service = !empty($dtData->category_service) ? $dtData->category_service : null;
-            if (!empty($category_service)){
-                $dtIcon = !empty($category_service->icon) ? env('STORAGE_URL').'/'.$category_service->icon : null;
+            if (!empty($category_service)) {
+                $dtIcon = !empty($category_service->icon) ? env('STORAGE_URL') . '/' . $category_service->icon : null;
                 $category_service->icon = $dtIcon;
             }
 
@@ -166,7 +210,9 @@ class ServiceController extends AuthController
         return response()->json($data);
     }
 
-    public function detail(){
+    public function detail()
+    {
+
         $app = $this->request->input('app') ?? 0;
         $id = $this->request->input('id') ?? 0;
         $rules = [
@@ -180,7 +226,7 @@ class ServiceController extends AuthController
         ];
         $messages = [
             'name.required' => 'Vui lòng nhập tên gian hàng',
-            'name.unique' => 'Tên đã tồn tại',
+            'name.unique' => 'Tên gian hàng đã tồn tại',
             'group_category_service_id.required' => 'Vui lòng chọn nhóm danh mục',
             'customer_id.required' => 'Vui lòng chọn khách hàng',
             'category_service_id.required' => 'Vui lòng chọn danh mục dịch vụ',
@@ -188,7 +234,7 @@ class ServiceController extends AuthController
             'wards_id.required' => 'Vui lòng chọn phường xã',
             'phone_number.required' => 'Vui lòng nhập số điện thoại gian hàng',
         ];
-        if (!empty($app)){
+        if (!empty($app)) {
             unset($rules['customer_id']);
         } else {
             unset($rules['phone_number']);
@@ -201,18 +247,18 @@ class ServiceController extends AuthController
             die();
         }
 
-        if ($this->request->hasFile('image_store')){
-            if (count($this->request->file('image_store')) > 5){
-                if (empty($customer_id)){
+        if ($this->request->hasFile('image_store')) {
+            if (count($this->request->file('image_store')) > 6) {
+                if (empty($customer_id)) {
                     $data['result'] = false;
                     $data['message'] = 'Chỉ được upload tối đã 5 hình cửa hàng';
                     return response()->json($data);
                 }
             }
         }
-        if ($this->request->hasFile('image_menu')){
-            if (count($this->request->file('image_menu')) > 10){
-                if (empty($customer_id)){
+        if ($this->request->hasFile('image_menu')) {
+            if (count($this->request->file('image_menu')) > 10) {
+                if (empty($customer_id)) {
                     $data['result'] = false;
                     $data['message'] = 'Chỉ được upload tối đã 10 hình menu';
                     return response()->json($data);
@@ -220,9 +266,9 @@ class ServiceController extends AuthController
             }
         }
 
-        if (!empty($app)){
+        if (!empty($app)) {
             $customer_id = !empty($this->request->client) ? $this->request->client->id : 0;
-            if (empty($customer_id)){
+            if (empty($customer_id)) {
                 $data['result'] = false;
                 $data['message'] = 'Vui lòng đăng nhập trước !';
                 return response()->json($data);
@@ -236,7 +282,7 @@ class ServiceController extends AuthController
             $dataCustomer = $responseCustomer->getData(true);
             $customers = collect($dataCustomer['data']);
             $dtPartner = $customers->where('id', $customer_id)->first();
-            if (empty($dtPartner['representative'])){
+            if (empty($dtPartner['representative'])) {
                 $responsePartner = $this->fnbCustomerService->detailRepresentativePartner($this->requestCustomer);
                 $dataPartner = $responsePartner->getData(true);
                 $data['result'] = $dataPartner['result'] ?? false;
@@ -248,7 +294,7 @@ class ServiceController extends AuthController
         } else {
             $customer_id = $this->request->input('customer_id');
         }
-        if (empty($id)){
+        if (empty($id)) {
             $dtData = new Service();
         } else {
             $dtData = Service::find($id);
@@ -256,6 +302,7 @@ class ServiceController extends AuthController
         $other_amenities = $this->request->input('other_amenities');
         $arrOtherAmenities = [];
         if (!empty($other_amenities)) {
+            $other_amenities = trim($other_amenities, ',');
             foreach (explode(',', $other_amenities) as $k => $v) {
                 $arrOtherAmenities[] = [
                     'other_amenities_service_id' => $v,
@@ -266,7 +313,7 @@ class ServiceController extends AuthController
         $type_lunch_break = !empty($this->request->input('type_lunch_break')) ? 1 : 0;
         $hour_start_lunch_break = $this->request->input('hour_start_lunch_break') ?? null;
         $hour_end_lunch_break = $this->request->input('hour_end_lunch_break') ?? null;
-        if ($type_lunch_break == 0){
+        if ($type_lunch_break == 0) {
             $hour_start_lunch_break = null;
             $hour_end_lunch_break = null;
         }
@@ -291,7 +338,7 @@ class ServiceController extends AuthController
             $dtData->name_location = $this->request->input('name_location') ?? null;
             $dtData->detail = $this->request->input('detail') ?? null;
             $dtData->rules = $this->request->input('rules') ?? null;
-            $dtData->active = $this->request->input('active') ?? 1;
+            $dtData->active = $app == 1 ? 0 : ($this->request->input('active') ?? 1);
             $dtData->type_lunch_break = $type_lunch_break;
             $dtData->hour_start_lunch_break = $hour_start_lunch_break;
             $dtData->hour_end_lunch_break = $hour_end_lunch_break;
@@ -306,8 +353,8 @@ class ServiceController extends AuthController
             $dtData->save();
             if ($dtData) {
                 $dtData->day()->delete();
-                if (!empty($day)){
-                    foreach ($day as $key => $value){
+                if (!empty($day)) {
+                    foreach ($day as $key => $value) {
                         $serviceDay = new ServiceDay();
                         $serviceDay->service_id = $dtData->id;
                         $serviceDay->day = $value;
@@ -319,7 +366,8 @@ class ServiceController extends AuthController
                     foreach ($dtData->image_store as $image) {
                         if (!in_array($image['image'], $image_store_old)) {
                             $this->deleteFile($image['image']);
-                            $image_store = ServiceImage::where('service_id', $dtData->id)->where('image', $image['image'])->where('type',1)->first();
+                            $image_store = ServiceImage::where('service_id', $dtData->id)->where('image',
+                                $image['image'])->where('type', 1)->first();
                             if (!empty($image_store)) {
                                 $image_store->delete();
                             }
@@ -331,7 +379,8 @@ class ServiceController extends AuthController
                     foreach ($dtData->image_menu as $image) {
                         if (!in_array($image['image'], $image_menu_old)) {
                             $this->deleteFile($image['image']);
-                            $image_menu= ServiceImage::where('service_id', $dtData->id)->where('image', $image['image'])->where('type',2)->first();
+                            $image_menu = ServiceImage::where('service_id', $dtData->id)->where('image',
+                                $image['image'])->where('type', 2)->first();
                             if (!empty($image_menu)) {
                                 $image_menu->delete();
                             }
@@ -343,29 +392,19 @@ class ServiceController extends AuthController
                     if (is_array($this->request->file('image_store'))) {
                         foreach ($this->request->file('image_store') as $key => $file) {
                             $image_store = new ServiceImage();
-                            $path = $this->UploadFile($file, 'service/' . $dtData->id, 800, 600,false);
+                            $path = $this->UploadFile($file, 'service/' . $dtData->id, 800, 600, false);
                             $image_store->image = $path;
                             $image_store->service_id = $dtData->id;
                             $image_store->type = 1;
                             $image_store->save();
-
-                            if (!empty($app)) {
-                                if ($key == 0) {
-                                    $path = $this->UploadFile($file, 'service/' . $dtData->id,
-                                        70, 70, false);
-                                    $dtData->image = $path;
-                                    $dtData->save();
-                                }
-                            }
                         }
                     }
                 }
-
                 if ($this->request->hasFile('image_menu')) {
                     if (is_array($this->request->file('image_menu'))) {
                         foreach ($this->request->file('image_menu') as $file) {
                             $image_menu = new ServiceImage();
-                            $path = $this->UploadFile($file, 'service/' . $dtData->id, 800, 600,false);
+                            $path = $this->UploadFile($file, 'service/' . $dtData->id, 800, 600, false);
                             $image_menu->image = $path;
                             $image_menu->service_id = $dtData->id;
                             $image_menu->type = 2;
@@ -373,7 +412,6 @@ class ServiceController extends AuthController
                         }
                     }
                 }
-
 
                 if ($this->request->hasFile('image')) {
                     if (!empty($dtData->image)) {
@@ -391,20 +429,42 @@ class ServiceController extends AuthController
                     }
                 }
 
+                //update thành đối tác
+                if (!empty($dtPartner)) {
+                    if ($dtPartner['type_client'] != 2){
+                        $this->requestUpdateCustomer = $this->request->duplicate(
+                            [],
+                            array_merge(
+                                $this->request->only(['client']),
+                                [
+                                    'id' => $dtPartner['id'],
+                                    'type_client' => 2
+                                ]
+                            )
+                        );
+                        $responsePartnerUpdate = $this->fnbCustomerService->updateTypeClient($this->requestUpdateCustomer);
+                        $dataPartnerUpdate = $responsePartnerUpdate->getData(true);
+                        $data['result'] = $dataPartnerUpdate['result'] ?? false;
+                        $data['message'] = $dataPartnerUpdate['message'] ?? 'Lỗi khi cập nhập trạng thái khách hàng';
+                        if ($data['result'] == false) {
+                            return response()->json($data);
+                        }
+                    }
+                }
 
                 DB::commit();
                 $data['result'] = true;
-                if (empty($id)){
+                if (empty($id)) {
                     $data['message'] = 'Thêm mới thành công';
                 } else {
-                    $data['message'] = 'Cập nhập thành công';
+                    $data['message'] = 'Cập nhật thành công';
                 }
             } else {
                 $data['result'] = false;
-                if (empty($id)){
+                if (empty($id)) {
                     $data['message'] = 'Thêm mới thất bại';
                 } else {
-                    $data['message'] = 'Cập nhập thất bại';
+                    $data['message'] = 'Cập nhật thất bại';
                 }
             }
             return response()->json($data);
@@ -416,10 +476,11 @@ class ServiceController extends AuthController
         }
     }
 
-    public function delete(){
+    public function delete()
+    {
         $id = $this->request->input('id') ?? 0;
         $dtData = Service::find($id);
-        if (empty($dtData)){
+        if (empty($dtData)) {
             $data['result'] = false;
             $data['message'] = 'Không tồn tại data';
             return response()->json($data);
@@ -448,7 +509,7 @@ class ServiceController extends AuthController
             $data['result'] = true;
             $data['message'] = lang('c_delete_true');
             return response()->json($data);
-        }  catch (\Exception $exception) {
+        } catch (\Exception $exception) {
             DB::rollBack();
             $data['result'] = false;
             $data['message'] = $exception->getMessage();
@@ -456,20 +517,46 @@ class ServiceController extends AuthController
         }
     }
 
-    public function active(){
+    public function active()
+    {
         $id = $this->request->input('id') ?? 0;
         $status = $this->request->input('status') ?? 0;
         $dtData = Service::find($id);
+        if (empty($dtData)){
+            $data['result'] = false;
+            $data['message'] = 'Không tồn tại gian hàng!';
+            return response()->json($data);
+        }
+        $customer_id = $dtData->customer_id;
+        $this->requestCustomer = clone $this->request;
+        $this->requestCustomer->merge(['id' => $customer_id]);
+        $this->requestCustomer->merge(['noti' => true]);
+        $responseCustomer = $this->fnbCustomerService->getDetailCustomer($this->requestCustomer);
+        $dataCustomer = $responseCustomer->getData(true);
+        $client = $dataCustomer['client'] ?? [];
+        $arr_object_id = [];
+        if(!empty($client)){
+            $arr_object_id = $client['arr_object_id'] ?? [];
+        }
         DB::beginTransaction();
         try {
             $dtData->active = $status;
             $dtData->save();
+
+            $this->requestNoti = clone $this->request;
+            $this->requestNoti->merge(['arr_object_id' => $arr_object_id]);
+            $this->requestNoti->merge(['dtData' => $dtData]);
+            $this->requestNoti->merge(['customer_id' => $customer_id]);
+            $this->requestNoti->merge(['type' => 'staff']);
+            $this->requestNoti->merge(['staff_id' => $this->request->input('staff_status')]);
+            $this->requestNoti->merge(['type_noti' => 'change_status_service']);
+            $this->fnbNoti->addNoti($this->requestNoti);
+
             DB::commit();
             $data['result'] = true;
             $data['message'] = lang('dt_success');
             return response()->json($data);
-        }
-        catch (\Exception $exception){
+        } catch (\Exception $exception) {
             DB::rollBack();
             $data['result'] = false;
             $data['message'] = $exception->getMessage();
@@ -477,7 +564,8 @@ class ServiceController extends AuthController
         }
     }
 
-    public function changeHot(){
+    public function changeHot()
+    {
         $id = $this->request->input('id') ?? 0;
         $dtData = Service::find($id);
         DB::beginTransaction();
@@ -488,8 +576,7 @@ class ServiceController extends AuthController
             $data['result'] = true;
             $data['message'] = lang('dt_success');
             return response()->json($data);
-        }
-        catch (\Exception $exception){
+        } catch (\Exception $exception) {
             DB::rollBack();
             $data['result'] = false;
             $data['message'] = $exception->getMessage();
@@ -497,7 +584,8 @@ class ServiceController extends AuthController
         }
     }
 
-    public function getListData(){
+    public function getListData()
+    {
         $current_page = 1;
         $per_page = 10;
         if ($this->request->client == null) {
@@ -507,7 +595,7 @@ class ServiceController extends AuthController
             $current_page = $this->request->query('current_page');
         }
         if ($this->request->query('per_page')) {
-            $per_page =$this->request->query('per_page');
+            $per_page = $this->request->query('per_page');
         }
         $hot = $this->request->input('hot') ?? -1;
         $search = $this->request->input('search') ?? null;
@@ -521,64 +609,122 @@ class ServiceController extends AuthController
         $favourite = $this->request->input('favourite') ?? 0;
         $customer_id = $this->request->client->id ?? 0;
 
-        if (!empty($lat) && !empty($lon)){
+        $partner = $this->request->input('partner') ?? 0;
+
+        $ward_id = $this->request->input('ward_id') ?? 0;
+        $province_id = $this->request->input('province_id') ?? 0;
+
+        $google_api_key = $this->fnbAdminService->get_option('google_api_key');
+
+        $checkWard = false;
+        $checkProvince = false;
+        if (empty($lat) && empty($lon)) {
+            $dtWard = Ward::where('Id', $ward_id)->first();
+            if (!empty($dtWard)) {
+                $lat = $dtWard->lat ?? 0;
+                $lon = $dtWard->lon ?? 0;
+                $checkWard = true;
+            } else {
+                $dtProvince = Province::where('Id', $province_id)->first();
+                if (!empty($dtProvince)) {
+                    $lat = $dtProvince->lat ?? 0;
+                    $lon = $dtProvince->lon ?? 0;
+                    $checkProvince = true;
+                }
+            }
+        }
+
+        if (!empty($lat) && !empty($lon)) {
             $orderBy = 'distance asc';
         } else {
             $orderBy = 'id desc';
         }
-        $query = Service::select('tbl_service.*',DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),null) as distance"))->with('category_service')
+        $query = Service::select('tbl_service.*',
+            DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),null) as distance"))->with('category_service')
             ->with('group_category_service')
             ->with('province')
             ->with('ward')
             ->with('other_amenities')
             ->with('image_store')
             ->with('favourite')
-            ->where('id','!=',0);
+            ->where('id', '!=', 0);
         if (!empty($search)) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%$search%");
             });
         }
-        if ($hot != -1){
+        if ($hot != -1) {
             if ($hot == 1) {
                 $query->where('hot', 1);
             } elseif ($hot == 0) {
                 $query->where('hot', 0);
             }
         }
-        if (!empty($id)){
-            $query->where('id','!=',$id);
+        if (!empty($id)) {
+            $query->where('id', '!=', $id);
         }
         if (!empty($favourite)) {
             $query->WhereHas('favourite', function ($q) use ($customer_id) {
                 $q->where('customer_id', $customer_id);
             });
         }
-        if (!empty($category_service_search)){
-            $category_service_search = is_array($category_service_search) ? ($category_service_search): [$category_service_search];
+        if (!empty($partner)){
+            $query->where('customer_id', $customer_id);
+        }
+        if (!empty($category_service_search)) {
+            $category_service_search = is_array($category_service_search) ? ($category_service_search) : explode(',',$category_service_search);
             $query->whereIn('category_service_id', $category_service_search);
         }
-        if (!empty($lat) && !empty($lon)){
-            $query->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),null)"),'!=',NULL);
-            if (empty($favourite)) {
+        if (!empty($lat) && !empty($lon)) {
+            $query->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),null)"),
+                '!=', null);
+            if (empty($favourite) && empty($partner)) {
                 $query->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),10000)"),
                     '>=', 0);
-                $query->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),10000)"),
-                    '<=', 50);
+                $query->where(function ($q) use ($lat, $lon, $ward_id, $province_id, $checkWard, $checkProvince) {
+                    $q->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),10000)"),
+                        '<=', 50);
+                    if (!empty($checkWard)) {
+                        $q->orWhere('wards_id', $ward_id);
+                    }
+                    if (!empty($checkProvince)) {
+                        $q->orWhere('province_id', $province_id);
+                    }
+                });
             }
         }
         $query->orderByRaw($orderBy);
         $dtData = $query->paginate($per_page, ['*'], '', $current_page);
         $customer_ids = $dtData->pluck('customer_id')->toArray();
+
+        $arrLatLng = $dtData->map(function ($item) {
+            return [
+                'lat' => $item->latitude,
+                'lng' => $item->longitude,
+                'service_id' => $item->id,
+            ];
+        })->toArray();
+
         $this->requestCustomer = clone $this->request;
         $this->requestCustomer->merge(['customer_id' => $customer_ids]);
         $this->requestCustomer->merge(['search' => null]);
         $responseCustomer = $this->fnbCustomerService->getListData($this->requestCustomer);
         $dataCustomer = $responseCustomer->getData(true);
         $customers = collect($dataCustomer['data']);
-        $dtData->getCollection()->transform(function ($item) use ($customers) {
+
+
+        $distances = getDistancesToMultipleDestinations($lat, $lon, $arrLatLng, $google_api_key);
+
+        $dtData->getCollection()->transform(function ($item) use ($customers, $distances, $lat, $lon,$customer_id) {
+            $duration_text = $item->distance > 0 ? round(($item->distance / 40) * 60) : 0;
+            $dtDataInstance = $distances[$item->id] ?? [];
             $customer = $customers->where('id', $item->customer_id)->first();
             $item->customer = $customer;
+            $item->distance = $customer_id == 22 ? ['distance_km' => $item->distance,'duration_text' => $duration_text] : $dtDataInstance;
+            $item->location_address = [
+                'lat' => $lat,
+                'lon' => $lon,
+            ];
             return $item;
         });
         $collection = new ServiceCollection($dtData);
@@ -589,13 +735,34 @@ class ServiceController extends AuthController
         ]);
     }
 
-    public function getDetailData($id = 0){
+    public function getDetailData($id = 0)
+    {
         if ($this->request->client == null) {
             $this->request->client = (object)['token' => Config::get('constant')['token_default']];
         }
+        $customer_id = $this->request->client->id ?? 0;
         $lat = !empty($this->request->input('lat')) ? $this->request->input('lat') : 0;
         $lon = !empty($this->request->input('lon')) ? $this->request->input('lon') : 0;
-        $dtData = Service::select('tbl_service.*',DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),null) as distance"))->with('category_service')
+
+        $ward_id = $this->request->input('ward_id') ?? 0;
+        $province_id = $this->request->input('province_id') ?? 0;
+
+        if (empty($lat) && empty($lon)) {
+            $dtWard = Ward::where('Id', $ward_id)->first();
+            if (!empty($dtWard)) {
+                $lat = $dtWard->lat ?? 0;
+                $lon = $dtWard->lon ?? 0;
+            } else {
+                $dtProvince = Province::where('Id', $province_id)->first();
+                if (!empty($dtProvince)) {
+                    $lat = $dtProvince->lat ?? 0;
+                    $lon = $dtProvince->lon ?? 0;
+                }
+            }
+        }
+
+        $dtData = Service::select('tbl_service.*',
+            DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),null) as distance"))->with('category_service')
             ->with('group_category_service')
             ->with('province')
             ->with('ward')
@@ -604,17 +771,26 @@ class ServiceController extends AuthController
             ->with('image_menu')
             ->with('day')
             ->with('favourite')
-            ->with(['review' => function ($query) {
-                $query->latest()->limit(5);
-            }])
+            ->with([
+                'review' => function ($query) {
+                    $query->latest()->limit(5);
+                }
+            ])
             ->find($id);
-        if (empty($dtData)){
+        if (empty($dtData)) {
             return response()->json([
                 'data' => [],
                 'result' => true,
                 'message' => 'Lấy thông tin thành công'
             ]);
         }
+
+        $arrLatLng[] = [
+            'lat' => $dtData->latitude,
+            'lng' => $dtData->longitude,
+            'service_id' => $dtData->id,
+        ];
+
         //đánh giá
         $customer_id_reviews = count($dtData->review) > 0 ? $dtData->review->pluck('customer_id')->toArray() : [0];
         $this->requestCustomer = clone $this->request;
@@ -623,7 +799,7 @@ class ServiceController extends AuthController
         $responseCustomer = $this->fnbCustomerService->getListData($this->requestCustomer);
         $dataCustomer = $responseCustomer->getData(true);
         $customers = collect($dataCustomer['data']);
-        if(count($customers) > 0) {
+        if (count($customers) > 0) {
             $dtData->review->transform(function ($item) use ($customers) {
                 $customer = $customers->where('id', $item->customer_id)->first();
                 $item->customer = $customer;
@@ -642,6 +818,20 @@ class ServiceController extends AuthController
         $customer = $customers->where('id', $dtData->customer_id)->first();
         $dtData->customer = $customer;
         $dtData->check_detail = true;
+
+        $distances = getDistancesToMultipleDestinations($lat, $lon, $arrLatLng,
+            $this->fnbAdminService->get_option('google_api_key'));
+        if ($customer_id == 22){
+            $duration_text = $dtData->distance > 0 ? round(($dtData->distance / 40) * 60) : 0;
+            $dtData->distance = ['distance_km' => $dtData->distance,'duration_text' => $duration_text];
+        } else {
+            $dtData->distance = $distances[$dtData->id] ?? [];
+        }
+        $dtData->location_address = [
+            'lat' => $lat,
+            'lon' => $lon,
+        ];
+
         $collection = ServiceResource::make($dtData);
         return response()->json([
             'data' => $collection->response()->getData(true),
@@ -650,7 +840,8 @@ class ServiceController extends AuthController
         ]);
     }
 
-    public function getListDataByTransaction(){
+    public function getListDataByTransaction()
+    {
         if ($this->request->client == null) {
             $this->request->client = (object)['token' => Config::get('constant')['token_default']];
         }
@@ -658,9 +849,9 @@ class ServiceController extends AuthController
         $query = Service::with('category_service')
             ->with('image_store')
             ->with('group_category_service')
-            ->where('id','!=',0);
-        if (!empty($service_id)){
-            $service_id = is_array($service_id) ? ($service_id): [$service_id];
+            ->where('id', '!=', 0);
+        if (!empty($service_id)) {
+            $service_id = is_array($service_id) ? ($service_id) : [$service_id];
             $query->whereIn('id', $service_id);
         }
         $dtData = $query->get();
@@ -670,55 +861,57 @@ class ServiceController extends AuthController
         });
         $dtData = new ServiceCollection($dtData);
         return response()->json([
-            'data' =>  $dtData->response()->getData(true),
+            'data' => $dtData->response()->getData(true),
             'result' => true,
             'message' => 'Lấy danh sách thành công'
         ]);
     }
 
-    public function getListReview(){
+    public function getListReview()
+    {
         $per_page = 1;
         $current_page = 2;
         if ($this->request->input('current_page')) {
             $current_page = $this->request->input('current_page');
         }
         if ($this->request->input('per_page')) {
-            $per_page =$this->request->input('per_page');
+            $per_page = $this->request->input('per_page');
         }
         $service_id = !empty($this->request->input('service_id')) ? $this->request->input('service_id') : 0;
-        $review = ReviewService::where('service_id',$service_id)
+        $review = ReviewService::where('service_id', $service_id)
             ->orderByRaw('id desc')
             ->paginate($per_page, ['*'], '', $current_page);
         return ReviewResource::collection($review);
     }
 
-    public function getReviewService(){
+    public function getReviewService()
+    {
         $service_id = $this->request->input('service_id') ?? 0;
         $search = $this->request->input('search.value');
         $start = $this->request->input('start', 0);
         $length = $this->request->input('length', 10);
         $orderColumnIndex = $this->request->input('order.0.column');
-        $orderBy = $this->request->input("columns.$orderColumnIndex.data",'id');
+        $orderBy = $this->request->input("columns.$orderColumnIndex.data", 'id');
         $orderDir = $this->request->input('order.0.dir', 'desc');
         $query = ReviewService::with('detail')
             ->with('service')
-            ->where('id','!=',0);
+            ->where('id', '!=', 0);
         if (!empty($search)) {
-            $query->where(function($q) use ($search,) {
+            $query->where(function ($q) use ($search,) {
                 $q->where('content', 'like', "%$search%");
                 $q->orWhereHas('service', function ($subQuery) use ($search) {
                     $subQuery->where('name', 'like', "%$search%");
                 });
             });
         }
-        if (!empty($service_id)){
+        if (!empty($service_id)) {
             $query->where('service_id', $service_id);
         }
         $filtered = $query->count();
         $query->orderBy($orderBy, $orderDir);
         $data = $query->skip($start)->take($length)->get();
-        if (!empty($data)){
-            foreach ($data as $key => $value){
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
             }
         }
         $total = ReviewService::count();
@@ -738,7 +931,7 @@ class ServiceController extends AuthController
         $service_id = !empty($this->request->input('service_id')) ? $this->request->input('service_id') : 0;
         $customer_id = !empty($this->request->client) ? $this->request->client->id : 0;
         $status = $this->request->input('status') ?? 0;
-        if (empty($customer_id)){
+        if (empty($customer_id)) {
             $data['result'] = false;
             $data['message'] = 'Vui lòng đăng nhập để sử dụng tính năng này!';
             return response()->json($data);
@@ -751,7 +944,7 @@ class ServiceController extends AuthController
         }
         DB::beginTransaction();
         try {
-            if ($status == 0){
+            if ($status == 0) {
                 $success = DB::table('tbl_favourite_service')->where([
                     'service_id' => $service_id,
                     'customer_id' => $customer_id,
@@ -769,7 +962,7 @@ class ServiceController extends AuthController
                 ]);
             }
             DB::commit();
-            if ($success){
+            if ($success) {
                 $data['result'] = true;
                 $data['message'] = 'Thành công';
             } else {
@@ -777,7 +970,7 @@ class ServiceController extends AuthController
                 $data['message'] = 'Thất bại';
             }
             return response()->json($data);
-        }  catch (\Exception $exception){
+        } catch (\Exception $exception) {
             DB::rollBack();
             $data['result'] = false;
             $data['message'] = $exception->getMessage();

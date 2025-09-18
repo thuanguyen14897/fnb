@@ -92,7 +92,11 @@ class CategoryServiceController extends Controller
                 $str = '<div class="text-center">' . (!empty($dtData['group_category_service']) ? $dtData['group_category_service']['name'] : '' ) . '</div>';
                 return $str;
             })
-            ->rawColumns(['options', 'active', 'icon', 'name','id','group_category_service','other_amenities'])
+            ->editColumn('index', function ($dtData) {
+                $str = '<div class="text-center">' . $dtData['order_by'] . '</div>';
+                return $str;
+            })
+            ->rawColumns(['options', 'active', 'icon', 'name','id','group_category_service','other_amenities','index'])
             ->setTotalRecords($data['recordsTotal'])
             ->setFilteredRecords($data['recordsFiltered'])
             ->with([

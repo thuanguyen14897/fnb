@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api_app;
 
 use App\Helpers\FilesHelpers;
 use App\Models\Clients;
+use App\Models\CustomerPackage;
+use App\Models\Package;
 use App\Services\AdminService;
 use App\Traits\UploadFile;
 use Firebase\JWT\JWT;
@@ -15,9 +17,10 @@ use Illuminate\Support\Facades\Mail;
 class LoginApi extends AuthController
 {
     use UploadFile;
+
     protected $fnbAdmin;
 
-    public function __construct(Request $request,AdminService $adminService)
+    public function __construct(Request $request, AdminService $adminService)
     {
         parent::__construct($request);
         $this->fnbAdmin = $adminService;
@@ -29,6 +32,7 @@ class LoginApi extends AuthController
         $dataResult = [
             'result' => false,
         ];
+        DB::beginTransaction();
         if ($this->request->input()) {
             $data = $this->request->input();
             if (!empty($data['phone'])) {
@@ -72,8 +76,8 @@ class LoginApi extends AuthController
                 $dataResult['message'] = lang('c_sign_up_fail');
                 return response()->json($dataResult);
             } else {
-                if (config('app.debug')){
-                    if ($data['key_code'] != '1111'){
+                if (config('app.debug')) {
+                    if ($data['key_code'] != '1111') {
                         $dataResult['result'] = false;
                         $dataResult['message'] = lang('c_code_otp_fail');
                         return response()->json($dataResult);
@@ -97,7 +101,7 @@ class LoginApi extends AuthController
             }
             $responseRefCode = $this->fnbAdmin->getOrderRef('client');
             $code = $responseRefCode['reference_no'] ?? null;
-            if (empty($code)){
+            if (empty($code)) {
                 $dataResult['result'] = false;
                 $dataResult['message'] = 'Mã người dùng không hợp lệ';
                 return response()->json($dataResult);
@@ -134,7 +138,8 @@ class LoginApi extends AuthController
                     FilesHelpers::maybe_create_upload_path('upload/clients/');
                     $paste_image = 'upload/clients/' . $id . '/';
                     $paste_imageShort = 'upload/clients/' . $id . '/';
-                    $image_avatar = FilesHelpers::uploadFileData($this->request->file('avatar'), 'avatar', $paste_image, $paste_imageShort);
+                    $image_avatar = FilesHelpers::uploadFileData($this->request->file('avatar'), 'avatar', $paste_image,
+                        $paste_imageShort);
                     if (!empty($image_avatar)) {
                         $avatar = is_array($image_avatar) ? $image_avatar[0] : $image_avatar;
                         if (!empty($avatar)) {
@@ -158,9 +163,33 @@ class LoginApi extends AuthController
                     DB::table('tbl_otp_client')->where('phone', $data['phone'])->delete();
                 }
 
-                //update mã giới thiệu
+
+
                 $dtClient = Clients::find($id);
-                $dtClient->referral_code = generateRandomString($id,6);
+
+                //thêm gói mặc định
+                $dtPackage = Package::where('check_default',1)->first();
+                if (!empty($dtPackage)){
+                    $customerPackage = new CustomerPackage();
+                    $customerPackage->transaction_package_id = 0;
+                    $customerPackage->package_id = $dtPackage->id;
+                    $customerPackage->customer_id = $id;
+                    $customerPackage->name = $dtPackage->name;
+                    $customerPackage->total = $dtPackage->total;
+                    $customerPackage->percent = $dtPackage->percent;
+                    $customerPackage->grand_total = $dtPackage->total - ($dtPackage->total * $dtPackage->percent / 100);
+                    $customerPackage->number_day = $dtPackage->number_day;
+                    $customerPackage->check_default = $dtPackage->check_default;
+                    $customerPackage->save();
+                }
+
+                $number_day = $dtPackage->number_day ?? 0;
+                $data_active_new = date('Y-m-d',strtotime("+$number_day day",strtotime($dtClient->created_at)));
+                $dtClient->date_active = $data_active_new;
+                //end
+
+                //update mã giới thiệu
+                $dtClient->referral_code = generateRandomString($id, 6);
                 $dtClient->save();
                 //end
 
@@ -182,11 +211,12 @@ class LoginApi extends AuthController
                         'player_id' => $data['player_id'],
                     ]);
                 }
-
+                DB::commit();
                 if (!empty($dataResult['token'])) {
                     return response()->json($dataResult);
                 }
             } catch (\Exception $exception) {
+                DB::rollBack();
                 $dataResult['result'] = false;
                 $dataResult['message'] = $exception->getMessage();
                 return response()->json($dataResult);
@@ -209,7 +239,7 @@ class LoginApi extends AuthController
                 $dataResult['message'] = lang('c_pls_input_phone_login');
                 return response()->json($dataResult);
             }
-            if ($type_login == 'password'){
+            if ($type_login == 'password') {
                 if (empty($data['password'])) {
                     $dataResult['message'] = lang('c_pls_input_password');
                     return response()->json($dataResult);
@@ -234,8 +264,8 @@ class LoginApi extends AuthController
                         $dataResult['message'] = 'Vui lòng nhập mã OTP';
                         return response()->json($dataResult);
                     } else {
-                        if (config('app.debug')){
-                            if ($data['key_code'] != '1111'){
+                        if (config('app.debug')) {
+                            if ($data['key_code'] != '1111') {
                                 $dataResult['result'] = false;
                                 $dataResult['message'] = lang('c_code_otp_fail');
                                 return response()->json($dataResult);
@@ -323,7 +353,8 @@ class LoginApi extends AuthController
         }
     }
 
-    public function verifyOtp(){
+    public function verifyOtp()
+    {
         $dataResult = [
             'result' => false,
         ];
@@ -363,8 +394,8 @@ class LoginApi extends AuthController
                 $dataResult['message'] = 'Mã OTP không được bỏ trống';
                 return response()->json($dataResult);
             } else {
-                if (config('app.debug')){
-                    if ($data['key_code'] != '1111'){
+                if (config('app.debug')) {
+                    if ($data['key_code'] != '1111') {
                         $dataResult['result'] = false;
                         $dataResult['message'] = lang('c_code_otp_fail');
                         return response()->json($dataResult);
@@ -394,7 +425,8 @@ class LoginApi extends AuthController
         }
     }
 
-    public function check_otp_forgot_password(){
+    public function check_otp_forgot_password()
+    {
         if ($this->request->input()) {
             $data = $this->request->input();
             if (!empty($data['phone'])) {
@@ -413,8 +445,8 @@ class LoginApi extends AuthController
                 $dataResult['message'] = 'Mã OTP không được bỏ trống';
                 return response()->json($dataResult);
             } else {
-                if (config('app.debug')){
-                    if ($data['key_code'] != '1111'){
+                if (config('app.debug')) {
+                    if ($data['key_code'] != '1111') {
                         $dataResult['result'] = false;
                         $dataResult['message'] = lang('c_code_otp_fail');
                         return response()->json($dataResult);
@@ -444,7 +476,8 @@ class LoginApi extends AuthController
         }
     }
 
-    public function forgot_password(){
+    public function forgot_password()
+    {
         if ($this->request->input()) {
             $data = $this->request->input();
             if (!empty($data['phone'])) {
@@ -468,13 +501,13 @@ class LoginApi extends AuthController
                 $client = Clients::find($kt_phone->id);
                 $client->password = encrypt($data['password']);
                 $client->save();
-                if ($client){
+                if ($client) {
                     $dataResult['result'] = true;
-                    $dataResult['message'] = 'Cập nhập mật khẩu thành công!';
+                    $dataResult['message'] = 'Cập nhật mật khẩu thành công!';
                     return response()->json($dataResult);
                 } else {
                     $dataResult['result'] = false;
-                    $dataResult['message'] = 'Cập nhập mật khẩu thất bại!';
+                    $dataResult['message'] = 'Cập nhật mật khẩu thất bại!';
                     return response()->json($dataResult);
                 }
             } catch (\Exception $exception) {
@@ -495,12 +528,12 @@ class LoginApi extends AuthController
         if (!empty($phone)) {
             $date = date('Y-m-d H:i:s');
             $phone_check = substr($phone, 1, 9);
-            $phone_check = '84'.$phone_check;
+            $phone_check = '84' . $phone_check;
 
             $userAgent = $_SERVER['HTTP_USER_AGENT'];
             $needle = "Windows";
 
-            if ($event == 'login'){
+            if ($event == 'login') {
                 $ktPhoneClient = DB::table('tbl_clients')
                     ->where('phone', $phone)
                     ->get()->first();
@@ -509,7 +542,7 @@ class LoginApi extends AuthController
                     $dataResult['result'] = false;
                     return response()->json($dataResult);
                 }
-            } elseif ($event == 'change_password'){
+            } elseif ($event == 'change_password') {
                 $ktPhoneClient = DB::table('tbl_clients')
                     ->where('phone', $phone)
                     ->get()->first();
@@ -518,30 +551,30 @@ class LoginApi extends AuthController
                     $dataResult['result'] = false;
                     return response()->json($dataResult);
                 }
-                $countSendSms = DB::table('tbl_send_sms')->where('phone',$phone_check)
-                    ->where('event','change_password')
-                    ->where(DB::raw('DATE_FORMAT(date_send,"%Y-%m-%d")'),'=',date('Y-m-d'))->count();
-                if ($countSendSms >= $this->fnbAdmin->get_option('limit_otp_change_pass')){
+                $countSendSms = DB::table('tbl_send_sms')->where('phone', $phone_check)
+                    ->where('event', 'change_password')
+                    ->where(DB::raw('DATE_FORMAT(date_send,"%Y-%m-%d")'), '=', date('Y-m-d'))->count();
+                if ($countSendSms >= $this->fnbAdmin->get_option('limit_otp_change_pass')) {
                     $dataResult['message'] = 'Số điện thoại này đã vượt quá số lần gửi OTP trong 1 ngày!';
                     $dataResult['result'] = false;
                     return response()->json($dataResult);
                 }
-            } elseif($event == 'register') {
+            } elseif ($event == 'register') {
                 $ktPhoneClient = DB::table('tbl_clients')
                     ->where('phone', $phone)
                     ->get()->first();
-                $countSendSms = DB::table('tbl_send_sms')->where('phone',$phone_check)
-                    ->where('event','register')
-                    ->where(DB::raw('DATE_FORMAT(date_send,"%Y-%m-%d")'),'=',date('Y-m-d'))->count();
-                if ($countSendSms >= $this->fnbAdmin->get_option('limit_otp_change_pass')){
+                $countSendSms = DB::table('tbl_send_sms')->where('phone', $phone_check)
+                    ->where('event', 'register')
+                    ->where(DB::raw('DATE_FORMAT(date_send,"%Y-%m-%d")'), '=', date('Y-m-d'))->count();
+                if ($countSendSms >= $this->fnbAdmin->get_option('limit_otp_change_pass')) {
                     $dataResult['message'] = 'Số điện thoại này đã vượt quá số lần gửi OTP trong 1 ngày!';
                     $dataResult['result'] = false;
                     return response()->json($dataResult);
                 }
                 $countSendLimitSms = DB::table('tbl_send_sms')
-                    ->where('event','register')
-                    ->where('user_agent',$userAgent)
-                    ->where(DB::raw('DATE_FORMAT(date_send,"%Y-%m-%d")'),'=',date('Y-m-d'))->count();
+                    ->where('event', 'register')
+                    ->where('user_agent', $userAgent)
+                    ->where(DB::raw('DATE_FORMAT(date_send,"%Y-%m-%d")'), '=', date('Y-m-d'))->count();
                 // if ($countSendLimitSms >= $this->fnbAdmin->get_option('limit_send_otp_register')){
                 //     $dataResult['message'] = 'Đã vượt quá số lần gửi OTP trong 1 ngày';
                 //     $dataResult['result'] = false;
@@ -572,10 +605,10 @@ class LoginApi extends AuthController
                 $content_sms = '';
                 if ($event == 'register') {
                     $content_sms = $this->fnbAdmin->get_option('content_otp_register');
-                } elseif ($event == 'change_password'){
+                } elseif ($event == 'change_password') {
                     $content_sms = $this->fnbAdmin->get_option('content_otp_change_pass');
                 }
-                $content_sms = str_replace('{code}', $key_code,$content_sms);
+                $content_sms = str_replace('{code}', $key_code, $content_sms);
                 if (empty(strpos($userAgent, $needle))) {
                     if (!config('app.debug')) {
                         $this->request->merge(['dtObject' => null]);
@@ -607,7 +640,7 @@ class LoginApi extends AuthController
         $data = $this->request->input();
         $id = !empty($this->request->client) ? $this->request->client->id : 0;
         if (!empty($id)) {
-           DB::beginTransaction();
+            DB::beginTransaction();
             try {
                 $dataClient = Clients::find($id);
                 if (isset($data['email']) && !empty($data['email'])) {
@@ -681,7 +714,8 @@ class LoginApi extends AuthController
                         if (!empty($dataClient->avatar)) {
                             $this->deleteFile($dataClient->avatar);
                         }
-                        $path = $this->UploadFile($this->request->file('avatar'), 'clients/' . $dataClient->id, 70, 70, false);
+                        $path = $this->UploadFile($this->request->file('avatar'), 'clients/' . $dataClient->id, 70, 70,
+                            false);
                         $dataClient->avatar = $path;
                         $dataClient->save();
                         $affected_avatar = true;
@@ -714,7 +748,7 @@ class LoginApi extends AuthController
                 $dataResult['result'] = false;
                 $dataResult['message'] = lang('c_update_account_fail');
                 return response()->json($dataResult);
-            } catch (\Exception $exception){
+            } catch (\Exception $exception) {
                 DB::rollBack();
                 $dataResult['result'] = false;
                 $dataResult['message'] = $exception->getMessage();
@@ -785,20 +819,99 @@ class LoginApi extends AuthController
         $id = !empty($this->request->client) ? $this->request->client->id : 0;
         if (!empty($id)) {
             $data = Clients::select(
-                'id', 'code', 'fullname', 'phone', 'email', 'prefix_phone', 'sign_up_with', 'address', 'birthday', 'gender',
+                'id', 'code', 'fullname', 'phone', 'email', 'prefix_phone', 'sign_up_with', 'address', 'birthday',
+                'gender',
                 'created_at', 'point', 'account_balance', 'customer_alepay_id', 'password', 'verify_phone',
                 'number_cccd', 'issued_cccd', 'date_cccd', 'number_passport', 'issued_passport', 'date_passport',
-                'active','avatar'
-                )
-                ->where('id', $id)->first();
+                'active',
+                'avatar',
+                'membership_level',
+                'point_membership',
+                'ranking_date',
+                'active_limit_private',
+                'invoice_limit_private',
+                'radio_discount_private',
+                'type_client',
+                'date_active',
+            )->where('id', $id)->first();
             if (!empty($data)) {
                 if (!empty($data->password)) {
                     $data->password = true;
                 } elseif (!empty($data->password)) {
                     $data->password = false;
                 }
-                $data->avatar = !empty($data->avatar) ? env('STORAGE_URL').'/'.$data->avatar : env('APP_URL').'/images/avatar_default.png';
+                $data->avatar = !empty($data->avatar) ? env('STORAGE_URL') . '/' . $data->avatar : env('APP_URL') . '/images/avatar_default.png';
 
+
+                $dataLevelData = $this->fnbAdmin->getMemberShipLevel($data->membership_level);
+                if (!empty($dataLevelData['result'])) {
+                    if (!empty($dataLevelData['data_next'])) {
+                        $membership_level_next = [
+                            'icon' => $dataLevelData['data_next']['icon'] ?? '',
+                            'image' => $dataLevelData['data_next']['image'] ?? '',
+                            'background_header' => $dataLevelData['data_next']['background_header'] ?? '',
+                            'name' => $dataLevelData['data_next']['name'] ?? '',
+                            'color_button' => $dataLevelData['data_next']['color_button'] ?? '',
+                            'point_end' => $dataLevelData['data_next']['point_end'] ?? null,
+                            'point_start' => $dataLevelData['data_next']['point_start'] ?? null,
+                            'color_background' => $dataLevelData['data_next']['color_background'] ?? null,
+                            'color' => $dataLevelData['data_next']['color'] ?? null,
+                        ];
+                        $data->data_membership_level_next = $membership_level_next;
+                    }
+                    $dataLevel = $dataLevelData['data'][0];
+                }
+                $membership_level = [
+                    'icon' => $dataLevel['icon'] ?? '',
+                    'image' => $dataLevel['image'] ?? '',
+                    'background_header' => $dataLevel['background_header'] ?? '',
+                    'color_button' => $dataLevel['color_button'] ?? '',
+                    'name' => $dataLevel['name'] ?? '',
+                    'point_end' => $dataLevel['point_end'] ?? null,
+                    'point_start' => $dataLevel['point_start'] ?? null,
+                    'color_background' => $dataLevel['color_background'] ?? null,
+                    'color' => $dataLevel['color'] ?? null,
+                ];
+                $data->data_membership_level = $membership_level;
+                if ($data->active_limit_private == 0) {
+                    $data->invoice_limit = $dataLevel['invoice_limit'] ?? 0;
+                    if (empty($dataLevel['radio_discount'])) {
+                        $data->radio_discount = null;
+                        $data->name_radio_discount = 'Chưa đặt hạng mức chiết khấu';
+                    } else {
+                        $data->radio_discount = $dataLevel['radio_discount'] ?? 0;
+                        $data->name_radio_discount = ($dataLevel['radio_discount'] ?? 0) . '%';
+                    }
+
+                } else {
+                    $data->invoice_limit = $data->invoice_limit_private;
+                    if (empty($data->radio_discount_private)) {
+                        $data->radio_discount = null;
+                        $data->name_radio_discount = 'Chưa đặt hạng mức chiết khấu';
+                    } else {
+                        $data->radio_discount = $data->radio_discount_private ?? 0;
+                        $data->name_radio_discount = $data->radio_discount_private;
+                    }
+                    $data->radio_discount = $data->radio_discount_private;
+                    $data->name_radio_discount = ($data->radio_discount_private ?? 0) . '%';
+                }
+
+                $data->data_package = $data->customer_package ?  [
+                    'id' => $data->customer_package->id,
+                    'package_id' => $data->customer_package->package_id,
+                    'name' => $data->customer_package->name,
+                    'total' => $data->customer_package->total,
+                    'percent' => $data->customer_package->percent,
+                    'grand_total' => $data->customer_package->grand_total,
+                    'number_day' => $data->customer_package->number_day,
+                ] : null;
+
+                $data->makeHidden(['customer_package']);
+                $data->data_representative = $data->representative;
+                if (!empty($data->data_representative)) {
+                    $data->data_representative->image = !empty($data->representative->image) ? env('STORAGE_URL') . '/' . $data->representative->image : null;
+                }
+                $data->makeHidden(['representative']);
                 $dataResult['result'] = true;
                 $dataResult['info'] = $data;
                 $dataResult['message'] = lang('c_get_info_success');
@@ -912,12 +1025,13 @@ class LoginApi extends AuthController
         }
     }
 
-    public function checkPassword(){
+    public function checkPassword()
+    {
         $id = !empty($this->request->client) ? $this->request->client->id : 0;
         $password = $this->request->input('password');
-        if (!empty($id)){
+        if (!empty($id)) {
             $dtClient = Clients::find($id);
-            if (empty($password)){
+            if (empty($password)) {
                 $dataResult['result'] = false;
                 $dataResult['message'] = 'Vui lòng nhập mật khẩu!';
                 return response()->json($dataResult);
@@ -939,18 +1053,19 @@ class LoginApi extends AuthController
         }
     }
 
-    public function changePassword(){
+    public function changePassword()
+    {
         $id = !empty($this->request->client) ? $this->request->client->id : 0;
         $password_old = $this->request->input('password_old');
         $password = $this->request->input('password');
-        if (!empty($id)){
+        if (!empty($id)) {
             $dtClient = Clients::find($id);
-            if (empty($password_old)){
+            if (empty($password_old)) {
                 $dataResult['result'] = false;
                 $dataResult['message'] = 'Vui lòng nhập mật khẩu cũ!';
                 return response()->json($dataResult);
             }
-            if (empty($password)){
+            if (empty($password)) {
                 $dataResult['result'] = false;
                 $dataResult['message'] = 'Vui lòng nhập mật khẩu!';
                 return response()->json($dataResult);
@@ -971,7 +1086,7 @@ class LoginApi extends AuthController
                     $dataResult['message'] = 'Đổi mật khẩu thành công';
                     return response()->json($dataResult);
                 }
-            } catch (\Exception $exception){
+            } catch (\Exception $exception) {
                 DB::rollBack();
                 $dataResult['result'] = false;
                 $dataResult['message'] = $exception->getMessage();

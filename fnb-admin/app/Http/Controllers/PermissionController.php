@@ -129,7 +129,7 @@ class PermissionController extends Controller
             return response()->json($data);
         } catch (Exception $exception) {
             $data['result'] = false;
-            $data['message'] = lang('dt_error');
+            $data['message'] = $exception->getMessage();
             return response()->json($data);
         }
     }

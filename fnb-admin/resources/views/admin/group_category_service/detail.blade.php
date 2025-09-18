@@ -14,7 +14,7 @@
                             <input name="name" class="form-control name" value="{{!empty($dtData) ? $dtData['name'] : ''}}">
                         </div>
                         <div class="form-group">
-                            <label for="index">Index</label>
+                            <label for="index">Sắp xếp</label>
                             <input type="number" name="index" class="form-control index" onkeyup="formatNumBerKeyChange(this)" min="1" max="6" value="{{!empty($dtData) ? $dtData['index'] : ''}}">
                         </div>
                         <div class="form-group">

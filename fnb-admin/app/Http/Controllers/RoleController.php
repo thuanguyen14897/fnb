@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RoleRequest;
+use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,13 +29,19 @@ class RoleController extends Controller
 
     public function getRole()
     {
-        $role = Role::with('permission')->orderByRaw('id DESC')->get();
+        $roles = Role::with('permission')
+            ->orderBy('parent_id')
+            ->orderBy('id')
+            ->get();
 
-        return Datatables::of($role)
+        $result = $this->flattenRoles($roles);
+        $start = intval($this->request->input('start', 0));
+        return Datatables::of($result)
             ->addColumn('options', function ($role) {
-                $edit = "<a href='admin/role/detail/$role->id'><i class='fa fa-pencil'></i> " . lang('dt_edit_role') . "</a>";
+                $role_id = $role['id'];
+                $edit = "<a href='admin/role/detail/$role_id'><i class='fa fa-pencil'></i> " . lang('dt_edit_role') . "</a>";
                 $delete = '<a type="button" class="po-delete" data-container="body" data-html="true" data-toggle="popover" data-placement="left" data-content="
-                <button href=\'admin/role/delete/'.$role->id.'\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
+                <button href=\'admin/role/delete/'.$role_id.'\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
                 <button class=\'btn btn-default po-close\'>' . lang('dt_close') . '</button>
             "><i class="fa fa-remove width-icon-actions"></i> ' . lang('dt_delete_role') .'</a>';
                 $options = ' <div class="dropdown text-center">
@@ -50,29 +57,56 @@ class RoleController extends Controller
 
                 return $options;
             })
+                ->editColumn('id', function ($role) use (&$start) {
+                    return '<div>'.(++$start).'</div>';
+                })
+            ->addColumn('name', function ($role) {
+                $indent = str_repeat("&nbsp;&nbsp;&nbsp;", $role['level']);
+                $prefix = $role['level'] > 0 ? "|--- " : "";
+                return $indent.$prefix.$role['name'];
+            })
             ->addColumn('permission', function ($role) {
                 $str = '';
                 $id_check = 0;
-                if (count($role->permission) > 0) {
-                    foreach ($role->permission as $key => $value) {
-                        $name = $value->groupPermission->name;
-                        $str_parent = '';
-                        if ($value->groupPermission->id !== $id_check) {
-                            $str_parent = "<div>$name</div>";
-                            $id_check = $value->groupPermission->id;
-                        }
-                        $str .= $str_parent."<div class='label label-success'>".lang($value->name)."</div>".' ';
+                foreach ($role['permissions'] as $perm) {
+                    $name = $perm['group_name'];
+                    $str_parent = '';
+                    if ($perm['group_id'] !== $id_check) {
+                        $str_parent = "<div>$name</div>";
+                        $id_check = $perm['group_id'];
                     }
+                    $str .= $str_parent."<div class='label label-success' style='margin-bottom: 5px'>".lang($perm['name'])."</div> ";
                 }
-
                 return $str;
             })
             ->addIndexColumn()
             ->removeColumn('created_at')
             ->removeColumn('updated_at')
-            ->rawColumns(['options', 'permission'])
+            ->rawColumns(['options', 'permission','name','id'])
             ->make(true);
     }
+
+    private function flattenRoles($roles, $parent_id = 0, $level = 0)
+    {
+        $result = [];
+        foreach ($roles->where('parent_id', $parent_id) as $role) {
+            $result[] = [
+                'id' => $role->id,
+                'name' => $role->name,
+                'level' => $level,
+                'permissions' => $role->permission()->orderBy('group_permission_id','asc')->get()->map(function($p){
+                    return [
+                        'name' => $p->name,
+                        'group_id' => $p->group_permission_id,
+                        'group_name' => $p->groupPermission->name,
+                    ];
+                })->toArray()
+            ];
+            $result = array_merge($result, $this->flattenRoles($roles, $role->id, $level+1));
+        }
+        return $result;
+    }
+
 
     public function get_detail($id = 0)
     {
@@ -91,6 +125,7 @@ class RoleController extends Controller
             }
             $title = lang('dt_edit_role');
         }
+
         return view('admin.role.detail', [
             'title' => $title,
             'id' => $id,
@@ -132,6 +167,7 @@ class RoleController extends Controller
             }
             $role->name = $roleRequest->name;
             $role->display_name = Str::slug($roleRequest->name);
+            $role->parent_id = $this->request->input('parent_id',0);
             $role->save();
             if ($role) {
                 $role->permission()->detach();
@@ -172,5 +208,34 @@ class RoleController extends Controller
             $data['message'] = lang('dt_error');
             return response()->json($data);
         }
+    }
+
+    public function getPermissonByRole()
+    {
+        $role = $this->request->role;
+        $data = [];
+        if (!empty($role)) {
+            DB::enableQueryLog();
+            $roles = GroupPermission::with('role')->whereHas('role', function ($query) use ($role) {
+                $query->where('role_id', $role);
+            })->get()->toArray();
+            if (!empty($roles)) {
+                foreach ($roles as $key => $value) {
+                    $id_group = $value['id'];
+                    $permission = Permission::with('role')->whereHas('role', function ($query) use ($role, $id_group) {
+                        $query->where('role_id', $role);
+                        $query->where('group_permission_id', $id_group);
+                    })->get()->toArray();
+                    if (!empty($permission)){
+                        foreach ($permission as $kk => $vv){
+                            $permission[$kk]['name'] = lang($vv['name']);
+                        }
+                    }
+                    $roles[$key]['permission'] = $permission;
+                }
+                $data['roles'] = $roles;
+            }
+        }
+        return response()->json($data);
     }
 }

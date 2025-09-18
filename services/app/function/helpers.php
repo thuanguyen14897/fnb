@@ -1597,3 +1597,116 @@ function getListDay($id = "")
         return $data;
     }
 }
+
+function getDistancesToMultipleDestinations($originLat, $originLng, $destinations, $apiKey,$objectKey = 'service_id')
+{
+    $maxPerRequest = 40; // Giới hạn của Google API
+    $origin = "$originLat,$originLng";
+    $results = [];
+    $destinationChunks = array_chunk($destinations, $maxPerRequest);
+    foreach ($destinationChunks as $chunk) {
+        $destStr = implode('|', array_map(function ($item) {
+            return "{$item['lat']},{$item['lng']}";
+        }, $chunk));
+        // Gọi API
+        $url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=$origin&destinations=$destStr&language=vi&key=$apiKey";
+        $response = file_get_contents($url);
+        $data = json_decode($response, true);
+        if ($data['status'] === 'OK') {
+            $elements = $data['rows'][0]['elements'];
+            foreach ($elements as $index => $element) {
+                $objectId = $chunk[$index][$objectKey];
+                if ($element['status'] === 'OK') {
+                    $results[$objectId] = [
+                        'lat' => $chunk[$index]['lat'],
+                        'lng' => $chunk[$index]['lng'],
+                        'distance_km' => $element['distance']['value'] / 1000,
+                        'duration_text' => $element['duration']['text'],
+                        'duration_seconds' => $element['duration']['value']
+                    ];
+                } else {
+                    $results[$objectId] = [
+                        'lat' => $chunk[$index]['lat'],
+                        'lng' => $chunk[$index]['lng'],
+                        'error' => $element['status']
+                    ];
+                }
+            }
+        } else {
+            return [
+                'error' => 'API Error: ' . $data['status']
+            ];
+        }
+    }
+    return $results;
+}
+
+
+function getLatLngFromAddress($address, $apiKey)
+{
+    $address = urlencode($address);
+
+    $url = "https://maps.googleapis.com/maps/api/geocode/json?address={$address}&key={$apiKey}";
+
+    // Gửi request
+    $response = file_get_contents($url);
+    if ($response === false) {
+        return null;
+    }
+
+    $data = json_decode($response, true);
+
+    // Kiểm tra kết quả
+    if (isset($data['status']) && $data['status'] === 'OK') {
+        $location = $data['results'][0]['geometry']['location'];
+        return [
+            'lat' => $location['lat'],
+            'lng' => $location['lng']
+        ];
+    }
+
+    return null;
+}
+
+function getListStatusService($id = -1,$type = 'name')
+{
+    $data = [
+        [
+            'id' => 0,
+            'name' => lang('Đang chờ duyệt'),
+            'color' => '#FF5A1F',
+            'background' => '#FEECDC'
+        ],
+        [
+            'id' => 1,
+            'name' => lang('Đang hoạt động'),
+            'color' => '#079449',
+            'background' => '#D7FAE0'
+        ],
+        [
+            'id' => 2,
+            'name' => lang('Đã bị từ chối'),
+            'color' => '#D93843',
+            'background' => '#FFDBDE'
+        ],
+        [
+            'id' => 3,
+            'name' => lang('Đang tạm ngưng'),
+            'color' => '#64646D',
+            'background' => '#EBEBF0'
+        ],
+    ];
+    if ($id != -1) {
+        $data = array_filter($data, function ($item) use ($id) {
+            return $item['id'] == $id;
+        });
+        if (!empty($data)) {
+            $data = array_values($data);
+            return $data[0][$type];
+        } else {
+            return null;
+        }
+    } else {
+        return $data;
+    }
+}

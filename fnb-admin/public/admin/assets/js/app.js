@@ -788,34 +788,68 @@ $(document).on('change', '.dt-active', function(e) {
 
 $(document).on('click', '.dt-update', function(e) {
     var row = $(this).closest('tr');
-    e.preventDefault();
-    var link = $(this).attr('href');
     $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
-    $.ajax({
-        url: link,
-        type: 'GET',
-        dataType: 'JSON',
-        data: {},
-    })
-        .done(function(data) {
-            if (data)
-            {
-                if (data.result) {
-                    if (typeof oTable != 'undefined') {
-                        oTable.draw('page');
+    e.preventDefault();
+    var link = $(this).attr('href');
+    var type = $(this).attr('data-type');
+    if (type == 'transaction' || type == 'payment') {
+        if (confirm("Bạn có chắc chắn muốn cập nhật trạng thái này không?")) {
+            $.ajax({
+                url: link,
+                type: 'GET',
+                dataType: 'JSON',
+                data: {},
+            })
+                .done(function (data) {
+                    if (data) {
+                        if (data.result) {
+                            if (type == 'transaction') {
+                                $('.click1')[0].click();
+                            }
+                            if (typeof oTable != 'undefined') {
+                                oTable.draw('page');
+                            }
+                            if (typeof oTableTransactionBill != 'undefined') {
+                                oTableTransactionBill.draw('page');
+                            }
+                            if (typeof oTablePayment != 'undefined') {
+                                oTablePayment.draw('page');
+                            }
+                            alert_float('success', data.message);
+                        } else {
+                            alert_float('error', data.message);
+                        }
                     }
-                    alert_float('success',data.message);
-                } else {
-                    alert_float('error',data.message);
+                })
+                .fail(function () {
+                })
+        }
+    } else {
+        $.ajax({
+            url: link,
+            type: 'GET',
+            dataType: 'JSON',
+            data: {},
+        })
+            .done(function (data) {
+                if (data) {
+                    if (data.result) {
+                        if (typeof oTable != 'undefined') {
+                            oTable.draw('page');
+                        }
+                        alert_float('success', data.message);
+                    } else {
+                        alert_float('error', data.message);
+                    }
                 }
-            }
-        })
-        .fail(function() {
-        })
+            })
+            .fail(function () {
+            })
+    }
     return false;
 });
 
@@ -1118,4 +1152,20 @@ function searchAjaxSelect2Mutil(element, url = '', id = 0, paramsCus = {}, allow
         $el.val(cleaned).trigger('change.select2');
     });
 }
+$(document).ajaxError(function(event, xhr) {
+    let res = {};
+    try {
+        res = xhr.responseJSON || JSON.parse(xhr.responseText);
+    } catch (e) {
+        console.warn("Response is not JSON, fallback to redirect");
+    }
+    if (xhr.status === 403) {
+        alert_float(res.status || 'error', res.message || 'Bạn không có quyền thực hiện hành động này');
+
+        setTimeout(function() {
+            window.location.href = res.redirect || '/admin/dashboard';
+        }, 100);
+    }
+});
+
 

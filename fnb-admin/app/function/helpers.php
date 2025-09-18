@@ -536,8 +536,10 @@ if (!function_exists('is_admin')) {
 if (!function_exists('access_denied')) {
     function access_denied($js = false, $lang = 'dt_access')
     {
+        $redirectUrl = $_SERVER["HTTP_REFERER"] ?? url('admin/dashboard');
+
         if ($js) {
-            die("<script type='text/javascript'>alert_float('error','" . lang($lang) . "');setTimeout(function(){ window.top.location.href = '" . (isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : 'admin/dashboard') . "'; }, 1000);</script>");
+            throw new \App\Exceptions\AccessDeniedException(lang($lang), $redirectUrl);
         } else {
             return abort(401);
         }
@@ -744,6 +746,110 @@ function getValueStatusTransaction($id, $type = 'name')
 
     return $option[$id][$type];
 }
+
+function getListStatusTransactionItem()
+{
+    return [
+        [
+            'id' => 0,
+            'name' => 'Đã gửi yêu cầu',
+            'color' => '#371585',
+            'background' => '#E9E1FD',
+            'index' => 0,
+        ],
+        [
+            'id' => 1,
+            'name' => 'Đã xác nhận',
+            'color' => '#052E5C',
+            'background' => '#DBEEFF',
+            'index' => 1,
+        ],
+        [
+            'id' => 2,
+            'name' => 'Hoàn thành',
+            'color' => '#03401F',
+            'background' => '#D7FAE0',
+            'index' => 2,
+        ],
+        [
+            'id' => 3,
+            'name' => 'Hủy',
+            'color' => '#BF1D28',
+            'background' => '#FFDBDE',
+            'index' => 3,
+        ],
+    ];
+}
+
+function getValueStatusTransactionItem($id, $type = 'name')
+{
+    $option[0]['name'] = lang('Đã gửi yêu cầu');
+    $option[1]['name'] = lang('Đã xác nhận');
+    $option[2]['name'] = lang('Hoàn thành');
+    $option[3]['name'] = lang('Hủy');
+
+    $option[0]['color'] = '#371585';
+    $option[1]['color'] = '#052E5C';
+    $option[2]['color'] = '#03401F';
+    $option[3]['color'] = '#BF1D28';
+
+    $option[0]['background'] = '#E9E1FD';
+    $option[1]['background'] = '#DBEEFF';
+    $option[2]['background'] = '#D7FAE0';
+    $option[3]['background'] = '#FFDBDE';
+
+    $option[0]['index'] = 0;
+    $option[1]['index'] = 1;
+    $option[2]['index'] = 2;
+    $option[3]['index'] = 3;
+
+    return $option[$id][$type];
+}
+
+function getListStatusTransactionBill()
+{
+    return [
+        [
+            'id' => 0,
+            'name' => 'Đã khởi tạo',
+            'color' => '#371585',
+            'background' => '#E9E1FD',
+            'index' => 0,
+        ],
+        [
+            'id' => 1,
+            'name' => 'Đã thanh toán',
+            'color' => '#052E5C',
+            'background' => '#DBEEFF',
+            'index' => 1,
+        ],
+        [
+            'id' => 2,
+            'name' => 'Hủy',
+            'color' => '#BF1D28',
+            'background' => '#FFDBDE',
+            'index' => 2,
+        ],
+    ];
+}
+
+function getValueStatusTransactionBill($id, $type = 'name')
+{
+    $option[0]['name'] = lang('Đã khởi tạo');
+    $option[1]['name'] = lang('Đã thanh toán');
+    $option[2]['name'] = lang('Hủy');
+
+    $option[0]['color'] = '#371585';
+    $option[1]['color'] = '#052E5C';
+    $option[2]['color'] = '#FFDBDE';
+
+    $option[0]['index'] = 0;
+    $option[1]['index'] = 1;
+    $option[2]['index'] = 2;
+
+    return $option[$id][$type];
+}
+
 //Hình ảnh mặc định
 function imgDefault()
 {
@@ -833,6 +939,54 @@ function get_staff_user_id($staff_id = 0)
         return 0;
     } else {
         return $user->id;
+    }
+}
+
+function get_staff_full_name($staff_id = 0)
+{
+    if (!empty($staff_id)) {
+        $user = Cache::remember('user-info', 3600, function () use ($staff_id) {
+            return \App\Models\User::find($staff_id);
+        });
+    } else {
+        $user = \Illuminate\Support\Facades\Auth::guard('admin')->user();
+    }
+    if (empty($user)) {
+        return 0;
+    } else {
+        return $user->name;
+    }
+}
+
+function get_role_by_user($staff_id = 0)
+{
+    if (!empty($staff_id)) {
+        $user = Cache::remember('user-info', 3600, function () use ($staff_id){
+            return \App\Models\User::find($staff_id);
+        });
+    } else {
+        $user = \Illuminate\Support\Facades\Auth::guard('admin')->user();
+    }
+    if (empty($user)) {
+        return [0];
+    } else {
+        return $user->role()->pluck('id')->toArray();
+    }
+}
+
+function get_department_by_user($staff_id = 0)
+{
+    if (!empty($staff_id)) {
+        $user = Cache::remember('user-info', 3600, function () use ($staff_id){
+            return \App\Models\User::find($staff_id);
+        });
+    } else {
+        $user = \Illuminate\Support\Facades\Auth::guard('admin')->user();
+    }
+    if (empty($user)) {
+        return [0];
+    } else {
+        return $user->department()->pluck('tbl_department.id')->toArray();
     }
 }
 
@@ -1400,7 +1554,7 @@ if (!function_exists('getReference')) {
             $ref = $q;
             switch ($field) {
                 case 'transaction':
-                    $prefix = 'CĐ';
+                    $prefix = 'CD';
                     break;
                 case 'payment':
                     $prefix = 'PT';
@@ -1437,6 +1591,12 @@ if (!function_exists('getReference')) {
                     break;
                 case 'handover_record':
                     $prefix = 'BBBG';
+                    break;
+                case 'package_customer':
+                    $prefix = 'GTV';
+                    break;
+                case 'transaction_bill':
+                    $prefix = 'HD';
                     break;
                 default:
                     $prefix = '';
@@ -1602,17 +1762,56 @@ if (!function_exists('menuHelper')) {
             [
                 'id' => 'membership_level',
                 'name' => lang('c_membership_level'),
-                'link' => 'admin/membership_level/list',
+                'link' => '',
                 'class' => 'hang_thanh_vien',
                 'image' => 'admin/assets/images/icon_menu/hang_thanh_vien.png',
+                'child' => [
+                    [
+                        'id' => 'package',
+                        'name' => lang('Gói thành viên'),
+                        'link' => 'admin/package/list',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'setup_membership_level',
+                        'name' => lang('Cài đặt hạng'),
+                        'link' => 'admin/membership_level/list',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'list_membership_level',
+                        'name' => lang('c_list_membership_level'),
+                        'link' => 'admin/membership_level/list_level',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'question_often',
+                        'name' => lang('Câu hỏi thường gặp'),
+                        'link' => 'admin/question_often/list',
+                        'image' => '',
+                    ]
+                ],
             ],
             [
                 'id' => 'manager_clients',
                 'name' => 'Thành viên',
-                'link' => 'admin/clients/list',
+                'link' => '',
                 'class' => 'thanh_vien',
                 'image' => 'admin/assets/images/icon_menu/thanh_vien.png',
-                'child' => [],
+                'child' => [
+                    [
+                        'id' => 'clients',
+                        'name' => lang('Danh sách thành viên'),
+                        'link' => 'admin/clients/list',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'transaction_package',
+                        'name' => lang('Danh sách mua gói'),
+                        'link' => 'admin/transaction_package/list',
+                        'image' => '',
+                    ]
+                ],
             ],
             [
                 'id' => 'manager_partner',
@@ -1654,13 +1853,13 @@ if (!function_exists('menuHelper')) {
                     [
                         'id' => 'transaction_bill',
                         'name' => lang('Hóa đơn'),
-                        'link' => '',
+                        'link' => 'admin/transaction_bill/list',
                         'image' => '',
                     ],
                     [
                         'id' => 'payment',
                         'name' => lang('Phiếu thu'),
-                        'link' => '',
+                        'link' => 'admin/payment/list',
                         'image' => '',
                     ],
                 ],
@@ -1794,22 +1993,26 @@ function getListStatusService($id = -1,$type = 'name')
         [
             'id' => 0,
             'name' => lang('Đang chờ duyệt'),
-            'color' => '#989898',
+            'color' => '#FF5A1F',
+            'background' => '#FEECDC'
         ],
         [
             'id' => 1,
             'name' => lang('Đang hoạt động'),
-            'color' => '#81c868',
+            'color' => '#079449',
+            'background' => '#D7FAE0'
         ],
         [
             'id' => 2,
             'name' => lang('Đã bị từ chối'),
-            'color' => '#f05050',
+            'color' => '#D93843',
+            'background' => '#FFDBDE'
         ],
         [
             'id' => 3,
             'name' => lang('Đang tạm ngưng'),
-            'color' => '#46b0b9',
+            'color' => '#64646D',
+            'background' => '#EBEBF0'
         ],
     ];
     if ($id != -1) {
@@ -1868,4 +2071,187 @@ function formatTimeAMPM($time) {
         'hour' => $hour[0],
         'type' => $hour[1]
     ];
+}
+
+function extractAndNormalizeTransactionCode($content)
+{
+    $content = preg_replace('/[^A-Za-z0-9]/', ' ', $content);
+    $content = preg_replace('/\s+/', ' ', $content);
+    $content = trim($content);
+    if (preg_match('/\b([A-Z]{3})[\s-]?(\d{8,10})\b/', $content, $matches)) {
+        return $matches[1] . '-' . $matches[2];
+    } elseif (preg_match('/\b([A-Z]{2})[\s-](V)?(\d{8,10})\b/', $content, $matches)) {
+        return 'GTV-' . $matches[3];
+    } elseif (preg_match('/\b([A-Z]{1})[\s-](TV)?(\d{8,10})\b/', $content, $matches)) {
+        return 'GTV-' . $matches[3];
+    } elseif (preg_match('/\b([A-Z]{1})[\s-](GTV)?(\d{8,10})\b/', $content, $matches)) {
+        return 'GTV-' . $matches[3];
+    }
+    return null;
+}
+
+if (!function_exists('recursiveRole')) {
+    function recursiveRole($id = 0, &$output = null, $parent_id = 0, $indent = null)
+    {
+        $query = DB::table('tbl_roles')->where(function($query) use ($parent_id){
+            $query->where('parent_id',$parent_id);
+        })
+            ->orderByRaw('parent_id asc')
+            ->get();
+        foreach ($query as $key => $item) {
+            if ($item->parent_id == $parent_id) {
+                $disabled = '';
+                if ($item->id == $id && $id != 0) {
+                    $disabled = 'disabled';
+                }
+                $output .= '<option ' . $disabled . '  value="' . $item->id . '">' . $indent . '➪ ' . $item->name . "</option>";
+                recursiveRole($id, $output, $item->id, $indent . "&nbsp;&nbsp;&nbsp;&nbsp;");
+            }
+        }
+        return $output;
+    }
+}
+
+function getRoleChild($id = [])
+{
+    $arrId = array();
+
+    $arrID_child = array();
+    get_childs_id_helper($id, $arrID_child);
+    $arrID_child = array_merge($arrID_child, $id);
+
+    if($arrID_child) {
+        $arrId = array_unique($arrID_child);
+    }
+
+    return $arrId;
+}
+
+function get_childs_id_helper($parent_id = [0], &$result = array(),$dem = 0) {
+    $dem++;
+    $items = \App\Models\Role::whereIn('parent_id',$parent_id)->get();
+    if($dem == 10){
+        return $items;
+    }
+    foreach($items as $value) {
+        array_push($result, $value->id);
+        get_childs_id_helper([$value->id], $result,$dem);
+    }
+}
+
+function getRoleParent($id = [])
+{
+    $arrId = [];
+    $arrID_child = [];
+    get_parent_role_id_helper($id, $arrID_child);
+    if ($arrID_child) {
+        $arrId = array_unique($arrID_child);
+    }
+
+    return $arrId;
+}
+
+function get_parent_role_id_helper($child_id = [0], &$result = array(),$dem = 0)
+{
+    $items = \App\Models\Role::whereIn('id',$child_id)->get();
+    if($dem == 10){
+        return $items;
+    }
+    foreach ($items as $value) {
+        array_push($result, $value->parent_id);
+        get_parent_role_id_helper([$value->parent_id], $result,$dem);
+    }
+}
+
+
+function getUserIdByRole($role_id = [],$staff_id = 0)
+{
+   if (empty($role_id)) {
+       if (!empty($staff_id)) {
+           $role_id = get_role_by_user($staff_id);
+       } else {
+           $role_id = get_role_by_user();
+           $staff_id = get_staff_user_id();
+       }
+   }
+   if (empty($staff_id)){
+       $staff_id = get_staff_user_id();
+   }
+   $derpartment_id = get_department_by_user($staff_id);
+   $derpartment_id = is_array($derpartment_id) ? $derpartment_id : [0];
+
+    $arrRole = getRoleChild($role_id);
+    if (empty($arrRole)) {
+        return [0];
+    }
+    $user_ids = DB::table('tbl_role_user')
+        ->whereExists(function ($query) use ($derpartment_id) {
+            $query->select(DB::raw(1))
+                ->from('tbl_users')
+                ->join('tbl_user_department','tbl_user_department.user_id','=','tbl_users.id')
+                ->whereRaw('tbl_users.id = tbl_role_user.user_id')
+                ->whereIn('tbl_user_department.department_id', $derpartment_id);
+        })
+        ->whereIn('role_id',$arrRole)->pluck('user_id')->toArray();
+    return $user_ids ?? [0];
+}
+
+function getUserIdByRoleParent($role_id = [],$staff_id = 0)
+{
+    if (empty($role_id)) {
+        if (!empty($staff_id)){
+            $role_id = get_role_by_user($staff_id);
+        } else {
+            $role_id = get_role_by_user();
+            $staff_id = get_staff_user_id();
+        }
+    }
+
+    if (empty($staff_id)){
+        $staff_id = get_staff_user_id();
+    }
+    $derpartment_id = get_department_by_user($staff_id);
+    $derpartment_id = is_array($derpartment_id) ? $derpartment_id : [0];
+
+    $arrRole = getRoleParent($role_id);
+    if (empty($arrRole)) {
+        return [0];
+    }
+    $user_ids = DB::table('tbl_role_user')
+        ->whereExists(function ($query) use ($derpartment_id) {
+            $query->select(DB::raw(1))
+                ->from('tbl_users')
+                ->join('tbl_user_department','tbl_user_department.user_id','=','tbl_users.id')
+                ->whereRaw('tbl_users.id = tbl_role_user.user_id')
+                ->whereIn('tbl_user_department.department_id', $derpartment_id);
+        })
+        ->whereIn('role_id',$arrRole)->pluck('user_id')->toArray();
+    return $user_ids ?? [0];
+}
+
+function getListTypePackage($id = 0)
+{
+    $data = [
+        [
+            'id' => 1,
+            'name' => 'Khách hàng',
+        ],
+        [
+            'id' => 2,
+            'name' => 'Đối tác',
+        ],
+    ];
+    if (!empty($id)) {
+        $data = array_filter($data, function ($item) use ($id) {
+            return $item['id'] == $id;
+        });
+        if (!empty($data)) {
+            $data = array_values($data);
+            return $data[0]['name'];
+        } else {
+            return null;
+        }
+    } else {
+        return $data;
+    }
 }

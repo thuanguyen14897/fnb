@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ares;
+use App\Models\Clients;
 use App\Models\MemberShipLevel;
 use App\Models\Province;
 use App\Models\UserAres;
@@ -28,6 +29,7 @@ class ClientsController extends Controller
     }
 
     public function get_list(){
+
         if (!has_permission('clients','view') && !has_permission('clients','viewown')) {
             access_denied();
         }
@@ -47,24 +49,25 @@ class ClientsController extends Controller
         if (!has_permission('clients', 'edit')){
             access_denied();
         }
+        $checkPermission = true;
         if (!has_permission('clients','view') && has_permission('clients','viewown')) {
-//            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+            $checkPermission = false;
+            $user_ids = getUserIdByRole();
             $this->request->merge(['ares_permission' => 1]);
-//            $aresPer = [];
-//            foreach ($UserAres as $key => $item) {
-//                $aresPer[] = $item->id_ares;
-//            }
-//            $this->request->merge(['aresPer' => $aresPer]);
-            $this->request->merge(['user_id' => get_staff_user_id()]);
+            $this->request->merge(['user_id' => $user_ids ? array_unique($user_ids) : [get_staff_user_id()]]);
         }
         $this->request->merge(['id' => $id]);
         $response = $this->fnbAccount->getDetailCustomer($this->request);
         $data = $response->getData(true);
         $client = $data['client'] ?? [];
-        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+        if (empty($checkPermission)) {
             if (!empty($id) && empty($client['id'])) {
                 access_denied();
             }
+        }
+        if (!empty($client)){
+            $membership_level = MemberShipLevel::find($client['membership_level'])->toArray();
+            $client['membership_level'] = $membership_level;
         }
         $title = lang('c_title_edit_client');
         return view('admin.clients.detail',[
@@ -75,15 +78,12 @@ class ClientsController extends Controller
     }
 
     public function view($id = 0){
+        $checkPermission = true;
         if (!has_permission('clients','view') && has_permission('clients','viewown')) {
-//            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+            $checkPermission = false;
+            $user_ids = getUserIdByRole();
             $this->request->merge(['ares_permission' => 1]);
-//            $aresPer = [];
-//            foreach ($UserAres as $key => $item) {
-//                $aresPer[] = $item->id_ares;
-//            }
-//            $this->request->merge(['aresPer' => $aresPer]);
-            $this->request->merge(['user_id' => get_staff_user_id()]);
+            $this->request->merge(['user_id' => $user_ids ? array_unique($user_ids) : [get_staff_user_id()]]);
         }
 
         $this->request->merge(['id' => $id]);
@@ -97,12 +97,11 @@ class ClientsController extends Controller
                 $client['radio_discount_member'] = $membership_level->radio_discount;
             }
         }
-        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+        if (empty($checkPermission)) {
             if (!empty($id) && empty($client['id'])) {
                 access_denied();
             }
         }
-
         $title = lang('dt_view_client');
         return view('admin.clients.view',[
             'title' => $title,
@@ -114,14 +113,9 @@ class ClientsController extends Controller
     {
         $this->request->merge(['type_client' => 1]);
         if (!has_permission('clients','view') && has_permission('clients','viewown')) {
-//            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+            $user_ids = getUserIdByRole();
             $this->request->merge(['ares_permission' => 1]);
-//            $aresPer = [];
-//            foreach ($UserAres as $key => $item) {
-//                $aresPer[] = $item->id_ares;
-//            }
-//            $this->request->merge(['aresPer' => $aresPer]);
-            $this->request->merge(['user_id' => get_staff_user_id()]);
+            $this->request->merge(['user_id' => $user_ids ? array_unique($user_ids) : [get_staff_user_id()]]);
         }
 
         $response = $this->fnbAccount->getListCustomer($this->request);
@@ -136,10 +130,14 @@ class ClientsController extends Controller
                 $customer_id = $client['id'];
                 $view = "<a href='admin/clients/view/$customer_id'><i class='fa fa-eye'></i> " . lang('dt_view') . "</a>";
                 $edit = "<a href='admin/clients/detail/$customer_id'><i class='fa fa-pencil'></i> " . lang('c_edit_client') . "</a>";
-                $delete = '<a type="button" class="po-delete" data-container="body" data-html="true" data-toggle="popover" data-placement="left" data-content="
-                <button href=\'admin/clients/delete/' . $customer_id. '\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
-                <button class=\'btn btn-default po-close\'>' . lang('dt_close') . '</button>
-            "><i class="fa fa-remove width-icon-actions"></i> ' . lang('dt_delete_client') . '</a>';
+                if ($customer_id != 22) {
+                    $delete = '<a type="button" class="po-delete" data-container="body" data-html="true" data-toggle="popover" data-placement="left" data-content="
+                    <button href=\'admin/clients/delete/' . $customer_id . '\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
+                    <button class=\'btn btn-default po-close\'>' . lang('dt_close') . '</button>
+                "><i class="fa fa-remove width-icon-actions"></i> ' . lang('dt_delete_client') . '</a>';
+                } else {
+                    $delete = '';
+                }
                 $options = ' <div class="dropdown text-center">
                             <button class="btn btn-default dropdown-toggle nav-link" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
                              Tác vụ
@@ -164,7 +162,8 @@ class ClientsController extends Controller
             })
             ->addColumn('img_membership_level', function ($client) {
                 $memberLevel = MemberShipLevel::find($client['membership_level']);
-                $dtImage = !empty($client['membership_level']) ? url('/upload/membership_level/'.$client['membership_level'].'.png') : null;
+//                $dtImage = !empty($client['membership_level']) ? url('/upload/membership_level/'.$client['membership_level'].'.png') : null;
+                $dtImage = !empty($memberLevel->icon) ? asset('storage/'.$memberLevel->icon) : null;
                 if($client['active_limit_private'] == 1) {
                     $radio_discount = $client['radio_discount_private'];
                 }
@@ -205,6 +204,17 @@ class ClientsController extends Controller
                 $str = _dt($client['created_at']);
                 return $str;
             })
+            ->editColumn('date_active', function ($client) {
+                $customer_package = $client['customer_package'] ?? null;
+                $namePackage = '';
+                $checkDefault = 0;
+                if (!empty($customer_package)){
+                    $namePackage = $customer_package['name'];
+                    $checkDefault = $customer_package['package']['check_default'] ?? 0;
+                }
+                $str = !empty($client['date_active']) ? _dthuan($client['date_active']) : null;
+                return '<div>'.$str.'</div><div><span class="label '.($checkDefault == 1 ? 'label-default': 'label-info').'">'.$namePackage.'</span></div>';
+            })
             ->editColumn('active', function ($client) {
                 $customer_id = $client['id'];
                 $classes = $client['active'] == 1 ? "btn-info" : "btn-danger";
@@ -244,7 +254,7 @@ class ClientsController extends Controller
                 }
                 return $str;
             })
-            ->rawColumns(['options', 'active', 'avatar','img_membership_level', 'phone', 'created_at', 'fullname','referral_code','point_membership','ranking_date','invoice_limit','ares'])
+            ->rawColumns(['options', 'active', 'avatar','img_membership_level', 'phone', 'created_at', 'fullname','referral_code','point_membership','ranking_date','invoice_limit','ares','date_active'])
             ->setTotalRecords($data['recordsTotal']) // tổng số bản ghi
             ->setFilteredRecords($data['recordsFiltered']) // sau khi lọc
             ->with([

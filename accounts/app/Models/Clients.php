@@ -68,4 +68,14 @@ class Clients extends Model
     {
         return $this->hasMany('App\Models\PartnerImage', 'customer_id', 'id')->where('type','=',2);
     }
+
+    function customer_package()
+    {
+        return $this->hasOne('App\Models\CustomerPackage', 'customer_id', 'id');
+    }
+
+    function transaction_package()
+    {
+        return $this->hasOne('App\Models\TransactionPackage', 'customer_id', 'id')->where('status','=',1);
+    }
 }

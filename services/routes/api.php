@@ -8,6 +8,7 @@ use App\Http\Controllers\Api_app\OtherAmenitiesController;
 use App\Http\Controllers\Api_app\ServiceController;
 use App\Http\Controllers\Api_app\CategoryController;
 use App\Http\Controllers\Api_app\AresController;
+use App\Http\Controllers\Api_app\QuestionOftenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +74,7 @@ Route::group(['prefix' => 'category'], function () {
     Route::get('getListAddress', [CategoryController::class, 'getListAddress']);
     Route::get('getListProvinceSixtyFour/{id?}', [CategoryController::class, 'getListProvinceSixtyFour']);
     Route::get('getListWardToAres', [CategoryController::class, 'getListWardToAres']);
+    Route::get('getListOtherAmenities', [CategoryController::class, 'getListOtherAmenities']);
 });
 
 Route::group(['prefix' => 'ares'], function () {
@@ -89,4 +91,13 @@ Route::group(['prefix' => 'ares'], function () {
     Route::get('getWardsWhereAres', [AresController::class, 'getWardsWhereAres']);
     Route::get('getListDataWhereName', [AresController::class, 'getListDataWhereName']);
     Route::get('create_auto_ares', [AresController::class, 'create_auto_ares']);
+});
+
+Route::group(['prefix' => 'question_often'], function () {
+    Route::get('getList', [QuestionOftenController::class, 'getList']);
+    Route::get('getDetail', [QuestionOftenController::class, 'getDetail']);
+    Route::post('detail', [QuestionOftenController::class, 'detail']);
+    Route::post('delete', [QuestionOftenController::class, 'delete']);
+    Route::get('ChangeStatus', [QuestionOftenController::class, 'ChangeStatus']);
+    Route::post('order_by', [QuestionOftenController::class, 'order_by']);
 });

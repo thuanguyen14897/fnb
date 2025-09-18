@@ -104,14 +104,14 @@ class OtherAmenitiesController extends AuthController
                 if (empty($id)){
                     $data['message'] = 'Thêm mới thành công';
                 } else {
-                    $data['message'] = 'Cập nhập thành công';
+                    $data['message'] = 'Cập nhật thành công';
                 }
             } else {
                 $data['result'] = false;
                 if (empty($id)){
                     $data['message'] = 'Thêm mới thất bại';
                 } else {
-                    $data['message'] = 'Cập nhập thất bại';
+                    $data['message'] = 'Cập nhật thất bại';
                 }
             }
             return response()->json($data);

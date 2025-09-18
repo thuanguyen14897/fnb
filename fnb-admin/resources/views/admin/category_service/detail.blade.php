@@ -28,6 +28,10 @@
                             <input name="name" class="form-control name" value="{{!empty($dtData) ? $dtData['name'] : ''}}">
                         </div>
                         <div class="form-group">
+                            <label for="index">Sắp xếp</label>
+                            <input type="number" name="index" class="form-control index" onkeyup="formatNumBerKeyChange(this)" min="1" value="{{!empty($dtData) ? $dtData['order_by'] : 1}}">
+                        </div>
+                        <div class="form-group">
                             <label for="image">{{lang('dt_image')}}</label>
                             <input type="file" name="icon" id="icon" class="filestyle icon"
                                    data-buttonbefore="true">

@@ -9,4 +9,5 @@ class Ward extends Model
 {
     use HasFactory;
     protected $table = 'tbl_wards';
+    public $timestamps = false;
 }

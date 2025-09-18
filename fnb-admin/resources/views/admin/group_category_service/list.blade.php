@@ -31,7 +31,7 @@
                         <th class="text-center">{{lang('Màu sắc')}}</th>
                         <th class="text-center">{{lang('Màu sắc viền')}}</th>
                         <th class="text-center">{{lang('Trạng thái')}}</th>
-                        <th class="text-center">{{lang('Index')}}</th>
+                        <th class="text-center">{{lang('Sắp xếp')}}</th>
                         <th class="text-center">{{lang('dt_actions')}}</th>
                     </tr>
                     </thead>

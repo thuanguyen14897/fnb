@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Traits\RequestServiceTrait;
 use Illuminate\Support\Facades\Http;
 
 class AdminService
 {
+    use RequestServiceTrait;
     protected $baseUrl;
 
     public function __construct()
@@ -32,5 +34,23 @@ class AdminService
         $response = Http::get("{$this->baseUrl}/api/getOption/{$field}");
         $response = $response->json();
         return !empty($response['result']) ? $response['result'] : null;
+    }
+
+    public function getWardUser($request = [])
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'GET',
+                "{$this->baseUrl}/api/category/getListWardToUser",
+                $request,
+            );
+            $data = $response->json();
+            return $data;
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

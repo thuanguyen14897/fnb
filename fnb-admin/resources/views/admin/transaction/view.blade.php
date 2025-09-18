@@ -116,9 +116,9 @@
         margin-bottom: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         display: flex;
-        align-items: flex-start;
         position: relative;
         margin-left: 75px; /* Space for time */
+        align-items: center;
     }
 
     .service-time {
@@ -294,6 +294,19 @@
                                                 if (!empty($image_service)){
                                                     $dtImage = !empty($image_service[0]) ? $image_service[0]['image'] : null;
                                                 }
+
+                                                $optionStatus = '<div class="btn-group">
+                                                     <button type="button" class="btn btn-white dropdown-toggle waves-effect" data-toggle="dropdown" aria-expanded="false" style="min-width: 150px;border: 1px solid '.getValueStatusTransactionItem($vv['status']['status'],'color').' !important">
+                                                     <div class="label" style="color: '.getValueStatusTransactionItem($vv['status']['status'],'color').'">'.getValueStatusTransactionItem($vv['status']['status']).'</div>
+                                                     <span class="caret"></span> </button>
+                                                     <ul class="dropdown-menu">';
+                                                foreach (getListStatusTransactionItem() as $kkk => $vvv){
+                                                    $optionStatus .= '<li style="cursor: pointer"><a onclick="changeStatusItem('.$vv['id'].','.$vvv['id'].')" data-id="'.$vvv['id'].'">'.$vvv['name'].'</a></li>';
+                                                }
+                                                $optionStatus .= '</ul></div>';
+
+                                                $optionStatus .= '<div>'.(!empty($vv['status']['date_status']) ? _dt($vv['status']['date_status']) : '').'</div>';
+
                                             @endphp
                                             <div class="service-item">
                                                 <div class="service-time">
@@ -320,7 +333,7 @@
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    
+                                                    <div>{!! $optionStatus !!}</div>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -332,6 +345,9 @@
                 </div>
                 </div>
         <div class="modal-footer">
+            <a class="dt-modal hide click1"
+               href="admin/transaction/view/{{$dtData['id']}}" data-toggle="modal"
+               data-target="#myModal"></a>
             <button type="button" class="btn btn-default"
                     data-dismiss="modal">{{lang('dt_close')}}</button>
         </div>
@@ -423,5 +439,31 @@
                 }
             }
         }
+    }
+
+    function changeStatusItem(transaction_item_id,status){
+        $.ajax({
+            url: 'admin/transaction/changeStatusItem',
+            type: 'POST',
+            dataType: 'JSON',
+            cache: false,
+            data: {
+                transaction_id: transaction_item_id,
+                status: status,
+            },
+        })
+            .done(function (data) {
+                $('.click1')[0].click();
+                if (data.result) {
+                    alert_float('success', data.message);
+                } else {
+                    alert_float('error', data.message);
+                }
+                oTable.draw('page');
+            })
+            .fail(function () {
+
+            });
+        return false;
     }
 </script>

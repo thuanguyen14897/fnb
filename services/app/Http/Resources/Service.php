@@ -36,7 +36,8 @@ class Service extends JsonResource
                 'star' => $star,
                 'total_review' => $total_review,
                 'distance' => [
-                    'distance' => $this->distance
+                    'distance' => $this->distance['distance_km'] ?? 0,
+                    'time' => ($this->distance['duration_text'] ?? 0) .' phút'
                 ],
                 'location' => [
                     'address' => $this->address,
@@ -46,6 +47,10 @@ class Service extends JsonResource
                     'wards_id' => $this->wards_id,
                     'latitude' => $this->latitude,
                     'longitude' => $this->longitude,
+                ],
+                'location_address' => [
+                    'lat' => $this->location_address['lat'] ?? null,
+                    'lon' => $this->location_address['lon'] ?? null,
                 ],
                 'other_amenities' => OtherAmenitis::collection($this->whenLoaded('other_amenities')),
                 'favourite' => $this->whenLoaded('favourite', function () use ($customer_id) {
@@ -84,6 +89,10 @@ class Service extends JsonResource
                     'wards_id' => $this->wards_id,
                     'latitude' => $this->latitude,
                     'longitude' => $this->longitude,
+                ],
+                'location_address' => [
+                    'lat' => $this->location_address['lat'] ?? null,
+                    'lon' => $this->location_address['lon'] ?? null,
                 ],
                 'category_service' => CategoryService::make($this->whenLoaded('category_service')),
                 'group_category_service' => GroupCategoryService::make($this->whenLoaded('group_category_service')),
@@ -143,7 +152,8 @@ class Service extends JsonResource
                     });
                 }),
                 'distance' => [
-                    'distance' => $this->distance
+                    'distance' => $this->distance['distance_km'] ?? 0,
+                    'time' => ($this->distance['duration_text'] ?? 0) .' phút'
                 ],
                 'location' => [
                     'address' => $this->address,
@@ -153,6 +163,10 @@ class Service extends JsonResource
                     'wards_id' => $this->wards_id,
                     'latitude' => $this->latitude,
                     'longitude' => $this->longitude,
+                ],
+                'location_address' => [
+                    'lat' => $this->location_address['lat'] ?? null,
+                    'lon' => $this->location_address['lon'] ?? null,
                 ],
                 'day' => $this->whenLoaded('day',function (){
                     return $this->day->map(function ($item) {
@@ -189,6 +203,12 @@ class Service extends JsonResource
                 'favourite' => $this->whenLoaded('favourite', function () use ($customer_id) {
                     return $this->favourite->contains('customer_id', $customer_id);
                 }),
+                'status' => [
+                    'id' => $this->active,
+                    'name' => getListStatusService($this->active),
+                    'color' => getListStatusService($this->active,'color'),
+                    'background' => getListStatusService($this->active,'background'),
+                ]
             ];
         }
     }

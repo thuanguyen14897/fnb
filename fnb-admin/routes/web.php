@@ -27,6 +27,12 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\MemberShipLevelController;
 use App\Http\Controllers\KPIController;
+use App\Http\Controllers\QuestionOftenController;
+use App\Http\Controllers\PackageController;
+use App\Http\Controllers\TransactionPackageController;
+use App\Http\Controllers\SocketController;
+use App\Http\Controllers\TransactionBillController;
+use App\Http\Controllers\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,9 +50,11 @@ Route::group(['prefix' => 'laravel-filemanager', 'middleware' => ['web']], funct
 });
 Route::group(['prefix' => 'cron'], function () {
     Route::get('cancelTransactionTrip', [CronController::class, 'cancelTransactionTrip']);
+    Route::get('startTransactionTrip', [CronController::class, 'startTransactionTrip']);
     Route::get('updateCodeClient', [CronController::class, 'updateCodeClient']);
     Route::get('addGroupPermistionByPermission', [CronController::class, 'addGroupPermistionByPermission']);
     Route::get('sendNotificationModule', [CronController::class, 'sendNotificationModule']);
+    Route::post('webhookPay2s', [CronController::class, 'webhookPay2s']);
 });
 
 Route::get('/clear', function () {
@@ -92,6 +100,9 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::post('updatePriority', [UserController::class, 'updatePriority']);
         Route::get('import_excel', [UserController::class, 'import_excel']);
         Route::post('action_import', [UserController::class, 'action_import']);
+        Route::get('view_user_parent/{id?}', [UserController::class, 'view_user_parent']);
+        Route::post('getUserParent/{id?}', [UserController::class, 'getUserParent']);
+        Route::post('getUserChild/{id?}', [UserController::class, 'getUserChild']);
     });
     Route::group(['prefix' => 'department'], function () {
         Route::get('list', [DepartmentController::class, 'get_list']);
@@ -108,6 +119,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('detail/{id?}', [RoleController::class, 'get_detail']);
         Route::post('submit/{id}', [RoleController::class, 'submit']);
         Route::get('delete/{id}', [RoleController::class, 'delete']);
+        Route::post('getPermissonByRole', [RoleController::class, 'getPermissonByRole']);
     });
     Route::group(['prefix' => 'group_permission'], function () {
         Route::get('list', [GroupPermissionController::class, 'get_list']);
@@ -173,6 +185,9 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('searchCategoryService/{id?}', [CategoryController::class, 'searchCategoryService']);
         Route::get('searchOtherAmenities/{id?}', [CategoryController::class, 'searchOtherAmenities']);
         Route::get('searchService/{id?}', [CategoryController::class, 'searchService']);
+        Route::get('searchPackage/{id?}', [CategoryController::class, 'searchPackage']);
+        Route::get('getListMemberShip/{id?}', [CategoryController::class, 'getListMemberShip']);
+        Route::get('searchTransactionBill/{id?}', [CategoryController::class, 'searchTransactionBill']);
     });
 
 
@@ -271,6 +286,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('delete/{id}', [TransactionController::class, 'delete']);
         Route::post('countAll', [TransactionController::class, 'countAll']);
         Route::get('view/{id}', [TransactionController::class, 'view']);
+        Route::post('changeStatus', [TransactionController::class, 'changeStatus']);
+        Route::post('changeStatusItem', [TransactionController::class, 'changeStatusItem']);
     });
 
     Route::group(['prefix' => 'ares'], function () {
@@ -299,10 +316,68 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
     Route::group(['prefix' => 'membership_level'], function () {
         Route::get('list', [MemberShipLevelController::class, 'get_list']);
         Route::post('updateMember', [MemberShipLevelController::class, 'updateMember']);
+
+        Route::get('list_level', [MemberShipLevelController::class, 'list_level']);
+        Route::post('getListLevel', [MemberShipLevelController::class, 'getListLevel']);
+        Route::get('detail/{id}', [MemberShipLevelController::class, 'detail']);
+        Route::post('submit_detail/{id}', [MemberShipLevelController::class, 'submit_detail']);
     });
 
     Route::group(['prefix' => 'kpi'], function () {
         Route::get('kpi_user', [KPIController::class, 'kpi_user']);
+    });
+
+    Route::group(['prefix' => 'question_often'], function () {
+        Route::get('list', [QuestionOftenController::class, 'get_list']);
+        Route::post('getList', [QuestionOftenController::class, 'getList']);
+        Route::get('detail/{id?}', [QuestionOftenController::class, 'getDetail']);
+        Route::post('detail/{id?}', [QuestionOftenController::class, 'detail']);
+        Route::get('delete/{id}', [QuestionOftenController::class, 'delete']);
+        Route::get('setup/{id}', [QuestionOftenController::class, 'setup']);
+        Route::get('changeStatus/{id}', [QuestionOftenController::class, 'changeStatus']);
+        Route::post('order_by', [QuestionOftenController::class, 'order_by']);
+    });
+
+    Route::group(['prefix' => 'package'], function () {
+        Route::get('list', [PackageController::class, 'get_list']);
+        Route::post('getListPackage', [PackageController::class, 'getListPackage']);
+        Route::get('detail/{id?}', [PackageController::class, 'get_detail']);
+        Route::post('detail/{id?}', [PackageController::class, 'detail']);
+        Route::get('delete/{id}', [PackageController::class, 'delete']);
+    });
+
+    Route::group(['prefix' => 'transaction_package'], function () {
+        Route::get('list', [TransactionPackageController::class, 'get_list']);
+        Route::post('getListTransactionPackage', [TransactionPackageController::class, 'getListTransactionPackage']);
+        Route::get('detail/{id?}', [TransactionPackageController::class, 'get_detail']);
+        Route::post('detail/{id?}', [TransactionPackageController::class, 'detail']);
+        Route::get('delete/{id}', [TransactionPackageController::class, 'delete']);
+        Route::get('changeStatus/{id}', [TransactionPackageController::class, 'changeStatus']);
+    });
+
+
+    Route::group(['prefix' => 'socket'], function () {
+        Route::post('login_socket', [SocketController::class, 'login_socket']);
+        Route::post('sendNotification', [SocketController::class, 'sendNotification']);
+    });
+
+    Route::group(['prefix' => 'transaction_bill'], function () {
+        Route::get('list', [TransactionBillController::class, 'get_list']);
+        Route::post('getList', [TransactionBillController::class, 'getList']);
+        Route::get('detail/{id?}', [TransactionBillController::class, 'get_detail']);
+        Route::get('delete/{id}', [TransactionBillController::class, 'delete']);
+        Route::post('countAll', [TransactionBillController::class, 'countAll']);
+        Route::get('view/{id}', [TransactionBillController::class, 'view']);
+        Route::post('changeStatus', [TransactionBillController::class, 'changeStatus']);
+    });
+
+    Route::group(['prefix' => 'payment'], function () {
+        Route::get('list', [PaymentController::class, 'get_list']);
+        Route::post('getList', [PaymentController::class, 'getList']);
+        Route::get('detail/{id?}', [PaymentController::class, 'get_detail']);
+        Route::get('delete/{id}', [PaymentController::class, 'delete']);
+        Route::get('view/{id}', [PaymentController::class, 'view']);
+        Route::post('changeStatus', [PaymentController::class, 'changeStatus']);
     });
 
 });

@@ -9,6 +9,7 @@ use App\Models\Transaction;
 use App\Models\TransactionDay;
 use App\Models\TransactionDayItem;
 use App\Services\AdminService;
+use App\Services\NotiService;
 use App\Services\ServiceService;
 use App\Traits\UploadFile;
 use Illuminate\Http\Request;
@@ -21,12 +22,14 @@ class TransactionController extends AuthController
     use UploadFile;
     protected $fnbServiceService;
     protected $fnbAdminService;
-    public function __construct(Request $request,ServiceService $fnbServiceService,AdminService $adminService)
+    protected $fnbNoti;
+    public function __construct(Request $request,ServiceService $fnbServiceService,AdminService $adminService,NotiService $notiService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
         $this->fnbServiceService = $fnbServiceService;
         $this->fnbAdminService = $adminService;
+        $this->fnbNoti = $notiService;
     }
 
     public function getList(){
@@ -44,6 +47,10 @@ class TransactionController extends AuthController
         $status_search = $this->request->input('status_search');
         $service_search = $this->request->input('service_search');
 
+        $ares_permission = $this->request->input('ares_permission') ?? 0;
+        if (!empty($ares_permission)) {
+            $user_id = $this->request->input('user_id') ?? 0;
+        }
 
         if (!empty($date_search)){
             $date_search = explode(' - ',$date_search);
@@ -62,8 +69,29 @@ class TransactionController extends AuthController
             $end_date_end = null;
         }
 
-        $query = Transaction::with('customer')
+        $query = Transaction::with(['customer' => function ($q) {
+                $q->select('id', 'fullname', 'phone', 'email', 'avatar');
+            }])
+            ->with('transaction_day_item')
             ->where('id','!=',0);
+        if (!empty($ares_permission)) {
+            if (!empty($user_id)) {
+                $this->requestWard = clone $this->request;
+                $ListWard = $this->fnbAdminService->getWardUser($this->requestWard);
+                if (!empty($ListWard['result'])) {
+                    if (!empty($ListWard['data'])) {
+                        $ward_id = $ListWard['data'];
+                        $query->whereHas('customer', function ($inst) use ($ward_id) {
+                            $inst->whereIn('wards_id', $ward_id);
+                        });
+                    } else {
+                        $query->where('tbl_transaction.id', 0);
+                    }
+                } else {
+                    $query->where('tbl_transaction.id', 0);
+                }
+            }
+        }
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
                 $q->where('reference_no', 'like', "%$search%");
@@ -102,6 +130,25 @@ class TransactionController extends AuthController
         $query->orderBy($orderBy, $orderDir);
         $data = $query->skip($start)->take($length)->get();
 
+        $allServiceIds = $data->map(function ($item) {
+            return $item->transaction_day_item->pluck('service_id')->toArray();
+        })->flatten()->unique()->toArray();
+        $this->requestService = clone $this->request;
+        $this->requestService->merge(['service_id' => $allServiceIds]);
+        $this->requestService->merge(['search' => null]);
+        $responseService = $this->fnbServiceService->getListDataByTransaction($this->requestService);
+        $dataService = $responseService->getData(true);
+        $services = collect($dataService['data']['data'] ?? []);
+
+        $data->transform(function ($item) use ($services) {
+            $item->transaction_day_item->transform(function ($dayItem) use ($services) {
+                $service = $services->where('id', $dayItem->service_id)->first();
+                $dayItem->service = $service;
+                return $dayItem;
+            });
+            return $item;
+        });
+
         if (!empty($data)){
             foreach ($data as $key => $value){
                 $dtCustomer = $value->customer ?? null;
@@ -113,7 +160,7 @@ class TransactionController extends AuthController
                 }
             }
         }
-        $total = Clients::count();
+        $total = Transaction::count();
 
         return response()->json([
             'total' => $total,
@@ -146,6 +193,11 @@ class TransactionController extends AuthController
             $end_date_end = null;
         }
 
+        $ares_permission = $this->request->input('ares_permission') ?? 0;
+        if (!empty($ares_permission)) {
+            $user_id = $this->request->input('user_id') ?? 0;
+        }
+
         $query = Transaction::with('customer')->where('id','!=',0);
         if (($customer_search)){
             $query->where('customer_id', $customer_search);
@@ -164,6 +216,24 @@ class TransactionController extends AuthController
             $query->whereHas('transaction_day_item',function ($q) use ($service_search){
                 $q->where('service_id',$service_search);
             });
+        }
+        if (!empty($ares_permission)) {
+            if (!empty($user_id)) {
+                $this->requestWard = clone $this->request;
+                $ListWard = $this->fnbAdminService->getWardUser($this->requestWard);
+                if (!empty($ListWard['result'])) {
+                    if (!empty($ListWard['data'])) {
+                        $ward_id = $ListWard['data'];
+                        $query->whereHas('customer', function ($inst) use ($ward_id) {
+                            $inst->whereIn('wards_id', $ward_id);
+                        });
+                    } else {
+                        $query->where('tbl_transaction.id', 0);
+                    }
+                } else {
+                    $query->where('tbl_transaction.id', 0);
+                }
+            }
         }
         $follow = $query->count();
 
@@ -184,6 +254,24 @@ class TransactionController extends AuthController
                 $query->whereHas('transaction_day_item',function ($q) use ($service_search){
                     $q->where('service_id',$service_search);
                 });
+            }
+            if (!empty($ares_permission)) {
+                if (!empty($user_id)) {
+                    $this->requestWard = clone $this->request;
+                    $ListWard = $this->fnbAdminService->getWardUser($this->requestWard);
+                    if (!empty($ListWard['result'])) {
+                        if (!empty($ListWard['data'])) {
+                            $ward_id = $ListWard['data'];
+                            $query->whereHas('customer', function ($inst) use ($ward_id) {
+                                $inst->whereIn('wards_id', $ward_id);
+                            });
+                        } else {
+                            $query->where('tbl_transaction.id', 0);
+                        }
+                    } else {
+                        $query->where('tbl_transaction.id', 0);
+                    }
+                }
             }
             $query->where('status',$status);
             $arr[$key]['count'] = $query->count();
@@ -273,6 +361,7 @@ class TransactionController extends AuthController
         }
         //end
         //cron
+        $check_start = $this->request->input('check_start') ?? 0;
         $check_cancel = $this->request->input('check_cancel') ?? 0;
         $cron = $this->request->input('cron') ?? 0;
         //
@@ -284,7 +373,7 @@ class TransactionController extends AuthController
                 $q->where('reference_no', 'like', "%$search%");
             });
         }
-        $query->where(function ($q) use ($status_search,$customer_search,$customer_id,$service_id,$start_date,$end_date,$start_date_end,$end_date_end,$date_search,$date_search_end,$check_cancel,$cron){
+        $query->where(function ($q) use ($status_search,$customer_search,$customer_id,$service_id,$start_date,$end_date,$start_date_end,$end_date_end,$date_search,$date_search_end,$check_cancel,$cron,$check_start){
             if ($status_search != -1) {
                 $status_search = is_array($status_search) ? $status_search : [$status_search];
                 $q->whereIn('status', $status_search);
@@ -313,7 +402,11 @@ class TransactionController extends AuthController
             }
             if (!empty($check_cancel)){
                 $q->whereDate('date_end', '<', now()->toDateString());
-                $q->where('status', '!=',Config::get('constant')['status_transaction_finish']);
+                $q->whereNotIn('status',[Config::get('constant')['status_transaction_finish'], Config::get('constant')['status_transaction_cancel']]);
+            }
+            if (!empty($check_start)){
+                $q->whereIn('status',[Config::get('constant')['status_request']]);
+                $q->whereDate('date_start', '=', now()->toDateString());
             }
         });
         $query->orderByRaw("id desc");
@@ -634,8 +727,20 @@ class TransactionController extends AuthController
         $transaction_id = $this->request->input('transaction_id');
         $status = $this->request->input('status');
         $noteStatus = $this->request->input('note');
+        $app = $this->request->input('app') ?? 0;
 
-        $transaction = Transaction::with('customer')->find($transaction_id);
+        if ($app == 1){
+            $customer_id = $this->request->client->id ?? 0;
+            if (empty($customer_id)){
+                $data['result'] = false;
+                $data['message'] = 'Vui lòng đăng nhập để tiếp tục sử dung dịch vụ';
+                return response()->json($data);
+            }
+        }
+
+        $transaction = Transaction::with(['customer' => function ($q) {
+            $q->select('id', 'fullname', 'phone', 'email', 'avatar');
+        }])->find($transaction_id);
         $index = getValueStatusTransaction($transaction->status,'index');
         $index_current = getValueStatusTransaction($status,'index');
         $status_current = $transaction->status;
@@ -650,7 +755,132 @@ class TransactionController extends AuthController
 
         if ($transaction->status == $this->request->status){
             $data['result'] = false;
-            $data['message'] = 'Trạng thái đã được cập nhập vui lòng kiểm tra lại!';
+            $data['message'] = 'Trạng thái đã được cập nhật vui lòng kiểm tra lại!';
+            return response()->json($data);
+        }
+        if ($app == 1){
+            $customer_id = $this->request->client->id ?? 0;
+            if ($transaction->customer_id != $customer_id){
+                $data['result'] = false;
+                $data['message'] = 'Chuyến đi không thuộc quyền của bạn, vui lòng kiểm tra lại!';
+                return response()->json($data);
+            }
+        } else {
+            $customer_id = $transaction->customer_id;
+        }
+        DB::beginTransaction();
+        $partner_id = $transaction->transaction_day_item->pluck('partner_id')->unique()->toArray();
+
+        $arr_object_id = [];
+        $dtCustomer = Clients::select(
+            'tbl_clients.fullname as name',
+            'tbl_clients.id as object_id',
+            'tbl_player_id.player_id as player_id',
+            DB::raw("'owen' as 'object_type'")
+        )
+            ->leftJoin('tbl_player_id', function ($join) {
+                $join->on('tbl_player_id.object_id', '=', 'tbl_clients.id');
+                $join->on('tbl_player_id.object_type', '=', DB::raw("'owen'"));
+            })
+            ->whereIn('tbl_clients.id', $partner_id ?? [0])
+            ->get()->toArray();
+        if (!empty($dtCustomer)) {
+            $arr_object_id = array_merge($arr_object_id, $dtCustomer);
+        }
+        $arr_object_id = array_values($arr_object_id);
+
+        if (in_array($status,[Config::get('constant')['status_transaction_finish'],Config::get('constant')['status_start']])){
+            $arr_object_id_admin = [];
+            $dtCustomer = Clients::select(
+                'tbl_clients.fullname as name',
+                'tbl_clients.id as object_id',
+                'tbl_player_id.player_id as player_id',
+                DB::raw("'customer' as 'object_type'")
+            )
+                ->leftJoin('tbl_player_id', function ($join) {
+                    $join->on('tbl_player_id.object_id', '=', 'tbl_clients.id');
+                    $join->on('tbl_player_id.object_type', '=', DB::raw("'customer'"));
+                })
+                ->where('tbl_clients.id', $customer_id)
+                ->get()->toArray();
+            if (!empty($dtCustomer)) {
+                $arr_object_id_admin = array_merge($arr_object_id_admin, $dtCustomer);
+            }
+            $arr_object_id_admin = array_values($arr_object_id_admin);
+            $transaction->customer->arr_object_id = $arr_object_id_admin;
+        }
+
+        try
+        {
+            if ($status == Config::get('constant')['status_transaction_finish']){
+                $transaction->cancel_end = $this->request->input('cancel_end') ?? 0;
+            }
+            $transaction->status = $status;
+            $transaction->note_status = !empty($noteStatus) ? $noteStatus : null;
+            $transaction->date_status = date('Y-m-d H:i:s');
+            $transaction->staff_status = $this->request->input('staff_status') ?? 0;
+            $transaction->customer_status = $app == 1 ? $customer_id : 0;
+            $transaction->save();
+
+            if ($status == Config::get('constant')['status_transaction_cancel']) {
+                //noti
+                $this->requestNoti = clone $this->request;
+                $this->requestNoti->merge(['arr_object_id' => $arr_object_id]);
+                $this->requestNoti->merge(['dtData' => $transaction]);
+                $this->requestNoti->merge(['customer_id' => $customer_id]);
+                $this->requestNoti->merge(['type' => $app == 1 ? 'customer' : 'staff']);
+                $this->requestNoti->merge(['type_noti' => 'change_status_transaction']);
+                $this->requestNoti->merge(['staff_id' => $this->request->input('staff_status')]);
+                $this->fnbNoti->addNoti($this->requestNoti);
+            }
+
+            DB::commit();
+            $data['result'] = true;
+            $data['data'] = $transaction;
+            $data['message'] = lang('dt_success');
+            return response()->json($data);
+        } catch (\Exception $exception){
+            DB::rollBack();
+            $data['result'] = false;
+            $data['data'] = [];
+            $data['message'] = $exception->getMessage();
+            return response()->json($data);
+        }
+    }
+
+    public function changeStatusItem(){
+        $transaction_item_id = $this->request->input('transaction_id');
+        $status = $this->request->input('status');
+        $noteStatus = $this->request->input('note');
+
+        $transaction = TransactionDayItem::with('transaction')->find($transaction_item_id);
+        if (empty($transaction)){
+            $data['result'] = false;
+            $data['message'] = 'Không tồn tại chi tiết chuyến đi!';
+            return response()->json($data);
+        }
+
+        if ($transaction->transaction->status == Config::get('constant')['status_transaction_finish']){
+            $data['result'] = false;
+            $data['message'] = 'Chuyến đi đã kết thúc không thể thay đổi trạng thái!';
+            return response()->json($data);
+        }
+
+        $index = getValueStatusTransactionItem($transaction->status,'index');
+        $index_current = getValueStatusTransactionItem($status,'index');
+        $status_current = $transaction->status;
+        $arr = [Config::get('constant')['status_transaction_item_cancel']];
+        if ($index_current < $index){
+            if (!in_array($status,$arr)) {
+                $data['result'] = false;
+                $data['message'] = 'Không thể thay đổi trạng thái nhỏ hơn trạng thái hiện tại';
+                return response()->json($data);
+            }
+        }
+
+        if ($transaction->status == $this->request->status){
+            $data['result'] = false;
+            $data['message'] = 'Trạng thái đã được cập nhật vui lòng kiểm tra lại!';
             return response()->json($data);
         }
         $customer_id = $transaction->customer_id;
@@ -661,7 +891,6 @@ class TransactionController extends AuthController
             $transaction->note_status = !empty($noteStatus) ? $noteStatus : null;
             $transaction->date_status = date('Y-m-d H:i:s');
             $transaction->staff_status = $this->request->input('staff_status');
-            $transaction->cancel_end = $this->request->input('cancel_end') ?? 0;
             $transaction->save();
             DB::commit();
             $data['result'] = true;

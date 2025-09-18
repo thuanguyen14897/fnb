@@ -26,6 +26,7 @@ class AresController extends AuthController
     }
 
     public function getList() {
+        $ares_permission = (int) ($this->request->input('ares_permission') ?? 0);
         $search = $this->request->input('search.value');
         $start = $this->request->input('start', 0);
         $length = $this->request->input('length', 10);
@@ -42,6 +43,19 @@ class AresController extends AuthController
         }
         $orderDir = $this->request->input('order.0.dir', 'asc');
         $query = Ares::where('id','!=',0);
+
+        if ($ares_permission) {
+            $aresPer = $this->request->input('aresPer'); // có thể là null/0
+            if (empty($aresPer)) {
+                $query->where('tbl_ares.id', 0);
+            } else {
+                $query->whereIn('id', $aresPer);
+            }
+
+        }
+
+
+
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%$search%");
@@ -132,14 +146,14 @@ class AresController extends AuthController
                 if (empty($id)){
                     $data['message'] = 'Thêm mới thành công';
                 } else {
-                    $data['message'] = 'Cập nhập thành công';
+                    $data['message'] = 'Cập nhật thành công';
                 }
             } else {
                 $data['result'] = false;
                 if (empty($id)){
                     $data['message'] = 'Thêm mới thất bại';
                 } else {
-                    $data['message'] = 'Cập nhập thất bại';
+                    $data['message'] = 'Cập nhật thất bại';
                 }
             }
             return response()->json($data);

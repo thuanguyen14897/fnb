@@ -64,6 +64,7 @@
                         <th class="text-center">{{lang('Khách hàng')}}</th>
                         <th class="text-center">{{lang('dt_start')}}</th>
                         <th class="text-center">{{lang('dt_end')}}</th>
+                        <th class="text-center">{{lang('Thông tin')}}</th>
                         <th class="text-center">{{lang('dt_status')}}</th>
                         <th class="text-center">Nhân viên CSKH</th>
                         <th class="text-center">{{lang('dt_actions')}}</th>
@@ -140,11 +141,13 @@
                 {data: 'customer', name: 'customer',width: "140px",orderable: false},
                 {data: 'date_start', name: 'date_start'},
                 {data: 'date_end', name: 'date_end'},
+                {data: 'info', name: 'info',width: "150px"},
                 {
                     "render": function (data, type, row) {
                         return `<div class="text-center">${data}</data>`;
                     },
-                    data: 'status', name: 'status'},
+                    data: 'status', name: 'status'
+                },
                 {data: 'user_id', name: 'user_id'},
                 {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px" },
 
@@ -188,6 +191,31 @@
                     }
                     $(`.count_all`).text(formatNumber(total));
                     $(`.count_follow`).text(formatNumber(response.follow));
+                })
+                .fail(function () {
+
+                });
+            return false;
+        }
+
+        function changeStatus(transaction_id,status){
+            $.ajax({
+                url: 'admin/transaction/changeStatus',
+                type: 'POST',
+                dataType: 'JSON',
+                cache: false,
+                data: {
+                    transaction_id: transaction_id,
+                    status: status,
+                },
+            })
+                .done(function (data) {
+                    if (data.result) {
+                        alert_float('success', data.message);
+                    } else {
+                        alert_float('error', data.message);
+                    }
+                    oTable.draw('page');
                 })
                 .fail(function () {
 

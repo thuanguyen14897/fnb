@@ -45,22 +45,19 @@ class PartnerController extends Controller
         if (!has_permission('partner', 'edit')){
             access_denied();
         }
-        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
-//            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+        $checkPermission = true;
+        if (!has_permission('partner','view') && has_permission('partner','viewown')) {
+            $checkPermission = false;
+            $user_ids = getUserIdByRole();
             $this->request->merge(['ares_permission' => 1]);
-//            $aresPer = [];
-//            foreach ($UserAres as $key => $item) {
-//                $aresPer[] = $item->id_ares;
-//            }
-//            $this->request->merge(['aresPer' => $aresPer]);
-            $this->request->merge(['user_id' => get_staff_user_id()]);
+            $this->request->merge(['user_id' => $user_ids ? array_unique($user_ids) : [get_staff_user_id()]]);
         }
 
         $this->request->merge(['id' => $id]);
         $response = $this->fnbAccount->getDetailCustomer($this->request);
         $data = $response->getData(true);
         $client = $data['client'] ?? [];
-        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+        if (empty($checkPermission)) {
             if (!empty($id) && empty($client['id'])) {
                 access_denied();
             }
@@ -74,23 +71,21 @@ class PartnerController extends Controller
     }
 
     public function view($id = 0){
-        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
-//            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
-            $this->request->merge(['ares_permission' => 1]);
-//            $aresPer = [];
-//            foreach ($UserAres as $key => $item) {
-//                $aresPer[] = $item->id_ares;
-//            }
-//            $this->request->merge(['aresPer' => $aresPer]);
-
-            $this->request->merge(['user_id' => get_staff_user_id()]);
+        if (!has_permission('partner', 'view') && !has_permission('partner', 'viewown')) {
+            access_denied();
         }
-
+        $checkPermission = true;
+        if (!has_permission('partner','view') && has_permission('partner','viewown')) {
+            $checkPermission = false;
+            $user_ids = getUserIdByRole();
+            $this->request->merge(['ares_permission' => 1]);
+            $this->request->merge(['user_id' => $user_ids ? array_unique($user_ids) : [get_staff_user_id()]]);
+        }
         $this->request->merge(['id' => $id]);
         $response = $this->fnbAccount->getDetailCustomer($this->request);
         $data = $response->getData(true);
         $client = $data['client'] ?? [];
-        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
+        if (empty($checkPermission)) {
             if (!empty($id) && empty($client['id'])) {
                 access_denied();
             }
@@ -107,16 +102,10 @@ class PartnerController extends Controller
     {
         $this->request->merge(['type_client' => 2]);
 
-        if (!has_permission('clients','view') && has_permission('clients','viewown')) {
-//            $UserAres = UserAres::where('id_user', get_staff_user_id())->get();
+        if (!has_permission('partner','view') && has_permission('partner','viewown')) {
+            $user_ids = getUserIdByRole();
             $this->request->merge(['ares_permission' => 1]);
-//            $aresPer = [];
-//            foreach ($UserAres as $key => $item) {
-//                $aresPer[] = $item->id_ares;
-//            }
-//            $this->request->merge(['aresPer' => $aresPer]);
-
-            $this->request->merge(['user_id' => get_staff_user_id()]);
+            $this->request->merge(['user_id' => $user_ids ? array_unique($user_ids) : [get_staff_user_id()]]);
         }
 
         $response = $this->fnbAccount->getListCustomer($this->request);
@@ -165,6 +154,17 @@ class PartnerController extends Controller
                 $str = _dt($client['created_at']);
                 return $str;
             })
+            ->editColumn('date_active', function ($client) {
+                $customer_package = $client['customer_package'] ?? null;
+                $namePackage = '';
+                $checkDefault = 0;
+                if (!empty($customer_package)){
+                    $namePackage = $customer_package['name'];
+                    $checkDefault = $customer_package['package']['check_default'] ?? 0;
+                }
+                $str = !empty($client['date_active']) ? _dthuan($client['date_active']) : null;
+                return '<div>'.$str.'</div><div><span class="label '.($checkDefault == 1 ? 'label-default': 'label-info').'">'.$namePackage.'</span></div>';
+            })
             ->editColumn('active', function ($client) {
                 $customer_id = $client['id'];
                 $classes = $client['active'] == 1 ? "btn-info" : "btn-danger";
@@ -205,7 +205,7 @@ class PartnerController extends Controller
                 }
                 return $str;
             })
-            ->rawColumns(['options', 'active', 'avatar', 'phone', 'created_at', 'fullname','referral_code', 'ares'])
+            ->rawColumns(['options', 'active', 'avatar', 'phone', 'created_at', 'fullname','referral_code', 'ares','date_active'])
             ->setTotalRecords($data['recordsTotal']) // tổng số bản ghi
             ->setFilteredRecords($data['recordsFiltered']) // sau khi lọc
             ->with([

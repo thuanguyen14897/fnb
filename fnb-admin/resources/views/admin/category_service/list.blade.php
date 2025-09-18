@@ -36,6 +36,7 @@
                         <th class="text-center">{{lang('Tiện ích')}}</th>
                         <th class="text-center">{{lang('Nhóm danh mục')}}</th>
                         <th class="text-center">{{lang('Trạng thái')}}</th>
+                        <th class="text-center">{{lang('Sắp xếp')}}</th>
                         <th class="text-center">{{lang('dt_actions')}}</th>
                     </tr>
                     </thead>
@@ -91,6 +92,7 @@
                         },
                         data: 'active', name: 'active',width: "110px",
                     },
+                    {data: 'index', name: 'index',width: "90px",},
                     {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px" },
 
                 ]

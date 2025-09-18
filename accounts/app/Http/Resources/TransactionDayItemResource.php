@@ -17,19 +17,44 @@ class TransactionDayItemResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [
-            'id' => $this->id,
-            'hour' => $this->hour,
-            'note' => $this->note,
-            'status' => [
-                'status' => $this->status,
-                'name' => getValueStatusTransactionItem($this->status,'name'),
-                'color' => getValueStatusTransactionItem($this->status,'color'),
-                'date_status' => $this->date_status,
-                'note' => $this->note_status,
-            ],
-            'service' => $this->service
-        ];
+        if (!empty($this->check_list)){
+            return [
+                'id' => $this->id,
+                'transaction' => [
+                    'id' => $this->transaction->id,
+                    'reference_no' => $this->transaction->reference_no,
+                    'date' => $this->transaction->date,
+                ],
+                'transaction_day' => [
+                    'id' => $this->transaction_day->id,
+                    'date' => $this->transaction_day->date,
+                ],
+                'hour' => $this->hour,
+                'note' => $this->note,
+                'status' => [
+                    'status' => $this->status,
+                    'name' => getValueStatusTransactionItem($this->status, 'name'),
+                    'color' => getValueStatusTransactionItem($this->status, 'color'),
+                    'date_status' => $this->date_status,
+                    'note' => $this->note_status,
+                ],
+                'service' => $this->service
+            ];
+        } else {
+            return [
+                'id' => $this->id,
+                'hour' => $this->hour,
+                'note' => $this->note,
+                'status' => [
+                    'status' => $this->status,
+                    'name' => getValueStatusTransactionItem($this->status, 'name'),
+                    'color' => getValueStatusTransactionItem($this->status, 'color'),
+                    'date_status' => $this->date_status,
+                    'note' => $this->note_status,
+                ],
+                'service' => $this->service
+            ];
+        }
     }
 
     public function with($request)

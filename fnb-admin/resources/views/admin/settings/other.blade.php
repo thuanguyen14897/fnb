@@ -1,4 +1,13 @@
 <div class="form-group">
+    <label for="title_package">Tiêu đề gói thành viên</label>
+    <input type="text" name="title_package" id="title_package" value="{{get_option('title_package')}}" class="form-control">
+</div>
+<div class="form-group">
+    <label for="content_package">Mô tả gói thành viên</label>
+    <textarea class="content_package form-control"
+              name="content_package">{{get_option('content_package')}}</textarea>
+</div>
+<div class="form-group">
     <label for="percent">Chiết khấu</label>
     <input type="number" name="percent" id="percent" value="{{get_option('percent')}}" min="0" max="100" onkeyup="formatNumBerKeyChange(this)" class="form-control">
 </div>
@@ -26,6 +35,16 @@
     <label for="note_version_app">Ghi chú version app</label>
     <textarea class="note_version_app form-control"
               name="note_version_app">{{get_option('note_version_app')}}</textarea>
+</div>
+<div class="form-group">
+    <label for="rule_register_partner">Điều khoản đăng ký trở thành đối tác </label>
+    <textarea class="rule_register_partner form-control editor"
+              name="rule_register_partner">{{get_option('rule_register_partner')}}</textarea>
+</div>
+<div class="form-group">
+    <label for="terms_guide">Hướng dẫn điền điều khoản </label>
+    <textarea class="terms_guide form-control editor"
+              name="terms_guide">{{get_option('terms_guide')}}</textarea>
 </div>
 <div class="form-group">
     <label for="policy_terms">Điều khoản và chính sách</label>

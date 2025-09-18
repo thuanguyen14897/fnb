@@ -20,4 +20,9 @@ class GroupCategoryService extends Model
     {
         return $this->hasMany('App\Models\Service', 'group_category_service_id', 'id');
     }
+
+    public function topServices()
+    {
+        return $this->hasMany('App\Models\Service', 'group_category_service_id', 'id')->where('hot', 1)->latest()->take(5);
+    }
 }

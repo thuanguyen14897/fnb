@@ -70,12 +70,44 @@
                 {   "render": function (data, type, row) {
                         return `<div class="text-center">${data}</data>`;
                     },
-                    data: 'DT_RowIndex', name: 'DT_RowIndex',width: "80px" },
+                    data: 'id', name: 'id',width: "80px" },
                 {data: 'name', name: 'name'},
                 {data: 'permission', name: 'permission'},
                 {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px" },
 
             ]
         });
+        $('#table_role tbody').on('click', 'td .rows-child', function() {
+            var tr = $(this).closest('tr');
+            var row = oTable.row(tr);
+            if (row.child.isShown()) {
+                $(this).removeClass('fa-caret-down');
+                $(this).addClass('fa-caret-right');
+                row.child.hide();
+                tr.removeClass('shown');
+            } else {
+                // Open this row
+                $(this).removeClass('fa-caret-right');
+                $(this).addClass('fa-caret-down');
+                row.child(loadInfoData(row.data())).show();
+                tr.addClass('shown');
+            }
+        });
+
+        function loadInfoData(cData) {
+            tr1 = `
+            <tr class="success">
+                <td class="bold" style="width: 250px;padding: 7px">Chức vụ</td>
+                <td class="bold" style="padding: 7px">Tên quyền</td>
+                <td class="bold" style="width: 100px;padding: 7px">Tác vụ</td>
+             </tr>`;
+            tb = `<table class="dt-table tnh-table table-bordered" style="width: 90% !important; float: right;">
+                    <tbody>
+                        ${tr1}
+                        ${cData.child}
+                    </tbody>
+                </table>`;
+            return tb;
+        }
     </script>
 @endsection

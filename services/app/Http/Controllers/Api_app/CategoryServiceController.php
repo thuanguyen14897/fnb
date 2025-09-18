@@ -116,6 +116,7 @@ class CategoryServiceController extends AuthController
             $dtData->name = $this->request->name;
             $dtData->group_category_service_id = $this->request->group_category_service_id;
             $dtData->active = $this->request->active ?? 1;
+            $dtData->order_by = $this->request->input('index');
             $dtData->save();
             if ($dtData) {
 
@@ -140,14 +141,14 @@ class CategoryServiceController extends AuthController
                 if (empty($id)){
                     $data['message'] = 'Thêm mới thành công';
                 } else {
-                    $data['message'] = 'Cập nhập thành công';
+                    $data['message'] = 'Cập nhật thành công';
                 }
             } else {
                 $data['result'] = false;
                 if (empty($id)){
                     $data['message'] = 'Thêm mới thất bại';
                 } else {
-                    $data['message'] = 'Cập nhập thất bại';
+                    $data['message'] = 'Cập nhật thất bại';
                 }
             }
             return response()->json($data);
@@ -228,6 +229,7 @@ class CategoryServiceController extends AuthController
         if (!empty($id)){
             $query->where('id', $id);
         }
+        $query->orderByRaw('order_by asc');
         $data = $query->limit($limit)->get();
         if (!empty($data)){
             foreach ($data as $key => $value){

@@ -5,7 +5,11 @@
     }
     .wrap_image_car_item{
         width: 12%;
-        margin-right: 5px
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+    .wrap_image_car_item > img{
+        border-radius: 10px;
     }
 </style>
 @section('content')
@@ -151,11 +155,9 @@
                             <div class="wrap_image_car">
                                 @if(!empty($dtData['image_store']))
                                     @foreach($dtData['image_store'] as $key => $value)
-                                        <div class="wrap_image_car_item">
                                             <a href="{{$value['image']}}" data-lightbox="customer-profile" class="display-block mbot5" >
-                                                <img src="{{$value['image']}}" style="width: 100px;height: 100px">
+                                                <div class="wrap_image_car_item"><img src="{{$value['image']}}" style="width: 100px;height: 100px"></div>
                                             </a>
-                                        </div>
                                     @endforeach
                                 @endif
                             </div>

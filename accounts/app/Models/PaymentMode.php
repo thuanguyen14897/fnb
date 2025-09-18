@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentMode extends Model
 {
     use HasFactory;
+
     protected $table = 'tbl_payment_mode';
 
     function payment()

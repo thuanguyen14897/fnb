@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use App\Services\CategorySystemService;
 use Illuminate\Support\Facades\Http;
+use App\Models\MemberShipLevel;
 
 class CategoryController extends AuthController
 {
@@ -238,7 +239,11 @@ class CategoryController extends AuthController
 
     public function getListWardToUser($id_user = 0)
     {
-        $data = DB::table('tbl_user_ares_ward')->where('id_user', $id_user)->get();
+        if (empty($id_user)){
+            $id_user = $this->request->input('user_id');
+        }
+        $id_user = is_array($id_user) ? $id_user : [$id_user];
+        $data = DB::table('tbl_user_ares_ward')->whereIn('id_user', $id_user)->get();
         $dataWard = [];
         foreach($data as $key => $value) {
             $dataWard[] = $value->id_ward;
@@ -248,6 +253,65 @@ class CategoryController extends AuthController
             'result' => true,
             'message' => 'Lấy danh sách thành công'
         ]);
-        return response()->json($data);
     }
+
+    public function getListMemberShip($id = '0')
+    {
+        $data = MemberShipLevel::select(
+            'id', 'name', 'color', 'icon', 'image', 'color_background', 'background_header', 'radio_discount', 'point_end', 'point_start', 'color_button',
+        )->where(function($q) use ($id) {
+            if(!empty($id)) {
+                $q->where('id', $id);
+            }
+        })->get();
+        $dataMemberShip = [];
+        foreach($data as $key => $value) {
+            $url = env('STORAGE_URL') ?? config('app.storage_url');
+            $value->icon = !empty($value->icon) ? ($url . '/' . $value->icon) : null;
+            $value->image = !empty($value->image) ? ($url . '/' . $value->image) : null;
+            $value->background_header = !empty($value->background_header) ? ($url . '/' . $value->background_header) : null;
+
+            if($value->id == 4) {
+                $value->name_radio_discount = 'Hạn mức thẻ công nợ tối đa 50 triệu đồng';
+            }
+            else {
+                $value->name_radio_discount = !empty($value->radio_discount) ? ($value->radio_discount.'%') : null;
+            }
+            $dataMemberShip[] = $value;
+        }
+
+        if(!empty($id)) {
+            $dataNext = MemberShipLevel::select(
+                'id', 'name', 'color', 'icon', 'image', 'color_background', 'background_header', 'radio_discount', 'point_end', 'point_start',
+            )->where(function($q) use ($id) {
+                if(!empty($id)) {
+                    $q->where('id', ($id + 1));
+                }
+            })->first();
+            if(!empty($dataNext->id)) {
+                $url = env('STORAGE_URL') ?? config('app.storage_url');
+                $dataNext->icon = !empty($dataNext->icon) ? ($url . '/' . $dataNext->icon) : null;
+                $dataNext->image = !empty($dataNext->image) ? ($url . '/' . $dataNext->image) : null;
+                $dataNext->background_header = !empty($value->background_header) ? ($url . '/' . $dataNext->background_header) : null;
+
+                if($dataNext->id == 4) {
+                    $dataNext->name_radio_discount = 'Hạn mức thẻ công nợ tối đa 50 triệu đồng';
+                }
+                else {
+                    $dataNext->name_radio_discount = !empty($dataNext->radio_discount) ? ($dataNext->radio_discount.'%') : null;
+                }
+                $dataMemberShipNext = $dataNext;
+            }
+
+
+        }
+
+        return response()->json([
+            'data' => $dataMemberShip,
+            'data_next' => $dataMemberShipNext ?? [],
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
+    }
+
 }

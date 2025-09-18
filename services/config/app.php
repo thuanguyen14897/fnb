@@ -59,6 +59,8 @@ return [
 
     'asset_url' => env('ASSET_URL'),
 
+    'storage_url' => env('STORAGE_URL', 'http://192.168.1.178:8882/storage'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

@@ -46,6 +46,15 @@ class Api_info extends AuthController
                 'intro_three',
                 'percent',
                 'policy_terms',
+                'url_socket',
+                'account_bank_sort',
+                'account_number',
+                'account_name',
+                'account_bank',
+                'title_package',
+                'content_package',
+                'rule_register_partner',
+                'terms_guide',
             ]);
         })->get();
         $data = [];
@@ -55,11 +64,22 @@ class Api_info extends AuthController
             }
             $data[$value->name] = $value->value;
         }
+        $data['db_name'] = config('database.connections.mysql.database');
+        $data['dtTypeRepresentative'] = getListTypeBusiness();
+        $data['dtDay'] = getListDay();
         return response()->json($data, 200);
     }
 
     public function getOption($field = ''){
         $data = get_option($field);
+        return response()->json(['result' => $data]);
+    }
+
+    public function getSetting($value = 0,$type = 'number_unformat'){
+        $data = null;
+        if ($type == 'number_unformat') {
+            $data = number_unformat($value);
+        }
         return response()->json(['result' => $data]);
     }
 

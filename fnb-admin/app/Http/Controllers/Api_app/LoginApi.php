@@ -1035,11 +1035,11 @@ class LoginApi extends AuthController
                 $client->save();
                 if ($client) {
                     $dataResult['result'] = true;
-                    $dataResult['message'] = 'Cập nhập mật khẩu thành công!';
+                    $dataResult['message'] = 'Cập nhật mật khẩu thành công!';
                     return response()->json($dataResult);
                 } else {
                     $dataResult['result'] = false;
-                    $dataResult['message'] = 'Cập nhập mật khẩu thất bại!';
+                    $dataResult['message'] = 'Cập nhật mật khẩu thất bại!';
                     return response()->json($dataResult);
                 }
             } catch (\Exception $exception) {

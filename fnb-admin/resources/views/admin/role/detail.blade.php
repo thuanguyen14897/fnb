@@ -25,6 +25,14 @@
                         @if($errors->has('name'))
                             <div class="alert alert-danger">{{ $errors->first('name') }}</div>
                         @endif
+                        <div class="form-group">
+                            <label for="parent_id">{{lang('Chức vụ quản lý')}}</label>
+                            <select type="text" name="parent_id" parsley-trigger="change" id="parent_id"
+                                    class="form-control parent_id select2">
+                                <option></option>
+                                {!! recursiveRole(!empty($role) ? $role->id : 0) !!}
+                            </select>
+                        </div>
                         <h4 class="page-title">Phân Quyền</h4>
                         <div class="form-group" style="margin-top: 5px;margin-bottom: 5px">
                             <div class="row">
@@ -85,6 +93,28 @@
 @endsection
 @section('script')
     <script>
+        @if(!empty($role))
+            $('#parent_id').val({{$role->parent_id}}).trigger('change');
+        @endif
+        $(".parent_id").change(function () {
+            var role = $(this).val();
+            $.ajax({
+                url: 'admin/role/getPermissonByRole',
+                type: 'POST',
+                dataType: 'JSON',
+                cache: false,
+                data: {
+                    role: role,
+                },
+            })
+                .done(function (data) {
+                })
+                .fail(function () {
+
+                });
+            return false;
+        });
+
         function checkAll(_this, group_permission_id) {
             $(".permission_" + group_permission_id).prop('checked', true);
         }

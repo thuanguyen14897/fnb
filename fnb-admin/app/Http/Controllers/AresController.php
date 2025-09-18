@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Ares;
 use App\Models\User;
+use App\Models\UserAres;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -29,7 +30,7 @@ class AresController extends Controller
 
     public function get_list()
     {
-        if (!has_permission('ares','view')){
+        if (!has_permission('ares','view') && !has_permission('ares','viewown')){
             access_denied();
         }
         return view('admin.ares.list');
@@ -38,6 +39,17 @@ class AresController extends Controller
     public function getList()
     {
         $search = $this->request->input('search.value') ?? null;
+        if (!has_permission('ares','view') && has_permission('ares','viewown')){
+            $user_ares = UserAres::where('id_user', '=', get_staff_user_id())->get();
+            $listAres = [];
+            foreach($user_ares as $dataAres) {
+                $listAres[] = $dataAres->id_ares;
+            }
+            $this->request->merge(['aresPer' => $listAres]);
+            $this->request->merge(['ares_permission' => 1]);
+        }
+
+
         $response = $this->fnbAres->getList($this->request);
         $data = $response->getData(true);
         $customer_ids = [];

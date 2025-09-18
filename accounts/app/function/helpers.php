@@ -724,7 +724,7 @@ function getListStatusTransactionItem()
             'name' => 'Đã xác nhận',
             'color' => '#052E5C',
             'background' => '#DBEEFF',
-            'index' => 2,
+            'index' => 1,
         ],
         [
             'id' => 2,
@@ -764,6 +764,50 @@ function getValueStatusTransactionItem($id, $type = 'name')
     $option[1]['index'] = 1;
     $option[2]['index'] = 2;
     $option[3]['index'] = 3;
+
+    return $option[$id][$type];
+}
+
+function getListStatusTransactionBill()
+{
+    return [
+        [
+            'id' => 0,
+            'name' => 'Đã khởi tạo',
+            'color' => '#371585',
+            'background' => '#E9E1FD',
+            'index' => 0,
+        ],
+        [
+            'id' => 1,
+            'name' => 'Đã thanh toán',
+            'color' => '#052E5C',
+            'background' => '#DBEEFF',
+            'index' => 1,
+        ],
+        [
+            'id' => 2,
+            'name' => 'Hủy',
+            'color' => '#BF1D28',
+            'background' => '#FFDBDE',
+            'index' => 2,
+        ],
+    ];
+}
+
+function getValueStatusTransactionBill($id, $type = 'name')
+{
+    $option[0]['name'] = lang('Đã khởi tạo');
+    $option[1]['name'] = lang('Đã thanh toán');
+    $option[2]['name'] = lang('Hủy');
+
+    $option[0]['color'] = '#371585';
+    $option[1]['color'] = '#052E5C';
+    $option[2]['color'] = '#FFDBDE';
+
+    $option[0]['index'] = 0;
+    $option[1]['index'] = 1;
+    $option[2]['index'] = 2;
 
     return $option[$id][$type];
 }
@@ -1716,3 +1760,30 @@ function getListStatusService($id = 0,$type = 'name')
         return $data;
     }
 }
+
+function createQrBank($data = array())
+{
+
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+        CURLOPT_URL => 'https://payment.pay2s.vn/v1/gateway/create_qr',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_POSTFIELDS => $data,
+        CURLOPT_HTTPHEADER => array(
+            'Cookie: PHPSESSID=t5g2srp7922an81o637aadbc7t'
+        ),
+    ));
+
+    $response = curl_exec($curl);
+    $response = json_decode($response);
+    curl_close($curl);
+    return $response;
+}
+

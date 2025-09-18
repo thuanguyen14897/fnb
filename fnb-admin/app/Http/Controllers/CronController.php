@@ -7,7 +7,9 @@ use App\Models\Notification;
 use App\Models\Permission;
 use App\Models\User;
 use App\Services\TransactionService;
+use App\Services\TransactionPackageService;
 use App\Traits\NotificationTrait;
+use App\Traits\SocketTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
@@ -24,18 +26,111 @@ use Illuminate\Support\Str;
 
 class CronController extends Controller
 {
-    use NotificationTrait;
+    use NotificationTrait,SocketTrait;
 
     public $fnbTransactionService;
-    public function __construct(Request $request,TransactionService $transactionService)
+    public $fnbTransactionPackageService;
+    public function __construct(Request $request,TransactionService $transactionService,TransactionPackageService $transactionPackageService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
         $this->fnbTransactionService = $transactionService;
+        $this->fnbTransactionPackageService = $transactionPackageService;
+    }
+
+    public function startTransactionTrip()
+    {
+        $hour_noti_start = get_option('hour_noti_start');
+        $hour_noti_end = '07:15';
+        if (strtotime(date('H:i')) >= strtotime($hour_noti_start) && strtotime($hour_noti_start) <= strtotime($hour_noti_end)) {
+            if ($this->request->user == null) {
+                $this->request->user = (object)['token' => Config::get('constant')['token_default']];
+            }
+            $this->requestTransaction = clone $this->request;
+
+
+            $this->request->merge(['check_start' => true]);
+            $this->request->merge(['status_search' => -1]);
+            $this->request->merge(['per_page' => 20]);
+            $this->request->merge(['cron' => 1]);
+            $response = $this->fnbTransactionService->getListDataTransaction($this->request);
+            $dtTransaction = $response->getData(true);
+            $dtTransaction = ($dtTransaction['data']['data'] ?? []);
+            $dataNoti = [];
+            if (!empty($dtTransaction)) {
+                foreach ($dtTransaction as $key => $transaction) {
+                    $this->requestTransaction->merge(['note' => 'Bắt đầu chuyến đi']);
+                    $this->requestTransaction->merge(['status' => 1]);
+                    $this->requestTransaction->merge(['staff_status' => Config::get('constant')['user_admin']]);
+                    $this->requestTransaction->merge(['transaction_id' => $transaction['id']]);
+                    $responseUpdate = $this->fnbTransactionService->changeStatus($this->requestTransaction);
+                    $dtUpdate = $responseUpdate->getData(true);
+                    $dtUpdate = $dtUpdate['data'] ?? [];
+                    if (!empty($dtUpdate) && !empty($dtUpdate['result'])) {
+                        $transaction = $dtUpdate['data'];
+                        $arr_object_id = [];
+                        $dtStaffAdmin = User::select(
+                            'tbl_users.name',
+                            'tbl_users.id as object_id',
+                            'tbl_player_id.player_id as player_id',
+                            DB::raw("'staff' as 'object_type'")
+                        )
+                            ->leftJoin('tbl_player_id', function ($join) {
+                                $join->on('tbl_player_id.object_id', '=', 'tbl_users.id');
+                                $join->on('tbl_player_id.object_type', '=', DB::raw("'staff'"));
+                            })
+                            ->where('admin', 1)
+                            ->where('active', 1)
+                            ->get()->toArray();
+                        if (!empty($dtStaffAdmin)) {
+                            $arr_object_id = array_merge($arr_object_id, $dtStaffAdmin);
+                        }
+                        $dtCustomer = $transaction['customer']['arr_object_id'] ?? null;
+                        if (!empty($dtCustomer)) {
+                            $arr_object_id = array_merge($arr_object_id, $dtCustomer);
+                        }
+                        $arr_object_id = array_values($arr_object_id);
+                        $playerId = [];
+                        if (!empty($arr_object_id)) {
+                            $playerId = array_unique(array_column($arr_object_id, 'player_id'));
+                            $content = '';
+                            $json_data = json_encode([
+                                'transaction_id' => $transaction['id'],
+                                'object' => 'transaction'
+                            ], JSON_UNESCAPED_UNICODE);
+                            $title = '';
+                            $title_owen = '';
+                            $content = "Chuyến đi " . $transaction['name'] . ', Khách hàng ' . $transaction['customer']['fullname'] . ', ' . _dt_new($transaction['date_start'],
+                                    false) . ' - ' . _dt_new($transaction['date_end'],
+                                    false) . ' đang trong hành trình, chúc quý khách 1 hành trình trọn vẹn.';
+                            $title = 'Bắt đầu chuyến đi';
+                            $title_owen = 'Bắt đầu chuyến đi';
+                            $data = [
+                                'arr_object_id' => $arr_object_id,
+                                'player_id' => $playerId,
+                                'json_data' => $json_data,
+                                'object_id' => $transaction['id'],
+                                'content' => $content,
+                                'created_by' => 0,
+                                'title' => $title,
+                                'title_owen' => $title_owen,
+                                'type' => 1,
+                            ];
+                            $dataNoti[] = $data;
+                        }
+                    }
+                }
+            }
+            $this->sendNotiOnesignalMutile($dataNoti, Config::get('constant')['noti_transaction_start']);
+            dd($dataNoti);
+        } else {
+            die(123);
+        }
     }
 
     public function cancelTransactionTrip()
     {
+
         if ($this->request->user == null) {
             $this->request->user = (object)['token' => Config::get('constant')['token_default']];
         }
@@ -48,7 +143,6 @@ class CronController extends Controller
         $response = $this->fnbTransactionService->getListDataTransaction($this->request);
         $dtTransaction = $response->getData(true);
         $dtTransaction = ($dtTransaction['data']['data'] ?? []);
-
         $cancel_end = 1;
         $count = 0;
         if (!empty($dtTransaction)) {
@@ -81,27 +175,12 @@ class CronController extends Controller
                     if (!empty($dtStaffAdmin)) {
                         $arr_object_id = array_merge($arr_object_id, $dtStaffAdmin);
                     }
-                    $dtCustomer = DB::table('tbl_player_id')
-                        ->where('tbl_player_id.object_id','=',$transaction['customer_id'])
-                        ->where('tbl_player_id.object_type','=','customer')
-                        ->get()
-                        ->map(function ($item) {
-                            return (array) $item;
-                        })
-                        ->toArray();
-                    if (empty($dtCustomer)){
-                        $dtCustomer[] = [
-                            'name' => $transaction['customer']['fullname'],
-                            'object_id' => $transaction['customer_id'],
-                            'player_id' => null,
-                            'object_type' => 'customer',
-                        ];
-                    }
+                    $dtCustomer = $transaction['customer']['arr_object_id'] ?? null;
                     if (!empty($dtCustomer)){
                         $arr_object_id = array_merge($arr_object_id, $dtCustomer);
                     }
                     $arr_object_id = array_values($arr_object_id);
-                    Notification::notiCancelTransaction($transaction, Config::get('constant')['noti_transaction_end'],
+                    Notification::notiEndTransaction($transaction, Config::get('constant')['noti_transaction_end'],
                         0, 2, $arr_object_id);
                 }
             }
@@ -111,7 +190,7 @@ class CronController extends Controller
 
     public function addGroupPermistionByPermission()
     {
-        $dtGroupPermission = DB::table('tbl_group_permissions')->whereNotIn('id', [1, 2, 4, 5, 8])->get();
+        $dtGroupPermission = DB::table('tbl_group_permissions')->whereNotIn('id', [1, 2, 3])->get();
         if (!empty($dtGroupPermission)) {
             foreach ($dtGroupPermission as $key => $value) {
                 foreach (Config::get('permission')['permissions'] as $k => $v) {
@@ -311,6 +390,146 @@ class CronController extends Controller
             }
         }
         $this->sendNotiOnesignalMutile($dataNoti, Config::get('constant')['noti_module']);
+    }
+
+    public function webhookPay2s(){
+        $expectedToken = '48749480338a3551eebcf62fece8908836aca072e8462f2134';
+
+        $headers = getallheaders();
+        if (isset($headers['Authorization'])) {
+            $authHeader = $headers['Authorization'];
+            // Tách token từ chuỗi Bearer
+            if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+                $receivedToken = $matches[1];
+            } else {
+                // Nếu header Authorization không đúng định dạng
+                $response = [
+                    'success' => false,
+                    'message' => 'Invalid Authorization header format'
+                ];
+                \Log::info('pay2s',$response);
+                exit();
+            }
+        } else {
+            // Nếu không có header Authorization
+            $response = [
+                'success' => false,
+                'message' => 'Authorization header not found'
+            ];
+            \Log::info('pay2s',$response);
+            exit();
+        }
+
+        if ($receivedToken !== $expectedToken) {
+            $response = [
+                'success' => false,
+                'message' => 'Invalid token'
+            ];
+            \Log::info('pay2s',$response);
+            exit();
+        }
+
+        $requestBody = file_get_contents('php://input');
+
+        $data = json_decode($requestBody, true);
+
+        if (json_last_error() === JSON_ERROR_NONE) {
+            \Log::info('pay2s',$data['transactions']);
+            if (isset($data['transactions']) && is_array($data['transactions'])) {
+                foreach ($data['transactions'] as $transaction) {
+                    $content = $transaction['content'];
+                    $reference_no = extractAndNormalizeTransactionCode($content);
+                    $this->request->merge(['reference_no' => $reference_no]);
+                    if ($transaction['transferType'] == "IN") {
+                        if ($this->request->client == null) {
+                            $this->request->client = (object)['token' => Config::get('constant')['token_default']];
+                        }
+                        $response = $this->fnbTransactionPackageService->getDetail($this->request);
+                        $data = $response->getData(true);
+                        $dtData = $data['dtData'] ?? [];
+                        $arr_object_id = [];
+                        $dtCustomer[] = [
+                            'name' => $dtData['data_customer']['fullname'],
+                            'object_id' => $dtData['customer_id'],
+                            'player_id' => null,
+                            'object_type' => 'customer',
+                        ];
+                        if (!empty($dtCustomer)){
+                            $arr_object_id = array_merge($arr_object_id, $dtCustomer);
+                        }
+                        $arr_object_id = array_values($arr_object_id);
+                        try {
+                            if (!empty($dtData)){
+                                $payment = $transaction['transferAmount'] ?? 0;
+                                if ($payment < $dtData['grand_total']){
+                                    $this->request->merge(['id' => $dtData['id']]);
+                                    $this->request->merge(['payment' => $payment]);
+                                    $this->request->merge(['payment_error' => 1]);
+                                    $this->fnbTransactionPackageService->updateTransaction($this->request);
+                                    $this->sendNotificationSocket([
+                                        'channels' => $arr_object_id,
+                                        'event' => 'check-payment',
+                                        'data' => [
+                                            'message' => 'Số tiền thanh toán đã thay đổi. Vui lòng liên hệ Admin để được hỗ trợ',
+                                            'payment_error' => true,
+                                            'data' => $dtData
+                                        ],
+                                        'db_name' => config('database.connections.mysql.database')
+                                    ], 'change-status');
+                                    $response = [
+                                        'success' => false,
+                                        'message' => 'Số tiền thanh toán đã thay đổi. Vui lòng liên hệ Admin để được hỗ trợ'
+                                    ];
+                                    return response()->json($response);
+                                }
+                                $this->request->merge(['id' => $dtData['id']]);
+                                $this->request->merge(['payment' => $payment]);
+                                $this->request->merge(['check_pay2s' => 1]);
+                                $this->request->merge(['staff_status' => Config::get('constant')['user_admin']]);
+                                $response = $this->fnbTransactionPackageService->changeStatus($this->request);
+                                $dataRes = $response->getData(true);
+                                $data = $dataRes['data'];
+                                $response = [
+                                    'result' => $data['message'] ?? true,
+                                    'message' => $data['message'] ?? null
+                                ];
+                                \Log::info('pay2s',$response);
+                            }
+                        } catch (\Exception $exception){
+                            $response = [
+                                'success' => false,
+                                'message' => $exception->getMessage()
+                            ];
+                            \Log::info('pay2s',$response);
+                        }
+                    }
+                }
+                $response = [
+                    'success' => true,
+                    'message' => 'Transactions processed successfully'
+                ];
+                \Log::info('pay2s',$response);
+                http_response_code(200);
+            } else {
+                // Phản hồi lỗi nếu không có 'transactions'
+                $response = [
+                    'success' => false,
+                    'message' => 'Invalid payload, transactions not found'
+                ];
+                \Log::info('pay2s',$response);
+                http_response_code(400);
+            }
+        } else {
+            // Phản hồi lỗi nếu JSON không hợp lệ
+            $response = [
+                'success' => false,
+                'message' => 'Invalid JSON'
+            ];
+            \Log::info('pay2s',$response);
+            http_response_code(400);
+        }
+        header('Content-Type: application/json');
+        echo json_encode($response);
     }
 
 }

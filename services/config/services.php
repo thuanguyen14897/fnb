@@ -34,4 +34,8 @@ return [
     'fnb_account' => [
         'base_url' => env('ACCOUNTS_API_URL', 'http://localhost:8883'),
     ],
+
+    'fnb_admin' => [
+        'base_url' => env('FNB_ADMIN_URL', 'http://localhost:8881'),
+    ],
 ];

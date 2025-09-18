@@ -12,7 +12,7 @@ trait RequestServiceTrait
 {
     public function sendRequestToService(string $method, string $url, Request $request, array $options = [])
     {
-        $token = $options['token'] ?? $request->user->token;
+        $token = $options['token'] ?? $request->user->token ?? Config::get('constant')['token_default'];
         $hasFile = $options['has_file'] ?? false;
 
         $http = Http::withHeaders([

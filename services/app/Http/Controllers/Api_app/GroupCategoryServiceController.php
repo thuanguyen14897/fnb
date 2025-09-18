@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api_app;
 use App\Http\Resources\Service;
 use App\Models\GroupCategoryService;
 use App\Models\PaymentMode;
+use App\Models\Province;
+use App\Models\Ward;
 use App\Traits\UploadFile;
+use App\Services\AdminService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -13,10 +16,12 @@ use Illuminate\Support\Facades\Validator;
 class GroupCategoryServiceController extends AuthController
 {
     use UploadFile;
-    public function __construct(Request $request)
+    public $fnbAdminService;
+    public function __construct(Request $request,AdminService $adminService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
+        $this->fnbAdminService = $adminService;
     }
 
     public function getListGroupCategory(){
@@ -136,14 +141,14 @@ class GroupCategoryServiceController extends AuthController
                 if (empty($id)){
                     $data['message'] = 'Thêm mới thành công';
                 } else {
-                    $data['message'] = 'Cập nhập thành công';
+                    $data['message'] = 'Cập nhật thành công';
                 }
             } else {
                 $data['result'] = false;
                 if (empty($id)){
                     $data['message'] = 'Thêm mới thất bại';
                 } else {
-                    $data['message'] = 'Cập nhập thất bại';
+                    $data['message'] = 'Cập nhật thất bại';
                 }
             }
             return response()->json($data);
@@ -218,6 +223,7 @@ class GroupCategoryServiceController extends AuthController
                 $q->where('name', 'like', "%$search%");
             });
         }
+        $query->orderBy('index','asc');
         $data = $query->limit($limit)->get();
         if (!empty($data)){
             foreach ($data as $key => $value){
@@ -243,16 +249,67 @@ class GroupCategoryServiceController extends AuthController
     public function getListDataHomePage(){
         $lat = !empty($this->request->input('lat')) ? $this->request->input('lat') : 0;
         $lon = !empty($this->request->input('lon')) ? $this->request->input('lon') : 0;
+
+        $customer_id = $this->request->client->id ?? 0;
+
+        $ward_id = $this->request->input('ward_id') ?? 0;
+        $province_id = $this->request->input('province_id') ?? 0;
+
+        $google_api_key = $this->fnbAdminService->get_option('google_api_key');
+
+        $checkWard = false;
+        $checkProvince = false;
+        if (empty($lat) && empty($lon)){
+            $dtWard = Ward::where('Id',$ward_id)->first();
+            if (!empty($dtWard)){
+                $lat = $dtWard->lat ?? 0;
+                $lon = $dtWard->lon ?? 0;
+                $checkWard = true;
+            } else {
+                $dtProvince = Province::where('Id',$province_id)->first();
+                if (!empty($dtProvince)){
+                    $lat = $dtProvince->lat ?? 0;
+                    $lon = $dtProvince->lon ?? 0;
+                    $checkProvince = true;
+                }
+            }
+        }
+
         $query = GroupCategoryService::where('id','!=',0);
-        $query->with(['service' => function ($q) use($lat,$lon) {
+        $query->with(['service' => function ($q) use($lat,$lon,$checkProvince,$checkWard,$province_id,$ward_id) {
             $q->select('*',DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),null) as distance"));
             $q->with('other_amenities');
             $q->with('favourite');
             $q->where('hot', 1);
-            $q->latest()->limit(5);
+            if (!empty($lat) && !empty($lon)){
+                $q->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),null)"),'!=',NULL);
+                $q->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),10000)"),
+                    '>=', 0);
+                $q->where(function ($inst) use ($lat,$lon,$ward_id,$province_id,$checkWard,$checkProvince){
+                    $inst->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),10000)"),
+                        '<=', 50);
+                    if (!empty($checkWard)) {
+                        $inst->orWhere('wards_id', $ward_id);
+                    }
+                    if(!empty($checkProvince)) {
+                        $inst->orWhere('province_id', $province_id);
+                    }
+                });
+            }
+            $q->limit(30);
         }]);
         $query->where('active',1);
         $data = $query->get();
+        $arrLatLng = $data->flatMap(function ($item) {
+            return $item->service->map(function ($it){
+                return [
+                    'lat' => $it->latitude,
+                    'lng' => $it->longitude,
+                    'service_id' => $it->id,
+                ];
+            });
+        })->toArray();
+        $distances = getDistancesToMultipleDestinations($lat, $lon, $arrLatLng, $google_api_key);
         if (!empty($data)){
             foreach ($data as $key => $value){
                 $dtIcon = !empty($value->icon) ? env('STORAGE_URL').'/'.$value->icon : null;
@@ -263,8 +320,15 @@ class GroupCategoryServiceController extends AuthController
                 $data[$key]['background'] = $background;
                 $service = $value->service;
                 unset($value->service);
-                $service = $service->map(function ($item){
+                $service = $service->map(function ($item) use ($distances,$lat,$lon,$customer_id){
+                    $duration_text = $item->distance > 0 ? round(($item->distance / 40) * 60) : 0;
+                    $dtDataInstance = $distances[$item->id] ?? [];
+                    $item->distance = $customer_id == 22 ? ['distance_km' => $item->distance,'duration_text' => $duration_text] : $dtDataInstance;
                     $item->homepage = true;
+                    $item->location_address = [
+                        'lat' => $lat,
+                        'lon' => $lon,
+                    ];
                     return $item;
                 });
                 $value->list_service = Service::collection($service);

@@ -14,5 +14,6 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         'webhook/webhookAlepay',
         'webhook/webhookStripe',
+        'cron/webhookPay2s',
     ];
 }

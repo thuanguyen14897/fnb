@@ -35,7 +35,7 @@ class TransactionController extends Controller
     }
 
     public function get_list(){
-        if (!has_permission('transaction','view')) {
+        if (!has_permission('transaction','view') && !has_permission('transaction', 'viewown')) {
             access_denied();
         }
         $title = lang('dt_transaction');
@@ -46,11 +46,16 @@ class TransactionController extends Controller
 
     public function getList()
     {
-        if (!has_permission('transaction', 'view')) {
+        if (!has_permission('transaction', 'view') && !has_permission('transaction', 'viewown')) {
             $data['result'] = false;
             $data['message'] = lang('Không có quyền xem!');
             $data['data'] = [];
             return response()->json($data);
+        }
+        if (!has_permission('transaction','view') && has_permission('transaction','viewown')) {
+            $user_ids = getUserIdByRole();
+            $this->request->merge(['ares_permission' => 1]);
+            $this->request->merge(['user_id' => $user_ids ? array_unique($user_ids) : [get_staff_user_id()]]);
         }
         $response = $this->fnbTransactionService->getList($this->request);
         $data = $response->getData(true);
@@ -95,6 +100,23 @@ class TransactionController extends Controller
             })
             ->editColumn('date_end', function ($dtData) {
                 return '<div>'.(!empty($dtData['date_end']) ? _dt_new($dtData['date_end'],false) : '').'</div>';
+            })
+            ->editColumn('info', function ($dtData) {
+                $day = date_range(_dthuan($dtData['date_start']), _dthuan($dtData['date_end']));
+                $day = count($day);
+                $countServiceAgree = collect($dtData['transaction_day_item'])->where('status','=',1)->count();
+                $countService = collect($dtData['transaction_day_item'])->count();
+                return '<div>
+                    <div>
+                    <img src="admin/assets/images/day.png" style="width: 20px;height:20px;margin-right: 5px">
+                    <b>'.$day.'</b> ngày</div>
+                    <div>
+                     <img src="admin/assets/images/location.png" style="width: 20px;height:20px;margin-right: 5px">
+                     <b>'.$countService.'</b> điểm đến</div>
+                    <div style="color:#FF5A1F">
+                     <img src="admin/assets/images/location.png" style="width: 20px;height:20px;margin-right: 5px">
+                    <b>'.$countServiceAgree.'</b> điểm đã xác nhận</div>
+                </div>';
             })
             ->editColumn('status', function ($transaction) {
                 $optionStatus = '<div class="btn-group">
@@ -146,7 +168,7 @@ class TransactionController extends Controller
                 return '<div style="display: flex;align-items: center;flex-wrap: wrap">' . loadImageAvatar($url,
                         '40px') . '<div>'.(!empty($customer['fullname']) ? $customer['fullname'] : '') . '</div></div><div style="color:#337ab7">'.(!empty($customer['phone']) ? $customer['phone'] : 'Chưa có sdt').'</div>';
             })
-            ->rawColumns(['options', 'reference_no', 'date', 'date_start','id','date_end','user_id','status','customer'])
+            ->rawColumns(['options', 'reference_no', 'date', 'date_start','id','date_end','user_id','status','customer','info'])
             ->setTotalRecords($data['recordsTotal'])
             ->setFilteredRecords($data['recordsFiltered'])
             ->with([
@@ -232,26 +254,21 @@ class TransactionController extends Controller
         return response()->json($data);
     }
 
-    public function active($id = 0){
-        if (!has_permission('service', 'edit')) {
-            $data['result'] = false;
-            $data['message'] = lang('dt_access');
-            return response()->json($data);
-        }
-        $this->request->merge(['id' => $id]);
-        $response = $this->fnbService->active($this->request);
-        $dataRes = $response->getData(true);
-        $data = $dataRes['data'];
-        return response()->json($data);
-    }
-
     public function countAll(){
+        if (!has_permission('transaction','view') && has_permission('transaction','viewown')) {
+            $user_ids = getUserIdByRole();
+            $this->request->merge(['ares_permission' => 1]);
+            $this->request->merge(['user_id' => $user_ids ? array_unique($user_ids) : [get_staff_user_id()]]);
+        }
         $response = $this->fnbTransactionService->countAll($this->request);
         $data = $response->getData(true);
         return response()->json($data);
     }
 
     public function view($id = 0){
+        if (!has_permission('transaction','view') && !has_permission('transaction', 'viewown')) {
+            access_denied(true, lang('dt_access'));
+        }
         $title = lang('dt_view_transaction');
         $this->request->merge(['id' => $id]);
         $response = $this->fnbTransactionService->getListDetailTransaction($this->request);
@@ -264,5 +281,39 @@ class TransactionController extends Controller
             'title' => $title,
             'dtData' => $dtData['data'] ?? [],
         ]);
+    }
+
+    public function changeStatus(){
+        if (!has_permission('transaction','approve')){
+            $data['result'] = false;
+            $data['message'] = lang('dt_access');
+            return response()->json($data);
+        }
+        $transaction_id = $this->request->input('transaction_id') ?? 0;
+        $status = $this->request->input('status') ?? 0;
+        $this->request->merge(['status' => $status]);
+        $this->request->merge(['staff_status' => Config::get('constant')['user_admin']]);
+        $this->request->merge(['transaction_id' => $transaction_id]);
+        $responseUpdate =  $this->fnbTransactionService->changeStatus($this->request);
+        $dtUpdate = $responseUpdate->getData(true);
+        $data = $dtUpdate['data'] ?? [];
+        return response()->json($data);
+    }
+
+    public function changeStatusItem(){
+        if (!has_permission('transaction','approve')){
+            $data['result'] = false;
+            $data['message'] = lang('dt_access');
+            return response()->json($data);
+        }
+        $transaction_id = $this->request->input('transaction_id') ?? 0;
+        $status = $this->request->input('status') ?? 0;
+        $this->request->merge(['status' => $status]);
+        $this->request->merge(['staff_status' => Config::get('constant')['user_admin']]);
+        $this->request->merge(['transaction_id' => $transaction_id]);
+        $responseUpdate =  $this->fnbTransactionService->changeStatusItem($this->request);
+        $dtUpdate = $responseUpdate->getData(true);
+        $data = $dtUpdate['data'] ?? [];
+        return response()->json($data);
     }
 }

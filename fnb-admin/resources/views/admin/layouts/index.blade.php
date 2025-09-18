@@ -289,6 +289,92 @@
 </script>
 {{--ckeditor--}}
 <script src="admin/ckeditor/ckeditor.js"></script>
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+<script>
+    let socket = null;
+    async function login_socket() {
+        try {
+            const response = await $.ajax({
+                type: "POST",
+                url: 'admin/socket/login_socket',
+                data: {
+                    user_id: '{{ get_staff_user_id() }}',
+                    user_name: '{{ get_staff_full_name() }}',
+                    db_name: '{{ config('database.connections.mysql.database') }}'
+                },
+                dataType: "json"
+            });
+
+            if (response.data && response.data.success) {
+                localStorage.setItem('tokenSocket', response.data.token);
+                return response.data.token;
+            } else {
+                throw new Error('Login socket không thành công');
+            }
+        } catch (error) {
+            console.error('Lỗi login_socket:', error);
+            throw error;
+        }
+    }
+
+    async function connect_socket() {
+        try {
+            let tokenSocket = localStorage.getItem('tokenSocket');
+            if (!tokenSocket || tokenSocket === 'undefined' || tokenSocket === 'null') {
+                tokenSocket = await login_socket();
+            }
+
+            if (!tokenSocket) {
+                throw new Error('Không có token để kết nối socket');
+            }
+
+            return new Promise((resolve, reject) => {
+                socket = io('<?= get_option('url_socket') ?>', {
+                    extraHeaders: {
+                        'auth': tokenSocket
+                    }
+                });
+
+                socket.on('connect', () => {
+                    console.log('Connected to server as socket:', socket.id);
+                    socket.emit('connectedData', {
+                        user_id: '{{ get_staff_user_id() }}',
+                        user_name: '{{ get_staff_full_name() }}',
+                        db_name: '{{ config('database.connections.mysql.database') }}'
+                    });
+                    resolve(socket);
+                });
+
+                socket.on('connect_error', (err) => {
+                    console.error('Socket connection error:', err);
+                    reject(err);
+                });
+            });
+        } catch (error) {
+            console.error('Lỗi connect_socket:', error);
+            throw error;
+        }
+    }
+
+    async function getSocket() {
+        if (socket && socket.connected) {
+            return socket;
+        }
+        return await connect_socket();
+    }
+    (async () => {
+        const socket = await getSocket();
+        socket.on('test_socket', (data) => {
+            console.log('Data test_socket:', data);
+        });
+        socket.on('change-status', (data) => {
+            console.log('Data change-status:', data);
+        });
+        socket.on('check-payment', (data) => {
+            console.log('Data payment:', data);
+        });
+    })();
+</script>
 <script>
     $( function() {
         $( "#draggable-call" ).draggable();
@@ -299,17 +385,14 @@
     var notificationsCount = parseInt(notificationsCountElem.data('count'));
     var notifications = notificationsWrapper.find('div.div-data-noti');
 
-    function dataTest(data){
+    socket.on('notification', function (data) {
         var classes = '';
         var href = '';
         json_data = JSON.parse(data.json_data);
         if (json_data.object != undefined) {
             if (json_data.object == 'transaction') {
                 classes = 'dt-modal';
-                href = `href=admin/transaction/view/${data.object_id}?type=${json_data.type}`;
-            } else if(json_data.object == 'transaction_driver') {
-                classes = 'dt-modal';
-                href = `href=admin/transaction_driver/view/${data.object_id}?type=${json_data.type}`;
+                href = `href=admin/transaction/view/${data.object_id}`;
             }
         }
         var existingNotifications = notifications.html();
@@ -349,7 +432,7 @@
                 };
             }
         }
-    }
+    });
 
     //end
     pageNoti = 1;
@@ -470,6 +553,9 @@
             };
         }
     }
+    @if(session('toast'))
+    alert_float("{{ session('toast.type') }}", "{{ session('toast.message') }}");
+    @endif
 </script>
 @yield('script')
 </body>

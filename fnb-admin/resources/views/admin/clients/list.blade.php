@@ -19,6 +19,13 @@
             <div class="card-box table-responsive">
                 <div class="row m-b-10">
                     <div class="col-md-2">
+                        <label for="package_search">Gói thành viên</label>
+                        <select class="package_search select2" id="package_search"
+                                data-placeholder="Chọn ..." name="package_search">
+                            <option></option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <label for="active_search">{{lang('c_active_client')}}</label>
                         <select class="active_search select2" id="active_search"
                                 data-placeholder="Chọn ..." name="active_search">
@@ -58,6 +65,7 @@
                         <th class="text-center">{{lang('c_ranking_date')}}</th>
                         <th class="text-center">{{lang('c_invoice_limit')}}</th>
                         <th class="text-center">{{lang('dt_date_created_customer')}}</th>
+                        <th class="text-center">{{lang('Ngày hết hạn sử dụng')}}</th>
                         <th class="text-center">{{lang('c_ares')}}</th>
                         <th class="text-center">{{lang('Mã giới thiệu')}}</th>
                         <th class="text-center">{{lang('c_active_client')}}</th>
@@ -79,11 +87,13 @@
             'active_search' : '#active_search',
             'date_search' : '#date_search',
             'ares_search' : '#ares_search',
+            'package_search' : '#package_search',
         };
         $('.H-search').click(function() {
             $('input[name="type_client_search"]').val($(this).find('a').attr('data-id')).trigger('change');
         })
         $(function() {
+            searchAjaxSelect2('#package_search', 'admin/category/searchPackage',0,{type:1})
             search_daterangepicker('date_search');
             oTable = InitDataTable('#table_client', 'admin/clients/getListCustomer', {
                 'order': [
@@ -121,6 +131,7 @@
                     {data: 'ranking_date', name: 'ranking_date', orderable: false},
                     {data: 'invoice_limit', name: 'invoice_limit', orderable: false},
                     {data: 'created_at', name: 'created_at'},
+                    {data: 'date_active', name: 'date_active'},
                     {data: 'ares', name: 'ares', orderable: false, searchable: false},
                     {data: 'referral_code', name: 'referral_code',width: "110px",},
                     {

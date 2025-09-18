@@ -36,7 +36,7 @@ class ServiceController extends Controller
     }
 
     public function get_list(){
-        if (!has_permission('service','view')) {
+        if (!has_permission('service','view') && !has_permission('service','viewown')) {
             access_denied();
         }
         $title = lang('dt_service_list');
@@ -55,6 +55,12 @@ class ServiceController extends Controller
             $responseCustomer = $this->fnbCustomerService->getListData($this->requestCustomer);
             $dataCustomer = $responseCustomer->getData(true);
             $customer_search_value = array_merge($customer_search_value, array_column($dataCustomer['data'], 'id'));
+        }
+
+        if (!has_permission('service','view') && has_permission('service','viewown')) {
+            $user_ids = getUserIdByRole();
+            $this->request->merge(['ares_permission' => 1]);
+            $this->request->merge(['user_id' => $user_ids ? array_unique($user_ids) : [get_staff_user_id()]]);
         }
         $this->request->merge(['customer_search_value' => array_unique($customer_search_value)]);
         $response = $this->fnbService->getList($this->request);
@@ -272,17 +278,30 @@ class ServiceController extends Controller
 
     public function view($id = 0)
     {
-        if (!has_permission('service', 'view')) {
+        $checkPermission = true;
+        if (!has_permission('service', 'view') && !has_permission('service', 'viewown')) {
             access_denied();
         }
         //đếm giao dịch
         $this->requestTransaction = clone $this->request;
         //end
 
+        if (!has_permission('service','view') && has_permission('service','viewown')) {
+            $checkPermission = false;
+            $user_ids = getUserIdByRole();
+            $this->request->merge(['ares_permission' => 1]);
+            $this->request->merge(['user_id' => $user_ids ? array_unique($user_ids) : [get_staff_user_id()]]);
+        }
+
         $this->request->merge(['id' => $id]);
         $response = $this->fnbService->getDetail($this->request);
         $data = $response->getData(true);
         $dtData = $data['dtData'] ?? [];
+        if (empty($checkPermission)) {
+            if (empty($dtData)) {
+                access_denied();
+            }
+        }
         $this->request->merge(['customer_id' => [$dtData['customer_id'] ?? [0]]]);
         $responseCustomer = $this->fnbCustomerService->getListData($this->request);
         $dataCustomer = $responseCustomer->getData(true);

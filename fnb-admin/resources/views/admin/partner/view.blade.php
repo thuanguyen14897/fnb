@@ -105,8 +105,8 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card-box">
-                                <div class="title_business">
-                                    <h5 class="text-muted text-uppercase m-t-0 m-b-20" style="color: black"><b>Thông tin người đại diện</b></h5>
+                                <div class="title_business" style="justify-content:flex-end">
+                                    <h5 class="text-muted text-uppercase m-t-0 m-b-20 hide" style="color: black"><b>Thông tin người đại diện</b></h5>
                                     <div class="edit_business edit_button">Chỉnh sửa <i style="margin-left: 5px"
                                                                                         class="fa fa-pencil"></i></div>
                                 </div>
@@ -114,144 +114,244 @@
                                       action="admin/partner/detailRepresentativePartner/{{$client['id']}}" method="post">
                                     <div class="row">
                                         <div class="result_business">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <input type="hidden" name="id"
-                                                           class="id"
-                                                           value="{{!empty($client['representative']) ? $client['representative']['id'] : 0}}">
-                                                    <label
-                                                        for="name_representative">Người đại diện </label>
-                                                    <input type="text" name="name_representative" autocomplete="off"
-                                                           readonly
-                                                           value="{{!empty($client['representative']) ? $client['representative']['name'] : ''}}"
-                                                           class="form-control name_representative">
-                                                </div>
-                                                <div class="row">
+                                            <ul class="nav nav-tabs" id="tab_partner">
+                                                <li class="active">
+                                                    <a href="#info_representative" data-toggle="tab" aria-expanded="false">
+                                                        <span class="visible-xs">Thông tin người đại diện</span>
+                                                        <span class="hidden-xs">Thông tin người đại diện</span>
+                                                    </a>
+                                                </li>
+                                                <li class="">
+                                                    <a href="#info_bank" data-toggle="tab" aria-expanded="false">
+                                                        <span class="visible-xs">Thông tin ngân hàng</span>
+                                                        <span class="hidden-xs">Thông tin ngân hàng</span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                            <div class="tab-content">
+                                                <div class="tab-pane active" id="info_representative">
                                                     <div class="col-md-6">
                                                         <div class="form-group">
-                                                            <label for="email_representative">Email</label>
-                                                            <input type="text" name="email_representative" autocomplete="off"
-                                                                   value="{{!empty($client['representative']) ? $client['representative']['email'] : ''}}"
-                                                                   readonly
-                                                                   class="form-control email_representative">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label
-                                                                for="birthday_representative">Ngày tháng năm sinh</label>
-                                                            <input type="text" name="birthday_representative" autocomplete="off"
-                                                                   value="{{!empty($client['representative']) ? (!empty($client['representative']['birthday']) ? _dthuan($client['representative']['birthday']) : '') : ''}}"
-                                                                   readonly
-                                                                   class="form-control birthday_representative datepicker">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label for="phone_representative">Số điện thoại</label>
-                                                            <input type="text" name="phone_representative" autocomplete="off"
-                                                                   value="{{!empty($client['representative']) ? $client['representative']['phone'] : ''}}"
-                                                                   readonly
-                                                                   class="form-control phone_representative">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label
-                                                                for="mst_representative">Mã số thuế</label>
-                                                            <input type="text" name="mst_representative" autocomplete="off"
-                                                                   value="{{!empty($client['representative']) ? $client['representative']['mst'] : ''}}"
-                                                                   readonly
-                                                                   class="form-control mst_representative">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label
-                                                        for="number_cccd_representative">Số CCCD </label>
-                                                    <input type="text" name="number_cccd_representative" autocomplete="off"
-                                                           readonly
-                                                           value="{{!empty($client['representative']) ? $client['representative']['number_cccd'] : ''}}"
-                                                           class="form-control number_cccd_representative">
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label for="date_cccd_representative">Ngày cấp</label>
-                                                            <input type="text" name="date_cccd_representative" autocomplete="off"
-                                                                   value="{{!empty($client['representative']) ? (!empty($client['representative']['date_cccd']) ? _dthuan($client['representative']['date_cccd']): '') : ''}}"
-                                                                   readonly
-                                                                   class="form-control date_cccd_representative datepicker">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label
-                                                                for="date_end_cccd_representative">Ngày hết hạn</label>
-                                                            <input type="text" name="date_end_cccd_representative" autocomplete="off"
-                                                                   value="{{!empty($client['representative']) ? (!empty($client['representative']['date_end_cccd']) ? _dthuan($client['representative']['date_end_cccd']): '') : ''}}"
-                                                                   readonly
-                                                                   class="form-control date_end_cccd_representative datepicker">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label
-                                                        for="issued_cccd_representative">Nơi cấp CCCD </label>
-                                                    <input type="text" name="issued_cccd_representative" autocomplete="off"
-                                                           readonly
-                                                           value="{{!empty($client['representative']) ? $client['representative']['issued_cccd'] : ''}}"
-                                                           class="form-control issued_cccd_representative">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label
-                                                        for="type_representative">Loại hình kinh doanh</label>
-                                                    <select class="form-control type_representative select2" name="type_representative">
-                                                        @foreach(getListTypeBusiness() as $key => $value)
-                                                            <option {{!empty($client['representative']) ? ($client['representative']['type'] == $value['id'] ? 'selected' : '') : ''}} value="{{$value['id']}}">{{$value['name']}}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="image_cccd">Hình CCCD</label>
-                                                    <input type="file" name="image_cccd[]" multiple
-                                                           id="image_business"
-                                                           class="filestyle image_cccd">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="image_kd">Hình giấp phép kinh doanh</label>
-                                                    <input type="file" name="image_kd[]" multiple
-                                                           id="image_kd"
-                                                           class="filestyle image_kd">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group div_image">
-                                                    <label
-                                                        for="client_business_image">{{lang('Hình ảnh CCCD')}}</label>
-                                                    <div class="row">
-                                                        @if(!empty($client['image_cccd']))
-                                                            @foreach($client['image_cccd'] as $key => $value)
-                                                                <div class="col-md-6">
-                                                                    {!! loadImage($value['image_new'],'350px','img-rounded',$value['image'],true,'image_cccd_old','200px') !!}
+                                                            <label for="image">Hình ảnh thương hiệu</label>
+                                                            <input type="file" name="image_avatar" id="image_avatar" class="filestyle image_avatar"
+                                                                   data-buttonbefore="true">
+                                                            @if(!empty($client['representative']) && $client['representative']['image'] != null)
+                                                                <div style="display: flex;justify-content:center;margin-top: 5px"
+                                                                     class="show_image">
+                                                                    <img src="{{$client['representative']['image']}}" alt="image"
+                                                                         class="img-responsive img-circle"
+                                                                         style="width: 150px;height: 150px">
                                                                 </div>
-                                                            @endforeach
-                                                        @endif
+                                                            @else
+                                                                <div style="display: flex;justify-content:center;margin-top: 5px"
+                                                                     class="show_image">
+                                                                    <img src="admin/assets/images/users/avatar-1.jpg" alt="image"
+                                                                         class="img-responsive img-circle"
+                                                                         style="width: 70px;height: 70px">
+
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <input type="hidden" name="id"
+                                                                   class="id"
+                                                                   value="{{!empty($client['representative']) ? $client['representative']['id'] : 0}}">
+                                                            <label
+                                                                for="name_representative">Người đại diện </label>
+                                                            <input type="text" name="name_representative" autocomplete="off"
+                                                                   readonly
+                                                                   value="{{!empty($client['representative']) ? $client['representative']['name'] : ''}}"
+                                                                   class="form-control name_representative">
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label for="email_representative">Email</label>
+                                                                    <input type="text" name="email_representative" autocomplete="off"
+                                                                           value="{{!empty($client['representative']) ? $client['representative']['email'] : ''}}"
+                                                                           readonly
+                                                                           class="form-control email_representative">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label
+                                                                        for="birthday_representative">Ngày tháng năm sinh</label>
+                                                                    <input type="text" name="birthday_representative" autocomplete="off"
+                                                                           value="{{!empty($client['representative']) ? (!empty($client['representative']['birthday']) ? _dthuan($client['representative']['birthday']) : '') : ''}}"
+                                                                           readonly
+                                                                           class="form-control birthday_representative datepicker">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label for="phone_representative">Số điện thoại</label>
+                                                                    <input type="text" name="phone_representative" autocomplete="off"
+                                                                           value="{{!empty($client['representative']) ? $client['representative']['phone'] : ''}}"
+                                                                           readonly
+                                                                           class="form-control phone_representative">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label
+                                                                        for="mst_representative">Mã số thuế</label>
+                                                                    <input type="text" name="mst_representative" autocomplete="off"
+                                                                           value="{{!empty($client['representative']) ? $client['representative']['mst'] : ''}}"
+                                                                           readonly
+                                                                           class="form-control mst_representative">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label
+                                                                for="number_cccd_representative">Số CCCD </label>
+                                                            <input type="text" name="number_cccd_representative" autocomplete="off"
+                                                                   readonly
+                                                                   value="{{!empty($client['representative']) ? $client['representative']['number_cccd'] : ''}}"
+                                                                   class="form-control number_cccd_representative">
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label for="date_cccd_representative">Ngày cấp</label>
+                                                                    <input type="text" name="date_cccd_representative" autocomplete="off"
+                                                                           value="{{!empty($client['representative']) ? (!empty($client['representative']['date_cccd']) ? _dthuan($client['representative']['date_cccd']): '') : ''}}"
+                                                                           readonly
+                                                                           class="form-control date_cccd_representative datepicker">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label
+                                                                        for="date_end_cccd_representative">Ngày hết hạn</label>
+                                                                    <input type="text" name="date_end_cccd_representative" autocomplete="off"
+                                                                           value="{{!empty($client['representative']) ? (!empty($client['representative']['date_end_cccd']) ? _dthuan($client['representative']['date_end_cccd']): '') : ''}}"
+                                                                           readonly
+                                                                           class="form-control date_end_cccd_representative datepicker">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label
+                                                                for="issued_cccd_representative">Nơi cấp CCCD </label>
+                                                            <input type="text" name="issued_cccd_representative" autocomplete="off"
+                                                                   readonly
+                                                                   value="{{!empty($client['representative']) ? $client['representative']['issued_cccd'] : ''}}"
+                                                                   class="form-control issued_cccd_representative">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label
+                                                                for="type_representative">Loại hình kinh doanh</label>
+                                                            <select class="form-control type_representative select2" name="type_representative">
+                                                                @foreach(getListTypeBusiness() as $key => $value)
+                                                                    <option {{!empty($client['representative']) ? ($client['representative']['type'] == $value['id'] ? 'selected' : '') : ''}} value="{{$value['id']}}">{{$value['name']}}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="image_cccd">Hình CCCD mặt trước</label>
+                                                            <input type="file" name="image_cccd_before"
+                                                                   id="image_cccd_before"
+                                                                   class="filestyle image_cccd_before">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="image_cccd">Hình CCCD mặt sau</label>
+                                                            <input type="file" name="image_cccd_after"
+                                                                   id="image_cccd_after"
+                                                                   class="filestyle image_cccd_after">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="image_kd">Hình giấp phép kinh doanh</label>
+                                                            <input type="file" name="image_kd[]" multiple
+                                                                   id="image_kd"
+                                                                   class="filestyle image_kd">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group div_image">
+                                                            <label
+                                                                for="client_business_image">{{lang('Hình ảnh CCCD')}}</label>
+                                                            <div class="row">
+                                                                @if(!empty($client['image_cccd']))
+                                                                    @foreach($client['image_cccd'] as $key => $value)
+                                                                        <div class="col-md-6">
+                                                                            {!! loadImage($value['image_new'],'350px','img-rounded',$value['image'],false,'image_cccd_old','200px') !!}
+                                                                        </div>
+                                                                    @endforeach
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group div_image">
+                                                            <label
+                                                                for="client_business_image">{{lang('Hình ảnh giấy phép')}}</label>
+                                                            <div class="row">
+                                                                @if(!empty($client['image_kd']))
+                                                                    @foreach($client['image_kd'] as $key => $value)
+                                                                        <div class="col-md-4">
+                                                                            {!! loadImage($value['image_new'],'200px','img-rounded',$value['image'],true,'image_kd_old','300px') !!}
+                                                                        </div>
+                                                                    @endforeach
+                                                                @endif
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="form-group div_image">
-                                                    <label
-                                                        for="client_business_image">{{lang('Hình ảnh giấy phép')}}</label>
-                                                    <div class="row">
-                                                        @if(!empty($client['image_kd']))
-                                                            @foreach($client['image_kd'] as $key => $value)
-                                                                <div class="col-md-4">
-                                                                    {!! loadImage($value['image_new'],'200px','img-rounded',$value['image'],true,'image_kd_old','300px') !!}
+                                                <div class="tab-pane" id="info_bank">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="account_image">Hình ảnh QR code</label>
+                                                            <input type="file" name="account_image" id="account_image" class="filestyle account_image"
+                                                                   data-buttonbefore="true">
+                                                            @if(!empty($client['representative']) && $client['representative']['account_image'] != null)
+                                                                <div style="display: flex;justify-content:center;margin-top: 5px"
+                                                                     class="show_image">
+                                                                    <a href="{{$client['representative']['account_image']}}" data-lightbox="customer-profile"
+                                                                       class="display-block mbot5 pull-left">
+                                                                        <img src="{{$client['representative']['account_image']}}" alt="image"
+                                                                             class="img-responsive img-circle"
+                                                                             style="width: 150px;height: 150px">
+                                                                    </a>
                                                                 </div>
-                                                            @endforeach
-                                                        @endif
+                                                            @else
+                                                                <div style="display: flex;justify-content:center;margin-top: 5px"
+                                                                     class="show_image">
+                                                                    <img src="admin/assets/images/users/avatar-1.jpg" alt="image"
+                                                                         class="img-responsive img-circle"
+                                                                         style="width: 70px;height: 70px">
+
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <input type="hidden" name="id"
+                                                                   class="id"
+                                                                   value="{{!empty($client['representative']) ? $client['representative']['id'] : 0}}">
+                                                            <label
+                                                                for="account_bank_representative">Tên ngân hàng</label>
+                                                            <input type="text" name="account_bank_representative" autocomplete="off"
+                                                                   readonly
+                                                                   value="{{!empty($client['representative']) ? $client['representative']['account_bank'] : ''}}"
+                                                                   class="form-control account_bank_representative">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label
+                                                                for="account_number_representative">Số tài khoản</label>
+                                                            <input type="text" name="account_number_representative" autocomplete="off"
+                                                                   readonly
+                                                                   value="{{!empty($client['representative']) ? $client['representative']['account_number'] : ''}}"
+                                                                   class="form-control account_number_representative">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label
+                                                                for="account_name_representative">Tên người hưởng thụ </label>
+                                                            <input type="text" name="account_name_representative" autocomplete="off"
+                                                                   readonly
+                                                                   value="{{!empty($client['representative']) ? $client['representative']['account_name'] : ''}}"
+                                                                   class="form-control account_name_representative">
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

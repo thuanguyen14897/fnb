@@ -583,6 +583,10 @@ $arrayList = [
     'dt_delete_partner' => 'Xóa đối tác',
     'dt_view_partner' => 'Chi tiết đối tác',
     'viewown' => 'Xem riêng',
+    'dt_transaction_bill' => 'Hóa đơn',
+    'dt_delete_transaction_bill' => 'Xóa hóa đơn',
+    'dt_code_transaction_bill' => 'Mã hóa đơn',
+    'dt_view_transaction_bill' => 'Xem hóa đơn',
 ];
 
 $array_c_message = include resource_path('lang/vn/c_message.php');

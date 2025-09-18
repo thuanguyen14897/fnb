@@ -113,6 +113,14 @@
                                                 <label for="active2"> Khoá </label>
                                             </div>
                                         </div>
+                                        <div class="form-group">
+                                            <label for="membership_level">{{lang('Hạng thành viên')}}</label>
+                                            <select class="form-control" name="membership_level" id="membership_level"  style="width: 100%;height: 35px">
+                                                @if(!empty($client['membership_level']))
+                                                    <option value="{{$client['membership_level']['id']}}">{{$client['membership_level']['name'] ?? ''}}</option>
+                                                @endif
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="col-md-6">
@@ -238,7 +246,7 @@
 
         var provinceNow = $('#province_id').val();
         $(document).ready(function(){
-
+            searchAjaxSelect2('#membership_level', 'admin/category/getListMemberShip')
             searchAjaxSelect2('#province_id','api/category/getListProvince', 0,{
                 'select2':true
             })

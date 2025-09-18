@@ -77,10 +77,11 @@ class UserController extends Controller
         return Datatables::of($user)
             ->addColumn('options', function ($user) {
                 $edit = "<a href='admin/user/detail/$user->id'><i class='fa fa-pencil'></i> " . lang('dt_edit_user') . "</a>";
+                $view_user_parent = "<a class='dt-modal' href='admin/user/view_user_parent/$user->id'><i class='fa fa-eye'></i> " . lang('Xem NV cấp trên/dưới') . "</a>";
                 $delete = '<a type="button" class="po-delete" data-container="body" data-html="true" data-toggle="popover" data-placement="left" data-content="
-                <button href=\'admin/user/delete/'.$user->id.'\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
-                <button class=\'btn btn-default po-close\'>' . lang('dt_close') . '</button>
-            "><i class="fa fa-remove width-icon-actions"></i> ' . lang('dt_delete_user') .'</a>';
+                    <button href=\'admin/user/delete/'.$user->id.'\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
+                    <button class=\'btn btn-default po-close\'>' . lang('dt_close') . '</button>
+                "><i class="fa fa-remove width-icon-actions"></i> ' . lang('dt_delete_user') .'</a>';
                 $user->id == Config::get('constant')['user_admin'] ? ($delete = '') : $delete;
                 $options = ' <div class="dropdown text-center">
                             <button class="btn btn-default dropdown-toggle nav-link" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
@@ -88,6 +89,7 @@ class UserController extends Controller
                             <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu pull-left" role="menu" aria-labelledby="dropdownMenu1">
+                                <li style="cursor: pointer">'.$view_user_parent.'</li>
                                 <li style="cursor: pointer">'.$edit.'</li>
                                 <li style="cursor: pointer">'.$delete.'</li>
                             </ul>
@@ -126,16 +128,20 @@ class UserController extends Controller
                         $data_ares = $this->fnbAres->getDetail($this->request, $value->id_ares);
                         $_ares = $data_ares->getData(true);
                         if(!empty($_ares['result'])){
-                            $str .= "<div class='label label-success'>". ($_ares['dtData']['name'] ?? '')."</div>".' ';
+                            $str .= "<div class='label label-success' style='margin-bottom: 5px;margin-right: 5px'>". ($_ares['dtData']['name'] ?? '')."</div>".' ';
                         }
                     }
                 }
-                return $str;
+                return '<div style="display: flex;flex-wrap: wrap">'.$str.'</div>';
             })
             ->editColumn('active', function ($user) {
                 $classes = $user->active == 1 ? "btn-info" : "btn-danger";
                 $content = $user->active == 1 ? "Hoạt động" : "Khoá";
                 $str = "<a class='dt-update text-center btn btn-xs $classes' href='admin/user/active/$user->id'>$content</a>";
+                return $str;
+            })
+            ->editColumn('code', function ($user) {
+                $str = "<a target='_blank' href='admin/user/detail/$user->id'>$user->code</a>";
                 return $str;
             })
             ->editColumn('image', function ($user) {
@@ -152,7 +158,7 @@ class UserController extends Controller
             })
             ->removeColumn('created_at')
             ->removeColumn('updated_at')
-            ->rawColumns(['options', 'department','role','active','image','service_support','priority','ares'])
+            ->rawColumns(['options', 'department','role','active','image','service_support','priority','ares','code'])
             ->make(true);
     }
 
@@ -783,5 +789,131 @@ class UserController extends Controller
 //            $data['message'] = 'Import thất bại: ' . $e->getMessage();
 //            return response()->json($data);
 //        }
+    }
+
+    public function view_user_parent($id){
+        if (!has_permission('user','view')){
+            access_denied();
+        }
+        $title = lang('Xem nhân viên cấp trên/dưới');
+        $user = User::with(['role','department'])->find($id);
+        $str = '';
+        if (count($user->role) > 0) {
+            foreach ($user->role as $key => $value) {
+                $str .= $value->name.', ';
+            }
+            $str = trim($str, ', ');
+        }
+        $user->str_role = $str;
+        $strDepartment = '';
+        if (count($user->department) > 0) {
+            foreach ($user->department as $key => $value) {
+                $strDepartment .= $value->name.', ';
+            }
+            $strDepartment = trim($strDepartment, ', ');
+        }
+        $user->str_department = $strDepartment;
+        return view('admin.user.view_user_parent',[
+            'id' => $id,
+            'title' => $title,
+            'user' => $user,
+        ]);
+    }
+
+    public function getUserParent($id){
+        $user_ids = getUserIdByRoleParent([],$id);
+        $user = User::with(['role','department'])->whereIn('id',$user_ids);
+        return Datatables::of($user)
+            ->addColumn('role', function ($user) {
+                $str = '';
+                if (count($user->role) > 0) {
+                    foreach ($user->role as $key => $value) {
+                        $str .= $value->name.', ';
+                    }
+                    $str = trim($str, ', ');
+                }
+
+                return $str;
+            })
+            ->editColumn('code', function ($user) {
+                $str = "<a target='_blank' href='admin/user/detail/$user->id'>$user->code</a>";
+                return $str;
+            })
+            ->editColumn('image', function ($user) {
+                $dtImage = !empty($user->image) ? asset('storage/'.$user->image) : 'admin/assets/images/users/avatar-1.jpg';
+                $str = '<div style="display: flex;justify-content:center;margin-top: 5px"
+                     class="show_image">
+                    <img src="'.$dtImage.'" alt="image"
+                         class="img-responsive img-circle"
+                         style="width: 50px;height: 50px">
+
+                </div>';
+                return $str;
+            })
+            ->addColumn('department', function ($user) {
+                $str = '';
+                if (count($user->department) > 0) {
+                    foreach ($user->department as $key => $value) {
+                        $str .= $value->name.', ';
+                    }
+                    $str = trim($str, ', ');
+                }
+
+                return $str;
+            })
+            ->addIndexColumn()
+            ->removeColumn('created_at')
+            ->removeColumn('updated_at')
+            ->rawColumns(['options','role','image','code','department'])
+            ->make(true);
+    }
+
+    public function getUserChild($id){
+        $user_ids = getUserIdByRole([],$id);
+        $user_ids = array_diff($user_ids, [$id]);
+        $user = User::with(['role','department'])->whereIn('id',$user_ids);
+        return Datatables::of($user)
+            ->addColumn('role', function ($user) {
+                $str = '';
+                if (count($user->role) > 0) {
+                    foreach ($user->role as $key => $value) {
+                        $str .= $value->name.', ';
+                    }
+                    $str = trim($str, ', ');
+                }
+
+                return $str;
+            })
+            ->editColumn('code', function ($user) {
+                $str = "<a target='_blank' href='admin/user/detail/$user->id'>$user->code</a>";
+                return $str;
+            })
+            ->editColumn('image', function ($user) {
+                $dtImage = !empty($user->image) ? asset('storage/'.$user->image) : 'admin/assets/images/users/avatar-1.jpg';
+                $str = '<div style="display: flex;justify-content:center;margin-top: 5px"
+                     class="show_image">
+                    <img src="'.$dtImage.'" alt="image"
+                         class="img-responsive img-circle"
+                         style="width: 50px;height: 50px">
+
+                </div>';
+                return $str;
+            })
+            ->addColumn('department', function ($user) {
+                $str = '';
+                if (count($user->department) > 0) {
+                    foreach ($user->department as $key => $value) {
+                        $str .= $value->name.', ';
+                    }
+                    $str = trim($str, ', ');
+                }
+
+                return $str;
+            })
+            ->addIndexColumn()
+            ->removeColumn('created_at')
+            ->removeColumn('updated_at')
+            ->rawColumns(['options','role','image','code','department'])
+            ->make(true);
     }
 }

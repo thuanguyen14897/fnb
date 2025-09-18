@@ -41,6 +41,30 @@
 </div>
 <div class="col-md-6">
     <div class="form-group">
+        <label for="account_bank">Ngân hàng</label>
+        <input type="text" name="account_bank" id="account_bank" value="{{get_option('account_bank')}}" class="form-control">
+    </div>
+</div>
+<div class="col-md-6">
+    <div class="form-group">
+        <label for="account_bank_sort">Ngân hàng viết tắt</label>
+        <input type="text" name="account_bank_sort" id="account_bank_sort" value="{{get_option('account_bank_sort')}}" class="form-control">
+    </div>
+</div>
+<div class="col-md-6">
+    <div class="form-group">
+        <label for="account_number">Số tài khoản</label>
+        <input type="text" name="account_number" id="account_number" value="{{get_option('account_number')}}" class="form-control">
+    </div>
+</div>
+<div class="col-md-6">
+    <div class="form-group">
+        <label for="account_name">Tên chủ tài khoản</label>
+        <input type="text" name="account_name" id="account_name" value="{{get_option('account_name')}}" class="form-control">
+    </div>
+</div>
+<div class="col-md-6">
+    <div class="form-group">
         <label for="logo">{{lang('c_logo')}}</label>
         <input type="file" name="logo" id="logo" class="filestyle image" data-buttonbefore="true">
         <div style="display: flex;justify-content:center;margin-top: 5px" class="show_image">

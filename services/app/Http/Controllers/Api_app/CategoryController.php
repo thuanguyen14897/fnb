@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api_app;
 
 use App\Models\AresWard;
+use App\Models\OtherAmenitiesService;
 use App\Services\AdminService;
 use App\Models\CategoryService;
 use App\Models\Province;
 use App\Models\Ward;
+use App\Services\OtherAmenitisService;
 use App\Traits\UploadFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -181,6 +183,34 @@ class CategoryController extends AuthController
         if (!empty($data)){
             foreach ($data as $key => $value) {
                 $data[$key]->Name = $value->Type.' '.$value->Name;
+            }
+        }
+        return response()->json([
+            'data' => $data,
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
+    }
+
+
+    public function getListOtherAmenities(){
+        $search = $this->request->input('search') ?? null;
+        $limit = $this->request->input('limit') ?? 50;
+        $id = $this->request->input('id') ?? 0;
+        $query = OtherAmenitiesService::where('id','!=',0);
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%");
+            });
+        }
+        if (!empty($id)){
+            $query->where('id', $id);
+        }
+        $data = $query->limit($limit)->get();
+        if (!empty($data)){
+            foreach ($data as $key => $value) {
+                $dtImage = !empty($value->image) ? config('app.storage_url').'/'.$value->image : null;
+                $data[$key]['image'] = $dtImage;
             }
         }
         return response()->json([

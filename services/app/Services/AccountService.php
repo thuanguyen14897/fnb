@@ -236,4 +236,29 @@ class AccountService
         }
     }
 
+    public function updateTypeClient($request){
+        try {
+            $response = $this->sendRequestToService(
+                'POST',
+                "{$this->baseUrl}/api/customer/updateTypeClient",
+                $request,
+                [
+                    'has_file' => true
+                ]
+            );
+            $data = $response->json();
+            return response()->json([
+                'data' => $data,
+                'result' => $data['result'],
+                'message' => $data['message']
+            ]);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }
