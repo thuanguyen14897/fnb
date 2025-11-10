@@ -87,8 +87,7 @@ class TransactionPackageController extends Controller
                 return $str;
             })
             ->editColumn('grand_total', function ($dtData) {
-                $str = '<div class="text-center">' . formatMoney($dtData['grand_total']) . '</div>';
-                return $str;
+                return '<div>'.(!empty($dtData['grand_total']) ? formatMoney($dtData['grand_total']) : 0).'</div>';
             })
             ->editColumn('status', function ($dtData) {
                 if ($dtData['status'] == 1){

@@ -24,6 +24,7 @@
         "mavinoo/laravel-batch": "^2.3",
         "phpseclib/phpseclib": "^3.0",
         "pusher/pusher-php-server": "^7.2",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-activitylog": "^4.8",
         "unisharp/laravel-filemanager": "^2.7",
         "yajra/laravel-datatables-oracle": "^10.11"

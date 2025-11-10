@@ -53,4 +53,26 @@ class AdminService
             ], 500);
         }
     }
+
+    public function getListDataKPI($request = [])
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/category/getListDataKPI",
+                $request,
+            );
+            $data = $response->json();
+            return response()->json([
+                'data' => $data,
+                'result' => $data['result'] ?? false,
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

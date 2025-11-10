@@ -14,4 +14,9 @@ class AresWard extends Model
     {
         return $this->belongsTo('App\Models\Ward', 'id_ward', 'Id');
     }
+
+    function ares()
+    {
+        return $this->belongsTo('App\Models\Ares', 'id_ares', 'id');
+    }
 }

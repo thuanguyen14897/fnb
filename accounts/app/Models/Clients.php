@@ -78,4 +78,19 @@ class Clients extends Model
     {
         return $this->hasOne('App\Models\TransactionPackage', 'customer_id', 'id')->where('status','=',1);
     }
+
+    function referral_level()
+    {
+        return $this->hasOne('App\Models\ReferralLevel', 'customer_id', 'id');
+    }
+
+    function referral_level_child()
+    {
+        return $this->hasMany('App\Models\ReferralLevel', 'parent_id', 'id');
+    }
+
+    function history_membership_level()
+    {
+        return $this->belongsTo('App\Models\HistoryCustomerMemberShipLevel', 'customer_id', 'id');
+    }
 }

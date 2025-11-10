@@ -282,7 +282,10 @@ class CategoryController extends Controller
     public function searchCustomer()
     {
         $search = $this->request->input('term');
+        $params = $this->request->input('paramsCus');
+        $type_client = $params['type_client'] ?? null;
         $this->request->merge(['search' => $search]);
+        $this->request->merge(['type_client' => $type_client]);
         $this->request->merge(['limit' => 50]);
         $response = $this->fnbCustomerService->getListData($this->request);
         $data = $response->getData(true);
@@ -295,6 +298,32 @@ class CategoryController extends Controller
             $results[] = [
                 'id' => $value['id'],
                 'text' => $value['fullname'] . ' (' . $value['phone'] . ')',
+                'phone' => $value['phone'],
+            ];
+        }
+        $data = [
+            'items' => $results
+        ];
+        return response()->json($data);
+    }
+
+    public function searchRepresentativer()
+    {
+        $search = $this->request->input('term');
+        $params = $this->request->input('paramsCus');
+        $this->request->merge(['search' => $search]);
+        $this->request->merge(['limit' => 50]);
+        $response = $this->fnbCustomerService->getListDataRepresentative($this->request);
+        $data = $response->getData(true);
+        if ($data['result'] == false) {
+            return response()->json($data);
+        }
+        $dtData = ($data['data']) ?? [];
+        $results = [];
+        foreach ($dtData as $key => $value) {
+            $results[] = [
+                'id' => $value['id'],
+                'text' => $value['name'] . ' (' . $value['phone'] . ')',
                 'phone' => $value['phone'],
             ];
         }

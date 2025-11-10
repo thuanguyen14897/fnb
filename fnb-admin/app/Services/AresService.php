@@ -301,4 +301,109 @@ class AresService
         }
     }
 
+    public function getListSyntheticFeePartner($request)
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/ares/getListSyntheticFeePartner",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
+                    'data' => [],
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0,
+                ], $response->status());
+            }
+
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'data' => $data['data'],
+                'recordsTotal' => $data['total'] ?? 0,
+                'recordsFiltered' => $data['filtered'] ?? 0,
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getListSyntheticRosePartner($request)
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/ares/getListSyntheticRosePartner",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
+                    'data' => [],
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0,
+                ], $response->status());
+            }
+
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'data' => $data['data'],
+                'recordsTotal' => $data['total'] ?? 0,
+                'recordsFiltered' => $data['filtered'] ?? 0,
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getListSyntheticKPI($request)
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'get',
+                "{$this->baseUrl}/api/ares/getListSyntheticKPI",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
+                    'data' => [],
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0,
+                ], $response->status());
+            }
+
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'data' => $data['data'],
+                'recordsTotal' => $data['total'] ?? 0,
+                'recordsFiltered' => $data['filtered'] ?? 0,
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

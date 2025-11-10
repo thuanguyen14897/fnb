@@ -7,6 +7,8 @@ use App\Http\Controllers\Api_app\PackageController;
 use App\Http\Controllers\Api_app\TransactionPackageController;
 use App\Http\Controllers\Api_app\TransactionBillController;
 use App\Http\Controllers\Api_app\PaymentController;
+use App\Http\Controllers\Api_app\ReportController;
+use App\Http\Controllers\Api_app\PointController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +39,8 @@ Route::post('get_info_account', [LoginApi::class, 'get_info_account'])->middlewa
 Route::post('lockAccount', [LoginApi::class, 'lockAccount'])->middleware(\App\Http\Middleware\CheckLoginApi::class);
 Route::post('checkPassword', [LoginApi::class, 'checkPassword'])->middleware(\App\Http\Middleware\CheckLoginApi::class);
 Route::post('changePassword', [LoginApi::class, 'changePassword'])->middleware(\App\Http\Middleware\CheckLoginApi::class);
+Route::post('updateProvinceWard', [LoginApi::class, 'updateProvinceWard'])->middleware(\App\Http\Middleware\CheckLoginApi::class);
+Route::post('checkReferralCode', [LoginApi::class, 'checkReferralCode']);
 
 Route::group(['prefix' => 'customer','middleware' => App\Http\Middleware\CheckLoginApi::class], function () {
     Route::get('getListCustomer', [ClientController::class, 'getListCustomer']);
@@ -50,6 +54,14 @@ Route::group(['prefix' => 'customer','middleware' => App\Http\Middleware\CheckLo
     Route::post('detailRepresentativePartner', [ClientController::class, 'detailRepresentativePartner']);
     Route::get('requestPaymentPay2s', [ClientController::class, 'requestPaymentPay2s']);
     Route::post('updateBankPartnerRepresentative', [ClientController::class, 'updateBankPartnerRepresentative']);
+    Route::get('cronUpgradeMemberShip', [ClientController::class, 'cronUpgradeMemberShip']);
+    Route::get('getReportReferral', [ClientController::class, 'getReportReferral']);
+    Route::get('getParentReferralByCustomer', [ClientController::class, 'getParentReferralByCustomer']);
+    Route::get('getListDataRepresentative', [ClientController::class, 'getListDataRepresentative']);
+    Route::post('addCustomerPackage', [ClientController::class, 'addCustomerPackage']);
+    Route::get('getListLogUpgradeClient', [ClientController::class, 'getListLogUpgradeClient']);
+    Route::post('updateLogUpgradeClient', [ClientController::class, 'updateLogUpgradeClient']);
+    Route::post('updateDateActive', [ClientController::class, 'updateDateActive']);
 });
 
 Route::group(['prefix' => 'transaction','middleware' => App\Http\Middleware\CheckLoginApi::class], function () {
@@ -65,6 +77,7 @@ Route::group(['prefix' => 'transaction','middleware' => App\Http\Middleware\Chec
     Route::post('countTransaction', [TransactionController::class, 'countTransaction']);
     Route::post('changeStatus', [TransactionController::class, 'changeStatus']);
     Route::post('changeStatusItem', [TransactionController::class, 'changeStatusItem']);
+    Route::post('checkService', [TransactionController::class, 'checkService']);
 });
 
 Route::group(['prefix' => 'package','middleware' => App\Http\Middleware\CheckLoginApi::class], function () {
@@ -97,6 +110,9 @@ Route::group(['prefix' => 'transaction_bill','middleware' => App\Http\Middleware
     Route::post('countTransaction', [TransactionBillController::class, 'countTransaction']);
     Route::post('changeStatus', [TransactionBillController::class, 'changeStatus']);
     Route::get('getListDataTransactionBill', [TransactionBillController::class, 'getListDataTransactionBill']);
+    Route::get('getListService', [TransactionBillController::class, 'getListService']);
+    Route::post('checkService', [TransactionBillController::class, 'checkService']);
+    Route::get('getListMonthTransaction', [TransactionBillController::class, 'getListMonthTransaction']);
 });
 
 Route::group(['prefix' => 'payment','middleware' => App\Http\Middleware\CheckLoginApi::class], function () {
@@ -105,5 +121,27 @@ Route::group(['prefix' => 'payment','middleware' => App\Http\Middleware\CheckLog
     Route::get('getListDataDetail/{id}', [PaymentController::class, 'getListDataDetail']);
     Route::post('delete', [PaymentController::class, 'delete']);
     Route::post('changeStatus', [PaymentController::class, 'changeStatus']);
+});
+
+Route::group(['prefix' => 'report','middleware' => App\Http\Middleware\CheckLoginApi::class], function () {
+    Route::get('getListReportRevenuePartner', [ReportController::class, 'getListReportRevenuePartner']);
+    Route::get('getListReportRevenuePartnerDetail', [ReportController::class, 'getListReportRevenuePartnerDetail']);
+    Route::get('getRevenuePartner', [ReportController::class, 'getRevenuePartner']);
+    Route::get('getSyntheticRevenue', [ReportController::class, 'getSyntheticRevenue']);
+    Route::get('getSyntheticRevenueDetail', [ReportController::class, 'getSyntheticRevenueDetail']);
+    Route::get('getSyntheticMemberRose', [ReportController::class, 'getSyntheticMemberRose']);
+    Route::get('getSyntheticKpiUser', [ReportController::class, 'getSyntheticKpiUser']);
+    Route::get('getListSyntheticRevenuePartner', [ReportController::class, 'getListSyntheticRevenuePartner']);
+    Route::get('getListSyntheticCustomer', [ReportController::class, 'getListSyntheticCustomer']);
+    Route::get('getListSyntheticSpendingCustomer', [ReportController::class, 'getListSyntheticSpendingCustomer']);
+    Route::get('getListSyntheticDiscountPartner', [ReportController::class, 'getListSyntheticDiscountPartner']);
+    Route::get('getListSyntheticUpgradeMembership', [ReportController::class, 'getListSyntheticUpgradeMembership']);
+    Route::get('getListSyntheticFeePartner', [ReportController::class, 'getListSyntheticFeePartner']);
+    Route::get('getListSyntheticRosePartner', [ReportController::class, 'getListSyntheticRosePartner']);
+});
+
+Route::group(['prefix' => 'point','middleware' => App\Http\Middleware\CheckLoginApi::class], function () {
+    Route::get('getListHistoryPoint', [PointController::class, 'getListHistoryPoint']);
+    Route::get('getListMonthPoint', [PointController::class, 'getListMonthPoint']);
 });
 

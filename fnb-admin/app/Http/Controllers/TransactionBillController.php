@@ -101,7 +101,7 @@ class TransactionBillController extends Controller
             })
             ->editColumn('service', function ($dtData) {
                 $service = $dtData['service'] ?? [];
-                $url = !empty($service['image']) ? $service['image'] : asset('admin/assets/images/users/avatar-1.jpg');
+                $url = !empty($service['image']) ? $service['image'] : asset('admin/assets/images/no_service.png');
                 return '<div style="display: flex;align-items: center;flex-wrap: wrap">' . loadImageAvatar($url,
                         '40px') . '<div><a target="_blank" href="admin/service/view/'.($service['id'] ?? 0).'">'.($dtData['service']['name'] ?? '') . '</a></div></div>';
             })
@@ -127,7 +127,9 @@ class TransactionBillController extends Controller
                         }
                     }
                     if ($value['id'] == Config::get('constant')['status_transaction_bill_cancel']){
-                        $classes = 'pointer-events';
+                        if ($value['id'] == Config::get('constant')['status_transaction_bill_approve']){
+                            $classes = 'pointer-events';
+                        }
                     }
                     $optionStatus .= '<li style="cursor: pointer" class="'.$classes.'"><a onclick="changeStatus('.$transaction['id'].','.$value['id'].','.$check.')" data-id="'.$value['id'].'">'.$value['name'].'</a></li>';
                 }
@@ -247,7 +249,7 @@ class TransactionBillController extends Controller
             return response()->json($data);
         }
         $this->request->merge(['id' => $id]);
-        $response = $this->fnbTransactionService->delete($this->request);
+        $response = $this->fnbTransactionBillService->delete($this->request);
         $dataRes = $response->getData(true);
         $data = $dataRes['data'];
         return response()->json($data);
@@ -293,7 +295,7 @@ class TransactionBillController extends Controller
         $this->request->merge(['status' => $status]);
         $this->request->merge(['staff_status' => Config::get('constant')['user_admin']]);
         $this->request->merge(['transaction_id' => $transaction_id]);
-        $responseUpdate =  $this->fnbTransactionService->changeStatus($this->request);
+        $responseUpdate =  $this->fnbTransactionBillService->changeStatus($this->request);
         $dtUpdate = $responseUpdate->getData(true);
         $data = $dtUpdate['data'] ?? [];
         return response()->json($data);

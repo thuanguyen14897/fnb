@@ -84,6 +84,15 @@
                                             </select>
                                         </div>
 
+                                        <div class="form-group">
+                                            <label for="staff_id">{{lang('Nhân viên phụ trách')}}</label>
+                                            <select class="form-control" name="staff_id" id="staff_id" required style="width: 100%;height: 35px">
+                                                @if(!empty($client['staff']))
+                                                    <option value="{{$client['staff']['id']}}">{{$client['staff']['name'] }} ({{$client['staff']['code']}})</option>
+                                                @endif
+                                            </select>
+                                        </div>
+
 
                                         <div class="form-group" style="position: relative;">
                                             <label for="password">{{lang('dt_password_user')}}</label>
@@ -139,24 +148,6 @@
                                             <div class="form-group">
                                                 <label for="issued_cccd">Nơi cấp CCCD</label>
                                                 <input type="text" name="issued_cccd" id="issued_cccd" value="{{!empty($client) ? $client['issued_cccd'] : ''}}" class="form-control issued_cccd">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="number_passport">Số Passport</label>
-                                                <input type="text" name="number_passport" id="number_passport" value="{{!empty($client) ? $client['number_passport'] : ''}}" class="form-control number_passport">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="date_passport">Ngày cấp Passport</label>
-                                                <input type="text" name="date_passport" id="date_passport" value="{{!empty($client->date_passport) ? _dthuan($client['date_passport']) : ''}}" class="form-control datepicker date_passport">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label for="issued_passport">Nơi cấp Passport</label>
-                                                <input type="text" name="issued_passport" id="issued_passport" value="{{!empty($client) ? $client['issued_passport'] : ''}}" class="form-control issued_passport">
                                             </div>
                                         </div>
                                         <div class="col-md-12">
@@ -246,6 +237,7 @@
 
         var provinceNow = $('#province_id').val();
         $(document).ready(function(){
+            searchAjaxSelect2('#staff_id', 'api/category/getListStaff',0,{select2:true})
             searchAjaxSelect2('#membership_level', 'admin/category/getListMemberShip')
             searchAjaxSelect2('#province_id','api/category/getListProvince', 0,{
                 'select2':true

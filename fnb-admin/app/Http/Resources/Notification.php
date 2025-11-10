@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\MemberShipLevel;
 use App\Models\ModuleNoti;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -18,6 +19,7 @@ class Notification extends JsonResource
         $json_data = json_decode($this->json_data);
         $icon = null;
         $banner = null;
+        $dtMemberShip = null;
         if ($this->object_type == 401) {
             if (!empty($json_data)) {
                 $module_noti_id = $json_data->module_noti_id;
@@ -25,6 +27,14 @@ class Notification extends JsonResource
                 $icon = !empty($dtModuleNoti->image) ? asset('storage/'.$dtModuleNoti->image) : null;
                 $banner = !empty($dtModuleNoti->banner) ? asset('storage/'.$dtModuleNoti->banner) : null;
             }
+        }
+        if ($this->object_type == 666){
+            $url = env('STORAGE_URL') ?? config('app.storage_url');
+            $membership_id = $json_data->membership_id;
+            $dtMemberShip = MemberShipLevel::find($membership_id);
+            $dtMemberShip->icon = !empty($dtMemberShip->icon) ? ($url . '/' . $dtMemberShip->icon) : null;
+            $dtMemberShip->image = !empty($dtMemberShip->image) ? ($url . '/' . $dtMemberShip->image) : null;
+            $dtMemberShip->background_header = !empty($dtMemberShip->background_header) ? ($url . '/' . $dtMemberShip->background_header) : null;
         }
         return [
             'id' => $this->id,
@@ -40,6 +50,7 @@ class Notification extends JsonResource
             'type_customer' => $this->type_customer,
             'icon' => $icon,
             'banner' => $banner,
+            'dtMemberShip' => $dtMemberShip,
         ];
     }
 }

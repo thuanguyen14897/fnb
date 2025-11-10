@@ -72,6 +72,8 @@
                         <th class="text-center">{{lang('dt_department')}}</th>
                         <th class="text-center">{{lang('dt_role')}}</th>
                         <th class="text-center">{{lang('c_ares')}}</th>
+                        <th class="text-center">{{lang('NVKD KPI')}}</th>
+                        <th class="text-center">{{lang('GDKD KPI')}}</th>
                         <th class="text-center">{{lang('dt_active_user')}}</th>
                         <th class="text-center">{{lang('dt_actions')}}</th>
                     </tr>
@@ -122,6 +124,18 @@
                 {data: 'department', name: 'department'},
                 {data: 'role', name: 'role'},
                 {data: 'ares', name: 'ares'},
+                {
+                    "render": function (data, type, row) {
+                        return `<div class="text-center">${data}</div>`;
+                    },
+                    data: 'check_nvkd', name: 'check_nvkd',width: "80px"
+                },
+                {
+                    "render": function (data, type, row) {
+                        return `<div class="text-center">${data}</div>`;
+                    },
+                    data: 'check_manager', name: 'check_manager',width: "80px"
+                },
                 {
                     "render": function (data, type, row) {
                         return `<div class="text-center">${data}</div>`;

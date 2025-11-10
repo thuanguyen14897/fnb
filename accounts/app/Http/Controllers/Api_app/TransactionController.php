@@ -905,4 +905,13 @@ class TransactionController extends AuthController
             return response()->json($data);
         }
     }
+
+    public function checkService(){
+        $service_id = $this->request->input('service_id') ?? 0;
+        $dtCheck = TransactionDayItem::where('service_id',$service_id)->first();
+        $data['result'] = true;
+        $data['data'] = $dtCheck;
+        $data['message'] = 'Lấy thông tin thành công';
+        return response()->json($data);
+    }
 }

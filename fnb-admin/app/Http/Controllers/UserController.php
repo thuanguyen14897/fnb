@@ -15,6 +15,7 @@ use App\Traits\UploadFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\DataTables;
 
@@ -22,16 +23,21 @@ class UserController extends Controller
 {
     protected $fnbAres;
     use UploadFile;
-    public function __construct(Request $request, AresService $aresService, CategorySystemService $categorySystemService)
-    {
+
+    public function __construct(
+        Request $request,
+        AresService $aresService,
+        CategorySystemService $categorySystemService
+    ) {
         parent::__construct($request);
         DB::enableQueryLog();
         $this->fnbAres = $aresService;
         $this->fnbCategorySystemService = $categorySystemService;
     }
 
-    public function get_list(){
-        if (!has_permission('user','view')){
+    public function get_list()
+    {
+        if (!has_permission('user', 'view') && !has_permission('user', 'viewown')) {
             access_denied();
         }
         $this->request->merge([
@@ -39,49 +45,77 @@ class UserController extends Controller
             'limit_all' => 1,
         ]);//show chỉ thông tin cơ bản
         $data_ares = $this->fnbAres->getListData($this->request);
-        if(!empty($data_ares->getData()->data->data)) {
+        if (!empty($data_ares->getData()->data->data)) {
             $ares = $data_ares->getData()->data->data;
         }
         $department = Department::get();
         $role = Role::get();
         return view('admin.user.list', [
-            'ares'=> $ares ?? [],
+            'ares' => $ares ?? [],
             'department' => $department ?? [],
             'role' => $role ?? [],
         ]);
     }
 
-    public function getUsers(){
-        $user = User::with('role')
+    public function getUsers()
+    {
+        $checkPermission = true;
+        if (!has_permission('user', 'view') && has_permission('user', 'viewown')) {
+            $user_ids = getUserIdByRole([],0,false);
+            $checkPermission = false;
+        }
+        $query = User::with('role')
             ->with('department')
             ->with('user_ares');
-        if($this->request->input('ares_search')) {
+        if ($this->request->input('ares_search')) {
             $ares_search = $this->request->input('ares_search');
-            $user->WhereHas('user_ares',function ($q) use ($ares_search){
+            $query->WhereHas('user_ares', function ($q) use ($ares_search) {
                 $q->where('id_ares', '=', "$ares_search");
             });
         }
-        if($this->request->input('department_search')) {
+        if ($this->request->input('department_search')) {
             $department_search = $this->request->input('department_search');
-            $user->WhereHas('department',function ($q) use ($department_search){
+            $query->WhereHas('department', function ($q) use ($department_search) {
                 $q->where('department_id', '=', "$department_search");
             });
         }
-        if($this->request->input('role_search')) {
+        if ($this->request->input('role_search')) {
             $role_search = $this->request->input('role_search');
-            $user->WhereHas('role',function ($q) use ($role_search){
+            $query->WhereHas('role', function ($q) use ($role_search) {
                 $q->where('role_id', '=', "$role_search");
             });
         }
-        $user->get();
+        if (empty($checkPermission)) {
+            $query->whereIn('id', ($user_ids ?? [0]));
+        }
+        $user = $query->get();
+        $id_ares = $user->flatMap(function ($item) {
+            return $item->user_ares->pluck('id_ares');
+        })->unique()->values()->toArray();
+        $this->requestAre = clone $this->request;
+        $this->requestAre->merge(['are_id' => $id_ares ?? [0]]);
+        $this->requestAre->merge(['limit_all' => true]);
+        $this->requestAre->merge(['search' => null]);
+        $this->requestAre->merge(['show_short' => true]);
+        $data_ares = $this->fnbAres->getListData($this->requestAre);
+        $dtAres = $data_ares->getData(true);
+        $dtAres = collect($dtAres['data']['data'] ?? []);
+        $user = $user->map(function ($item) use ($dtAres) {
+            $item->user_ares->map(function ($it) use ($dtAres) {
+                $ares = $dtAres->where('id', '=', $it->id_ares)->first();
+                $it->name = $ares['name'] ?? null;
+                return $it;
+            });
+            return $item;
+        });
         return Datatables::of($user)
             ->addColumn('options', function ($user) {
                 $edit = "<a href='admin/user/detail/$user->id'><i class='fa fa-pencil'></i> " . lang('dt_edit_user') . "</a>";
-                $view_user_parent = "<a class='dt-modal' href='admin/user/view_user_parent/$user->id'><i class='fa fa-eye'></i> " . lang('Xem NV cấp trên/dưới') . "</a>";
+                $view_user_parent = "<a class='dt-modal hide' href='admin/user/view_user_parent/$user->id'><i class='fa fa-eye'></i> " . lang('Xem NV cấp trên/dưới') . "</a>";
                 $delete = '<a type="button" class="po-delete" data-container="body" data-html="true" data-toggle="popover" data-placement="left" data-content="
-                    <button href=\'admin/user/delete/'.$user->id.'\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
+                    <button href=\'admin/user/delete/' . $user->id . '\' class=\'btn btn-danger dt-delete\'>' . lang('dt_delete') . '</button>
                     <button class=\'btn btn-default po-close\'>' . lang('dt_close') . '</button>
-                "><i class="fa fa-remove width-icon-actions"></i> ' . lang('dt_delete_user') .'</a>';
+                "><i class="fa fa-remove width-icon-actions"></i> ' . lang('dt_delete_user') . '</a>';
                 $user->id == Config::get('constant')['user_admin'] ? ($delete = '') : $delete;
                 $options = ' <div class="dropdown text-center">
                             <button class="btn btn-default dropdown-toggle nav-link" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
@@ -89,9 +123,9 @@ class UserController extends Controller
                             <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu pull-left" role="menu" aria-labelledby="dropdownMenu1">
-                                <li style="cursor: pointer">'.$view_user_parent.'</li>
-                                <li style="cursor: pointer">'.$edit.'</li>
-                                <li style="cursor: pointer">'.$delete.'</li>
+                                <li style="cursor: pointer">' . $view_user_parent . '</li>
+                                <li style="cursor: pointer">' . $edit . '</li>
+                                <li style="cursor: pointer">' . $delete . '</li>
                             </ul>
                         </div>';
 
@@ -101,8 +135,7 @@ class UserController extends Controller
                 $str = '';
                 if (count($user->department) > 0) {
                     foreach ($user->department as $key => $value) {
-//                        $str .= "<div class='label label-success'>$value->name</div>".' ';
-                        $str .= $value->name.', ';
+                        $str .= $value->name . ', ';
                     }
                     $str = trim($str, ', ');
                 }
@@ -113,8 +146,7 @@ class UserController extends Controller
                 $str = '';
                 if (count($user->role) > 0) {
                     foreach ($user->role as $key => $value) {
-//                        $str .= "<div class='label label-success'>$value->name</div>".' ';
-                        $str .= $value->name.', ';
+                        $str .= $value->name . ', ';
                     }
                     $str = trim($str, ', ');
                 }
@@ -123,16 +155,17 @@ class UserController extends Controller
             })
             ->addColumn('ares', function ($user) {
                 $str = '';
-                if(!empty($user->user_ares)) {
+                if (!empty($user->user_ares)) {
                     foreach ($user->user_ares as $key => $value) {
-                        $data_ares = $this->fnbAres->getDetail($this->request, $value->id_ares);
-                        $_ares = $data_ares->getData(true);
-                        if(!empty($_ares['result'])){
-                            $str .= "<div class='label label-success' style='margin-bottom: 5px;margin-right: 5px'>". ($_ares['dtData']['name'] ?? '')."</div>".' ';
-                        }
+//                        $data_ares = $this->fnbAres->getDetail($this->request, $value->id_ares);
+//                        $_ares = $data_ares->getData(true);
+//                        if (!empty($_ares['result'])) {
+//                            $str .= "<div class='label label-success' style='margin-bottom: 5px;margin-right: 5px'>" . ($_ares['dtData']['name'] ?? '') . "</div>" . ' ';
+//                        }
+                        $str .= "<div class='label label-success' style='margin-bottom: 5px;margin-right: 5px'>" . ($value['name'] ?? '') . "</div>" . ' ';
                     }
                 }
-                return '<div style="display: flex;flex-wrap: wrap">'.$str.'</div>';
+                return '<div style="display: flex;flex-wrap: wrap">' . $str . '</div>';
             })
             ->editColumn('active', function ($user) {
                 $classes = $user->active == 1 ? "btn-info" : "btn-danger";
@@ -145,10 +178,10 @@ class UserController extends Controller
                 return $str;
             })
             ->editColumn('image', function ($user) {
-                $dtImage = !empty($user->image) ? asset('storage/'.$user->image) : 'admin/assets/images/users/avatar-1.jpg';
+                $dtImage = !empty($user->image) ? asset('storage/' . $user->image) : 'admin/assets/images/users/avatar-1.jpg';
                 $str = '<div style="display: flex;justify-content:center;margin-top: 5px"
                      class="show_image">
-                    <img src="'.$dtImage.'" alt="image"
+                    <img src="' . $dtImage . '" alt="image"
                          class="img-responsive img-circle"
                          style="width: 50px;height: 50px">
 
@@ -156,20 +189,43 @@ class UserController extends Controller
 
                 return $str;
             })
+            ->editColumn('check_nvkd', function ($data) {
+                $checked = $data->check_nvkd == 1 ? 'checked' : '';
+                $str = '<input type="checkbox" '.$checked.' name="active" class="active dt-active"  data-plugin="switchery" data-color="#5fbeaa" data-href="admin/user/changeStatusNVKD/'.$data->id.'" data-status="'.$data->check_nvkd.'">';
+                return $str;
+            })
+            ->editColumn('check_manager', function ($data) {
+                $checked = $data->check_manager == 1 ? 'checked' : '';
+                $str = '<input type="checkbox" '.$checked.' name="active" class="active dt-active"  data-plugin="switchery" data-color="#5fbeaa" data-href="admin/user/changeStatusManager/'.$data->id.'" data-status="'.$data->check_manager.'">';
+                return $str;
+            })
             ->removeColumn('created_at')
             ->removeColumn('updated_at')
-            ->rawColumns(['options', 'department','role','active','image','service_support','priority','ares','code'])
+            ->rawColumns([
+                'options',
+                'check_nvkd',
+                'check_manager',
+                'department',
+                'role',
+                'active',
+                'image',
+                'service_support',
+                'priority',
+                'ares',
+                'code'
+            ])
             ->make(true);
     }
 
-    public function get_detail($id = 0){
-        if (empty($id)){
-            if (!has_permission('user','add')){
+    public function get_detail($id = 0)
+    {
+        if (empty($id)) {
+            if (!has_permission('user', 'add')) {
                 access_denied();
             }
             $title = lang('dt_add_user');
         } else {
-            if (!has_permission('user','edit')){
+            if (!has_permission('user', 'edit')) {
                 access_denied();
             }
             $title = lang('dt_edit_user');
@@ -183,15 +239,15 @@ class UserController extends Controller
         ]);//show chỉ thông tin cơ bản
         $data_ares = $this->fnbAres->getListData($this->request);
         $CountAresWard = [];
-        if(!empty($data_ares->getData(true)['data']['data'])) {
+        if (!empty($data_ares->getData(true)['data']['data'])) {
             $ares = $data_ares->getData(true)['data']['data'];
-            foreach($ares as $key => $value) {
+            foreach ($ares as $key => $value) {
                 $CountAresWard[$value['id']] = count($value['ares_ward']);
             }
         }
-        if(!empty($user->id)) {
+        if (!empty($user->id)) {
             $user->ares = UserAres::where('id_user', $user->id)->get();
-            foreach($user->ares as $key => $value) {
+            foreach ($user->ares as $key => $value) {
                 $this->request->merge(['id_ares' => $value->id_ares ?? 0]);
                 $this->request->merge(['limit' => -1]);
                 $response = $this->fnbCategorySystemService->getListWardToAres($this->request);
@@ -201,14 +257,14 @@ class UserController extends Controller
                     ->select(DB::raw("GROUP_CONCAT(id_ward) as listID"))
                     ->where('id_user', $user->id)->where('id_ares', $value->id_ares)->first();
                 $user->ares[$key]->itemActive = explode(',', $itemActive->listID);
-                if(!empty($CountAresWard[$value->id_ares]) && $CountAresWard[$value->id_ares] <= count($user->ares[$key]->itemActive)) {
+                if (!empty($CountAresWard[$value->id_ares]) && $CountAresWard[$value->id_ares] <= count($user->ares[$key]->itemActive)) {
                     $user->ares[$key]->itemActive = [];
                 }
 
             }
 
         }
-        return view('admin.user.detail',[
+        return view('admin.user.detail', [
             'id' => $id,
             'title' => $title,
             'role' => $role,
@@ -218,10 +274,11 @@ class UserController extends Controller
         ]);
     }
 
-    public function submit($id = 0){
-        if (empty($id)){
+    public function submit($id = 0)
+    {
+        if (empty($id)) {
             $user = new User();
-            $dtUserCheck = User::orderBy('id','desc')->limit(1)->first();
+            $dtUserCheck = User::orderBy('id', 'desc')->limit(1)->first();
             $user->priority = ($dtUserCheck->priority + 1);
         } else {
             $user = User::find($id);
@@ -234,7 +291,7 @@ class UserController extends Controller
         $user->email = $this->request->email;
         $user->active = $this->request->active;
         $user->admin = !empty($this->request->admin) ? 1 : 0;
-        if (!empty($this->request->password)){
+        if (!empty($this->request->password)) {
             $user->password = bcrypt($this->request->password);
         }
         $permission_items = [];
@@ -264,29 +321,27 @@ class UserController extends Controller
             UserAres::where('id_user', $user->id)
                 ->delete();
             DB::table('tbl_user_ares_ward')->where('id_user', $user->id)->delete();
-            if(!empty($list_ares)) {
+            if (!empty($list_ares)) {
                 foreach ($list_ares as $key => $value) {
                     $UserAres = new UserAres();
                     $UserAres->id_user = $user->id;
                     $UserAres->id_ares = $value;
-                    if(!empty($ward_ares[$value])) {
+                    if (!empty($ward_ares[$value])) {
                         $UserAres->is_all = 0;
-                    }
-                    else {
+                    } else {
                         $UserAres->is_all = 1;
                     }
                     $UserAres->save();
-                    if(!empty($ward_ares[$value])) {
+                    if (!empty($ward_ares[$value])) {
                         $UserAres->is_all = 0;
-                        foreach($ward_ares[$value] as $k => $v) {
+                        foreach ($ward_ares[$value] as $k => $v) {
                             DB::table('tbl_user_ares_ward')->insert([
                                 'id_user' => $user->id,
                                 'id_ares' => $value,
                                 'id_ward' => $v,
                             ]);
                         }
-                    }
-                    else {
+                    } else {
 
                         $UserAres->save();
                         $this->request->merge(['id_ares' => $value ?? 0]);
@@ -333,10 +388,10 @@ class UserController extends Controller
                 }
             }
             if ($this->request->hasFile('image')) {
-                if (!empty($user->image)){
+                if (!empty($user->image)) {
                     $this->deleteFile($user->image);
                 }
-                $path = $this->UploadFile($this->request->file('image'),'users/'.$user->id);
+                $path = $this->UploadFile($this->request->file('image'), 'users/' . $user->id);
                 $user->image = $path;
                 $user->save();
             }
@@ -362,8 +417,8 @@ class UserController extends Controller
                         $query->whereIn('role_id', $role);
                         $query->where('group_permission_id', $id_group);
                     })->get()->toArray();
-                    if (!empty($permission)){
-                        foreach ($permission as $kk => $vv){
+                    if (!empty($permission)) {
+                        foreach ($permission as $kk => $vv) {
                             $permission[$kk]['name'] = lang($vv['name']);
                         }
                     }
@@ -386,8 +441,9 @@ class UserController extends Controller
         return response()->json($data);
     }
 
-    public function active($id){
-        if (!has_permission('user','edit')){
+    public function active($id)
+    {
+        if (!has_permission('user', 'edit')) {
             $data['result'] = false;
             $data['message'] = lang('dt_access');
             return response()->json($data);
@@ -399,15 +455,16 @@ class UserController extends Controller
             $data['result'] = true;
             $data['message'] = lang('dt_success');
             return response()->json($data);
-        } catch (\Exception $exception){
+        } catch (\Exception $exception) {
             $data['result'] = false;
             $data['message'] = $exception;
             return response()->json($data);
         }
     }
 
-    public function delete($id){
-        if (!has_permission('user','delete')){
+    public function delete($id)
+    {
+        if (!has_permission('user', 'delete')) {
             $data['result'] = false;
             $data['message'] = lang('dt_access');
             return response()->json($data);
@@ -415,7 +472,7 @@ class UserController extends Controller
         $user = User::find($id);
         try {
             $user->delete();
-            if (!empty($user->image)){
+            if (!empty($user->image)) {
                 $this->deleteFile($user->image);
             }
             $user->role()->detach();
@@ -425,48 +482,52 @@ class UserController extends Controller
             $data['result'] = true;
             $data['message'] = lang('dt_success');
             return response()->json($data);
-        } catch (\Exception $exception){
+        } catch (\Exception $exception) {
             $data['result'] = false;
             $data['message'] = $exception;
             return response()->json($data);
         }
     }
 
-    public function updatePriority(){
+    public function updatePriority()
+    {
         $user_id = $this->request->input('user_id');
         $priority = $this->request->input('priority');
         $user = User::find($user_id);
         try {
             $user->priority = $priority;
             $user->save();
-            $dtTransactionCheckDriver = TransactionDriver::select('id','date','created_at',DB::raw("1 as type"))->orderBy('created_at', 'desc')->limit(1);
-            $dtTransactionCheckVs1 = Transaction::select('id','date','created_at',DB::raw("2 as type"))->orderBy('created_at', 'desc')->limit(1)->unionall($dtTransactionCheckDriver);
+            $dtTransactionCheckDriver = TransactionDriver::select('id', 'date', 'created_at',
+                DB::raw("1 as type"))->orderBy('created_at', 'desc')->limit(1);
+            $dtTransactionCheckVs1 = Transaction::select('id', 'date', 'created_at',
+                DB::raw("2 as type"))->orderBy('created_at', 'desc')->limit(1)->unionall($dtTransactionCheckDriver);
             $dtTransactionCheckNew = DB::query()
                 ->fromSub($dtTransactionCheckVs1, 'union_query')
-                ->select('id','type')
+                ->select('id', 'type')
                 ->orderBy('id', 'desc')
                 ->first();
-            if (!empty($dtTransactionCheckNew)){
-                if ($dtTransactionCheckNew->type == 1){
-                    $dtTransactionCheck = TransactionDriver::select('id','date',DB::raw("3 as type"))->find($dtTransactionCheckNew->id);
+            if (!empty($dtTransactionCheckNew)) {
+                if ($dtTransactionCheckNew->type == 1) {
+                    $dtTransactionCheck = TransactionDriver::select('id', 'date',
+                        DB::raw("3 as type"))->find($dtTransactionCheckNew->id);
                 } else {
-                    $dtTransactionCheck = Transaction::select('id','date','type')->find($dtTransactionCheckNew->id);
+                    $dtTransactionCheck = Transaction::select('id', 'date', 'type')->find($dtTransactionCheckNew->id);
                 }
-                if (!empty($dtTransactionCheck->transaction_staff_new())){
+                if (!empty($dtTransactionCheck->transaction_staff_new())) {
                     $service = $dtTransactionCheck->type;
                     $priority = $dtTransactionCheck->transaction_staff_new()->priority;
-                    User::whereHas('department',function ($query){
-                        $query->where('check_transaction',1);
+                    User::whereHas('department', function ($query) {
+                        $query->where('check_transaction', 1);
                     })
                         ->whereExists(function ($query) use ($service) {
                             $query->select("tbl_user_service.user_id")
                                 ->from('tbl_user_service')
                                 ->whereRaw('tbl_user_service.user_id = tbl_users.id')
-                                ->where('tbl_user_service.service',$service);
-                        })->where('priority','<=',$priority)->update([
+                                ->where('tbl_user_service.service', $service);
+                        })->where('priority', '<=', $priority)->update([
                             'check_tran' => 1
                         ]);
-                    User::where('id',$dtTransactionCheck->transaction_staff_new()->id)->update([
+                    User::where('id', $dtTransactionCheck->transaction_staff_new()->id)->update([
                         'check_tran' => 1
                     ]);
                 }
@@ -474,7 +535,7 @@ class UserController extends Controller
             $data['result'] = true;
             $data['message'] = lang('dt_success');
             return response()->json($data);
-        } catch (\Exception $exception){
+        } catch (\Exception $exception) {
             $data['result'] = false;
             $data['message'] = $exception;
             return response()->json($data);
@@ -482,8 +543,8 @@ class UserController extends Controller
     }
 
 
-
-    public function import_excel() {
+    public function import_excel()
+    {
         if (!has_permission('user', 'import')) {
             access_denied();
         }
@@ -493,7 +554,8 @@ class UserController extends Controller
         ]);
     }
 
-    public function action_import(Request $request) {
+    public function action_import(Request $request)
+    {
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv',
         ]);
@@ -513,8 +575,8 @@ class UserController extends Controller
             unset($rows[0]);
             $idUserBefore = '';
             foreach ($rows as $key => $row) {
-                $code = !empty($row[1]) ? $row[1] : ('NS-' . time(). rand(1000, 9999));
-                if(empty($row[1]) && empty($row[2]) && !empty($idUserBefore) && !empty($row[7])) {
+                $code = !empty($row[1]) ? $row[1] : ('NS-' . time() . rand(1000, 9999));
+                if (empty($row[1]) && empty($row[2]) && !empty($idUserBefore) && !empty($row[7])) {
 
                     $dataExcelRow[$key][0] = '';
                     $dataExcelRow[$key][1] = '';
@@ -527,9 +589,9 @@ class UserController extends Controller
 
 
                     $ares = $row[7];
-                    $ward_ares = $row[8] ?? NULL;
+                    $ward_ares = $row[8] ?? null;
                     $ares = explode(',', $ares);
-                    if(!empty($ward_ares)) {
+                    if (!empty($ward_ares)) {
                         $ward_ares = explode(',', $ward_ares);
                     }
 
@@ -541,7 +603,7 @@ class UserController extends Controller
                         if (empty($listAres)) {
                             $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm khu vực</span>';
                             continue;
-                        } else if (count($ares) > count($listAres)) {
+                        } elseif (count($ares) > count($listAres)) {
                             $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm khu vực</span>';
                             continue;
                         }
@@ -554,12 +616,12 @@ class UserController extends Controller
                     if (!empty($listAres)) {
                         foreach ($listAres as $item) {
                             $listAresID[] = $item['id'];
-                            if(!empty($item['ward'])) {
+                            if (!empty($item['ward'])) {
                                 foreach ($item['ward'] as $kW => $vW) {
                                     $listWard[$item['id']][] = $vW['Id'];
                                     $CountListWard[] = $vW['Id'];
                                 }
-                                if(!empty($item['all_ward'])) {
+                                if (!empty($item['all_ward'])) {
                                     $AresALL[$item['id']] = 1;
                                 }
                             }
@@ -573,8 +635,8 @@ class UserController extends Controller
                                 'id_ares' => $listAresIDItem,
                                 'is_all' => !empty($AresALL[$listAresIDItem]) ?? 0
                             ]);
-                            if(!empty($listWard[$listAresIDItem])) {
-                                foreach($listWard[$listAresIDItem] as $vWard) {
+                            if (!empty($listWard[$listAresIDItem])) {
+                                foreach ($listWard[$listAresIDItem] as $vWard) {
                                     DB::table('tbl_user_ares_ward')->insert([
                                         'id_user' => $idUserBefore,
                                         'id_ares' => $listAresIDItem,
@@ -588,8 +650,7 @@ class UserController extends Controller
                         }
                     }
 
-                }
-                else {
+                } else {
 
                     if (empty($row[2])) {
                         $dataExcelRow[$key]['result'] = '<span class="label label-warning">Tên nhân viên không được để trống</span>';
@@ -599,11 +660,11 @@ class UserController extends Controller
                     $name = $row[2];
                     $email = $row[3];
                     $phone = $row[4];
-                    $password = !empty($row[6]) ? bcrypt($row[6]) : NULL;
+                    $password = !empty($row[6]) ? bcrypt($row[6]) : null;
                     $dataExcelRow[$key][6] = !empty($password) ? '******' : '';
 
                     $ares = $row[7];
-                    $ward_ares = $row[8] ?? NULL;
+                    $ward_ares = $row[8] ?? null;
 
                     $department = $row[5];
 
@@ -611,7 +672,7 @@ class UserController extends Controller
                     $dataExcelRow[$key][9] = !empty($active) ? 'Hoạt động' : 'Khóa';
                     $arrayDataAppend = [];
                     $ares = explode(',', $ares);
-                    if(!empty($ward_ares)) {
+                    if (!empty($ward_ares)) {
                         $ward_ares = explode(',', $ward_ares);
                     }
                     $department = explode(',', $department);
@@ -625,7 +686,7 @@ class UserController extends Controller
                     if ($listDeparment->isEmpty() && !empty($department)) {
                         $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm thấy phòng ban</span>';
                         continue;
-                    } else if (count($department) > count($listDeparment)) {
+                    } elseif (count($department) > count($listDeparment)) {
                         $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm thấy phòng ban</span>';
                         continue;
                     }
@@ -639,7 +700,7 @@ class UserController extends Controller
                         if (empty($listAres)) {
                             $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm khu vực</span>';
                             continue;
-                        } else if (count($ares) > count($listAres)) {
+                        } elseif (count($ares) > count($listAres)) {
                             $dataExcelRow[$key]['result'] = '<span class="label label-warning">Không tìm khu vực</span>';
                             continue;
                         }
@@ -659,11 +720,11 @@ class UserController extends Controller
                     if (!empty($listAres)) {
                         foreach ($listAres as $item) {
                             $listAresID[] = $item['id'];
-                            if(!empty($item['ward'])) {
+                            if (!empty($item['ward'])) {
                                 foreach ($item['ward'] as $kW => $vW) {
                                     $listWard[$item['id']][] = $vW['Id'];
                                 }
-                                if(!empty($item['all_ward'])) {
+                                if (!empty($item['all_ward'])) {
                                     $AresALL[$item['id']] = 1;
                                 }
                             }
@@ -687,7 +748,7 @@ class UserController extends Controller
                         ];
 
                         foreach ($arrayDataAppend as $kd => $vd) {
-                            $dataInsert[$kd] = $row[$vd] ?? NULL;
+                            $dataInsert[$kd] = $row[$vd] ?? null;
                         }
 
                         $idUser = DB::table('tbl_users')->insertGetId($dataInsert);
@@ -708,8 +769,8 @@ class UserController extends Controller
                                         'id_ares' => $listAresIDItem,
                                         'is_all' => !empty($AresALL[$listAresIDItem]) ?? 0
                                     ]);
-                                    if(!empty($listWard[$listAresIDItem])) {
-                                        foreach($listWard[$listAresIDItem] as $vWard) {
+                                    if (!empty($listWard[$listAresIDItem])) {
+                                        foreach ($listWard[$listAresIDItem] as $vWard) {
                                             DB::table('tbl_user_ares_ward')->insert([
                                                 'id_user' => $idUser,
                                                 'id_ares' => $listAresIDItem,
@@ -733,7 +794,7 @@ class UserController extends Controller
                         ];
 
                         foreach ($arrayDataAppend as $kd => $vd) {
-                            $dataUpdate[$kd] = $row[$vd] ?? NULL;
+                            $dataUpdate[$kd] = $row[$vd] ?? null;
                         }
 
 
@@ -760,8 +821,8 @@ class UserController extends Controller
                                         'id_ares' => $listAresIDItem,
                                         'is_all' => !empty($AresALL[$listAresIDItem]) ?? 0
                                     ]);
-                                    if(!empty($listWard[$listAresIDItem])) {
-                                        foreach($listWard[$listAresIDItem] as $vWard) {
+                                    if (!empty($listWard[$listAresIDItem])) {
+                                        foreach ($listWard[$listAresIDItem] as $vWard) {
                                             DB::table('tbl_user_ares_ward')->insert([
                                                 'id_user' => $user->id,
                                                 'id_ares' => $listAresIDItem,
@@ -791,16 +852,17 @@ class UserController extends Controller
 //        }
     }
 
-    public function view_user_parent($id){
-        if (!has_permission('user','view')){
+    public function view_user_parent($id)
+    {
+        if (!has_permission('user', 'view')) {
             access_denied();
         }
         $title = lang('Xem nhân viên cấp trên/dưới');
-        $user = User::with(['role','department'])->find($id);
+        $user = User::with(['role', 'department'])->find($id);
         $str = '';
         if (count($user->role) > 0) {
             foreach ($user->role as $key => $value) {
-                $str .= $value->name.', ';
+                $str .= $value->name . ', ';
             }
             $str = trim($str, ', ');
         }
@@ -808,27 +870,28 @@ class UserController extends Controller
         $strDepartment = '';
         if (count($user->department) > 0) {
             foreach ($user->department as $key => $value) {
-                $strDepartment .= $value->name.', ';
+                $strDepartment .= $value->name . ', ';
             }
             $strDepartment = trim($strDepartment, ', ');
         }
         $user->str_department = $strDepartment;
-        return view('admin.user.view_user_parent',[
+        return view('admin.user.view_user_parent', [
             'id' => $id,
             'title' => $title,
             'user' => $user,
         ]);
     }
 
-    public function getUserParent($id){
-        $user_ids = getUserIdByRoleParent([],$id);
-        $user = User::with(['role','department'])->whereIn('id',$user_ids);
+    public function getUserParent($id)
+    {
+        $user_ids = getUserIdByRoleParent([], $id);
+        $user = User::with(['role', 'department'])->whereIn('id', $user_ids);
         return Datatables::of($user)
             ->addColumn('role', function ($user) {
                 $str = '';
                 if (count($user->role) > 0) {
                     foreach ($user->role as $key => $value) {
-                        $str .= $value->name.', ';
+                        $str .= $value->name . ', ';
                     }
                     $str = trim($str, ', ');
                 }
@@ -840,10 +903,10 @@ class UserController extends Controller
                 return $str;
             })
             ->editColumn('image', function ($user) {
-                $dtImage = !empty($user->image) ? asset('storage/'.$user->image) : 'admin/assets/images/users/avatar-1.jpg';
+                $dtImage = !empty($user->image) ? asset('storage/' . $user->image) : 'admin/assets/images/users/avatar-1.jpg';
                 $str = '<div style="display: flex;justify-content:center;margin-top: 5px"
                      class="show_image">
-                    <img src="'.$dtImage.'" alt="image"
+                    <img src="' . $dtImage . '" alt="image"
                          class="img-responsive img-circle"
                          style="width: 50px;height: 50px">
 
@@ -854,7 +917,7 @@ class UserController extends Controller
                 $str = '';
                 if (count($user->department) > 0) {
                     foreach ($user->department as $key => $value) {
-                        $str .= $value->name.', ';
+                        $str .= $value->name . ', ';
                     }
                     $str = trim($str, ', ');
                 }
@@ -864,20 +927,21 @@ class UserController extends Controller
             ->addIndexColumn()
             ->removeColumn('created_at')
             ->removeColumn('updated_at')
-            ->rawColumns(['options','role','image','code','department'])
+            ->rawColumns(['options', 'role', 'image', 'code', 'department'])
             ->make(true);
     }
 
-    public function getUserChild($id){
-        $user_ids = getUserIdByRole([],$id);
+    public function getUserChild($id)
+    {
+        $user_ids = getUserIdByRole([], $id);
         $user_ids = array_diff($user_ids, [$id]);
-        $user = User::with(['role','department'])->whereIn('id',$user_ids);
+        $user = User::with(['role', 'department'])->whereIn('id', $user_ids);
         return Datatables::of($user)
             ->addColumn('role', function ($user) {
                 $str = '';
                 if (count($user->role) > 0) {
                     foreach ($user->role as $key => $value) {
-                        $str .= $value->name.', ';
+                        $str .= $value->name . ', ';
                     }
                     $str = trim($str, ', ');
                 }
@@ -889,10 +953,10 @@ class UserController extends Controller
                 return $str;
             })
             ->editColumn('image', function ($user) {
-                $dtImage = !empty($user->image) ? asset('storage/'.$user->image) : 'admin/assets/images/users/avatar-1.jpg';
+                $dtImage = !empty($user->image) ? asset('storage/' . $user->image) : 'admin/assets/images/users/avatar-1.jpg';
                 $str = '<div style="display: flex;justify-content:center;margin-top: 5px"
                      class="show_image">
-                    <img src="'.$dtImage.'" alt="image"
+                    <img src="' . $dtImage . '" alt="image"
                          class="img-responsive img-circle"
                          style="width: 50px;height: 50px">
 
@@ -903,7 +967,7 @@ class UserController extends Controller
                 $str = '';
                 if (count($user->department) > 0) {
                     foreach ($user->department as $key => $value) {
-                        $str .= $value->name.', ';
+                        $str .= $value->name . ', ';
                     }
                     $str = trim($str, ', ');
                 }
@@ -913,7 +977,91 @@ class UserController extends Controller
             ->addIndexColumn()
             ->removeColumn('created_at')
             ->removeColumn('updated_at')
-            ->rawColumns(['options','role','image','code','department'])
+            ->rawColumns(['options', 'role', 'image', 'code', 'department'])
             ->make(true);
     }
+
+    public function profile($id = 0)
+    {
+        $title = lang('Thông tin nhân viên');
+        $dtData = User::find($id);
+        if ($this->request->input()) {
+            $rules = [
+                'phone' => 'required|unique:tbl_users,phone,' . $id,
+                'name' => 'required',
+            ];
+            $messages = [
+                'phone.required' => 'Vui lòng nhập số điện thoại',
+                'phone.unique' => 'Số điện thoại đã tồn tại',
+                'name.required' => 'Vui lòng nhập tên nhân viên',
+            ];
+            $validator = Validator::make($this->request->all(), $rules, $messages);
+            if ($validator->fails()) {
+                $data['result'] = false;
+                $data['message'] = $validator->errors()->all();
+                echo json_encode($data);
+                die();
+            }
+            DB::beginTransaction();
+            try {
+                $dtData->phone = $this->request->input('phone');
+                $dtData->name = $this->request->input('name');
+                if (!empty($this->request->input('password'))) {
+                    $dtData->password = bcrypt($this->request->input('password'));
+                }
+                $dtData->save();
+                DB::commit();
+                $data['result'] = true;
+                $data['message'] = 'Cập nhập thông tin thành công';
+                return response()->json($data);
+            } catch (\Exception $exception) {
+                DB::rollBack();
+                $data['result'] = false;
+                $data['message'] = $exception->getMessage();
+                return response()->json($data);
+            }
+        }
+        return view('admin.user.profile', ['id' => $id, 'dtData' => $dtData, 'title' => $title]);
+    }
+
+    public function changeStatusNVKD($id){
+        if (!has_permission('user','edit')){
+            $data['result'] = false;
+            $data['message'] = lang('dt_access');
+            return response()->json($data);
+        }
+        $user = User::find($id);
+        try {
+            $user->check_nvkd = $this->request->input('status') == 0 ? 1 : 0;
+            $user->save();
+            $data['result'] = true;
+            $data['message'] = lang('dt_success');
+            return response()->json($data);
+        } catch (\Exception $exception){
+            $data['result'] = false;
+            $data['message'] = $exception->getMessage();
+            return response()->json($data);
+        }
+    }
+
+    public function changeStatusManager($id){
+        if (!has_permission('user','edit')){
+            $data['result'] = false;
+            $data['message'] = lang('dt_access');
+            return response()->json($data);
+        }
+        $user = User::find($id);
+        try {
+            $user->check_manager = $this->request->input('status') == 0 ? 1 : 0;
+            $user->save();
+            $data['result'] = true;
+            $data['message'] = lang('dt_success');
+            return response()->json($data);
+        } catch (\Exception $exception){
+            $data['result'] = false;
+            $data['message'] = $exception->getMessage();
+            return response()->json($data);
+        }
+    }
+
 }

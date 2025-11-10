@@ -99,6 +99,72 @@ class AdminService
         return $response;
     }
 
+    public function getLisMembershipExpense($request = [])
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'POST',
+                "{$this->baseUrl}/api/category/getLisMembershipExpense",
+                $request,
+            );
+            $data = $response->json();
+            return response()->json([
+                'data' => $data,
+                'result' => $data['result'] ?? false,
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getLisMembershipPurchases($request = [])
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'POST',
+                "{$this->baseUrl}/api/category/getLisMembershipPurchases",
+                $request,
+            );
+            $data = $response->json();
+            return response()->json([
+                'data' => $data,
+                'result' => $data['result'] ?? false,
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getLisMembershipLongTerm($request = [])
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'POST',
+                "{$this->baseUrl}/api/category/getLisMembershipLongTerm",
+                $request,
+            );
+            $data = $response->json();
+            return response()->json([
+                'data' => $data,
+                'result' => $data['result'] ?? false,
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function requestPaymentPay2s($request = [])
     {
         try {
@@ -113,6 +179,24 @@ class AdminService
                 'result' => $data['result'] ?? false,
                 'message' => $data['message']
             ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getListStaff($request = [])
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'GET',
+                "{$this->baseUrl}/api/category/getListStaff",
+                $request,
+            );
+            $data = $response->json();
+            return $data;
         } catch (\Exception $e) {
             return response()->json([
                 'result' => false,

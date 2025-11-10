@@ -6,6 +6,7 @@ use App\Http\Resources\TransactionBillResource;
 use App\Http\Resources\TransactionDayItemResource;
 use App\Models\Clients;
 use App\Models\Payment;
+use App\Models\Service;
 use App\Models\Transaction;
 use App\Models\TransactionBill;
 use App\Models\TransactionDayItem;
@@ -242,6 +243,9 @@ class TransactionBillController extends AuthController
             if (!empty($service_search)){
                 $query->where('service_id',$service_search);
             }
+            if (!empty($partner_search)){
+                $query->where('partner_id', $partner_search);
+            }
             if (!empty($ares_permission)) {
                 if (!empty($user_id)) {
                     $this->requestWard = clone $this->request;
@@ -287,17 +291,16 @@ class TransactionBillController extends AuthController
 
     public function delete(){
         $id = $this->request->input('id') ?? 0;
-        $dtData = Transaction::find($id);
+        $dtData = TransactionBill::find($id);
         if (empty($dtData)){
             $data['result'] = false;
-            $data['message'] = 'Không tồn tại chuyến đi';
+            $data['message'] = 'Không tồn tại hóa đơn';
             return response()->json($data);
         }
         DB::beginTransaction();
         try {
             $dtData->delete();
-            $dtData->transaction_day()->delete();
-            $dtData->transaction_day_item()->delete();
+            $dtData->payment()->delete();
             DB::commit();
             $data['result'] = true;
             $data['message'] = lang('c_delete_true');
@@ -322,10 +325,12 @@ class TransactionBillController extends AuthController
         if ($this->request->query('per_page')) {
             $per_page =$this->request->query('per_page');
         }
-        $customer_id = $this->request->client->id ?? 0;
+        $type = $this->request->input('type') ?? 1;
+        $partner_id = $this->request->client->id ?? 0;
         $status_search = $this->request->input('status_search');
         $customer_search = $this->request->input('customer_search');
         $search = $this->request->input('search') ?? null;
+        $year_month = $this->request->input('year_month') ?? date('Y-m');
         //admin
         $cron = $this->request->input('cron') ?? 0;
         $service_id = $this->request->input('service_id') ?? 0;
@@ -360,24 +365,34 @@ class TransactionBillController extends AuthController
                 $q->where('reference_no', 'like', "%$search%");
             });
         }
-        $query->where(function ($q) use ($status_search,$customer_search,$customer_id,$service_id,$start_date,$end_date,$date_search,$cron){
+        $query->where(function ($q) use ($status_search,$customer_search,$partner_id,$service_id,$start_date,$end_date,$date_search,$cron,$type,$year_month){
             if ($status_search != -1) {
                 $status_search = is_array($status_search) ? $status_search : [$status_search];
                 $q->whereIn('status', $status_search);
             }
-            if (empty($customer_search)) {
-                //trong admin không cần lọc theo customer id
-                if (empty($cron)) {
-                    $q->where(function ($q) use ($customer_id) {
-                        $q->where('customer_id', $customer_id);
-                    });
-                }
+            if (!empty($customer_search)) {
+                $q->where('customer_id', $customer_search);
             }
+            if (empty($cron)) {
+                $q->where(function ($q) use ($partner_id,$type) {
+                    if ($type == 1){
+                        //đối tác
+                        $q->where('partner_id', $partner_id);
+                    } else {
+                        //thành viên
+                        $q->where('customer_id', $partner_id);
+                    }
+                });
+            }
+
             if (!empty($service_id)){
                 $q->where('service_id',$service_id);
             }
             if (!empty($date_search)){
                 $q->whereBetween('date', [$start_date, $end_date]);
+            }
+            if (!empty($year_month)){
+                $q->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?",[$year_month]);
             }
         });
         $query->orderByRaw("id desc");
@@ -410,7 +425,7 @@ class TransactionBillController extends AuthController
             $this->request->client = (object)['token' => Config::get('constant')['token_default']];
         }
         $dtData = TransactionBill::with(['customer' => function ($q) {
-                $q->select('id', 'fullname', 'phone', 'email', 'avatar');
+                $q->select('id', 'fullname', 'phone', 'email', 'avatar','membership_level','active_limit_private','radio_discount_private');
             }])
             ->with(['transaction' => function ($q) {
                 $q->select('id', 'reference_no', 'date');
@@ -437,10 +452,30 @@ class TransactionBillController extends AuthController
         $dtData->service = $service;
         //end
         if (!empty($dtData)){
+            $percent = 0;
+            $name_level = null;
             $dtCustomer = $dtData->customer ?? null;
             if (!empty($dtCustomer)){
+                if ($dtCustomer->active_limit_private == 1){
+                    $percent = $dtClient->radio_discount_private ?? 0;
+                } else {
+                    if (!empty($dtCustomer->membership_level)) {
+                        $dataLevelData = $this->fnbAdminService->getMemberShipLevel($dtCustomer->membership_level);
+                        if (!empty($dataLevelData['result'])) {
+                            $dataLevel = $dataLevelData['data'][0];
+                            if (!empty($dataLevel)) {
+                                $percent = $dataLevel['radio_discount'] ?? 0;
+                                $name_level = $dataLevel['name'] ?? null;
+                            }
+                        }
+                    }
+                }
                 $dtImage = !empty($dtCustomer->avatar) ? env('STORAGE_URL').'/'.$dtCustomer->avatar : null;
                 $dtData->customer->avatar_new = $dtImage;
+                $dtData->customer->membership = [
+                    'membership_level' => $name_level,
+                    'percent' => $percent
+                ];
             } else {
                 $dtData->customer = null;
             }
@@ -481,11 +516,11 @@ class TransactionBillController extends AuthController
         $validator = Validator::make($this->request->all(),
             [
                 'service_id' => 'required',
-                'transaction_day_item_id' => 'required',
+                'customer_id' => 'required',
             ]
             , [
-                'transaction_id.required' => 'Vui lòng chọn chuyến đi!',
-                'transaction_day_item_id.required' => 'Vui lòng chọn gian hàng!',
+                'service_id.required' => 'Vui lòng chọn gian hàng!',
+                'customer_id.required' => 'Vui lòng chọn khách hàng!',
             ]);
         if ($validator->fails()) {
             $data['data'] = [];
@@ -495,22 +530,62 @@ class TransactionBillController extends AuthController
             die();
         }
         $app = $dataPost['app'] ?? 0;
-        $dtTransaction = Transaction::find($dataPost['transaction_id']);
-        if (empty($dtTransaction)){
-            $data['result'] = false;
-            $data['data'] = [];
-            $data['message'] = 'Chuyến đi không tồn tại!';
-            return response()->json($data);
-        }
-        $dtTransactionDayItem = TransactionDayItem::find($dataPost['transaction_day_item_id']);
-        if (empty($dtTransactionDayItem)){
+        $this->requestService = clone $this->request;
+        $this->requestService->merge(['id' => $dataPost['service_id'] ?? 0]);
+        $responseService = $this->fnbServiceService->getDetail($this->requestService);
+        $dataService = $responseService->getData(true);
+        $dtService = collect($dataService['dtData'] ?? []);
+        if (empty($dtService)){
             $data['result'] = false;
             $data['data'] = [];
             $data['message'] = 'Gian hàng không tồn tại!';
             return response()->json($data);
         }
+        $dtClient = Clients::find($dataPost['customer_id']);
+        if (empty($dtClient)){
+            $data['result'] = false;
+            $data['data'] = [];
+            $data['message'] = 'Khách hàng không tồn tại!';
+            return response()->json($data);
+        }
+        $percent = 0;
+        if ($dtClient->active_limit_private == 1){
+            $percent = $dtClient->radio_discount_private ?? 0;
+        } else {
+            if (!empty($dtClient->membership_level)) {
+                $dataLevelData = $this->fnbAdminService->getMemberShipLevel($dtClient->membership_level);
+                if (!empty($dataLevelData['result'])) {
+                    $dataLevel = $dataLevelData['data'][0];
+                    if (!empty($dataLevel)) {
+                        $percent = $dataLevel['radio_discount'] ?? 0;
+                    }
+                }
+            }
+        }
+        $membership_level_id = $dtClient->membership_level ?? 0;
+        $service_id = $dataPost['service_id'] ?? 0;
+        $customer_id_new = $dtClient->id;
+
+        $dtTransactionDayItem = TransactionDayItem::where(function ($query) use ($service_id){
+                $query->where('service_id',$service_id);
+                $query->whereNotIn('status', [
+                    Config::get('constant')['status_transaction_item_cancel'],
+                    Config::get('constant')['status_transaction_item_finish'],
+                ]);
+            })
+            ->whereHas('transaction_day', function ($q) {
+                $q->whereDate('date', date('Y-m-d'));
+            })
+            ->whereHas('transaction', function ($q) use ($customer_id_new) {
+                $q->where('customer_id', $customer_id_new);
+                $q->whereNotIn('status', [
+                    Config::get('constant')['status_transaction_cancel'],
+                    Config::get('constant')['status_transaction_finish'],
+                ]);
+            })
+            ->first();
         if ($app == 1) {
-            if ($customer_id != $dtTransactionDayItem->partner_id) {
+            if ($customer_id != $dtService['customer_id']) {
                 $data['result'] = false;
                 $data['data'] = [];
                 $data['message'] = 'Bạn không thuộc chủ sở hữu của gian hàng đang tạo hóa đơn!';
@@ -518,12 +593,10 @@ class TransactionBillController extends AuthController
             }
         }
 
-        $customer_id_new = $dtTransaction->customer_id;
-
+        $percent = !empty($percent) ? $percent : 0;
         $total = $dataPost['total'] ?? 0;
-        $percent = $dataPost['percent'] ?? 0;
-        $transaction_id = $dataPost['transaction_id'] ?? 0;
-        $transaction_day_item_id = $dataPost['transaction_day_item_id'] ?? 0;
+        $transaction_id = $dtTransactionDayItem->transaction->id ?? 0;
+        $transaction_day_item_id = $dtTransactionDayItem->id ?? 0;
         $date = date('Y-m-d H:i:s');
         $total = $this->fnbAdminService->getSetting($total);
         $discount = $this->fnbAdminService->getSetting($percent);
@@ -565,8 +638,8 @@ class TransactionBillController extends AuthController
             $transactionBill->customer_id = $customer_id_new;
             $transactionBill->transaction_id = $transaction_id;
             $transactionBill->transaction_day_item_id = $transaction_day_item_id;
-            $transactionBill->service_id = $dtTransactionDayItem->service_id;
-            $transactionBill->partner_id = $dtTransactionDayItem->partner_id;
+            $transactionBill->service_id = $dtService['id'];
+            $transactionBill->partner_id = $dtService['customer_id'];
             $transactionBill->total = $total;
             $transactionBill->discount = $discount;
             $transactionBill->total_discount = $total_discount;
@@ -575,6 +648,7 @@ class TransactionBillController extends AuthController
             $transactionBill->app = 1;
             $transactionBill->created_by = $customer_id;
             $transactionBill->type_created = 2;
+            $transactionBill->membership_level_id = $membership_level_id;
             $transactionBill->save();
             $this->fnbAdminService->updateOrderRef('transaction_bill');
             //thêm phiếu thanh toán
@@ -611,7 +685,7 @@ class TransactionBillController extends AuthController
                 $this->requestNoti->merge(['type' => 'customer']);
                 $this->requestNoti->merge(['staff_id' => 0]);
                 $this->requestNoti->merge(['type_noti' => 'remind_payment']);
-                $this->fnbNoti->addNoti($this->requestNoti);
+//                $this->fnbNoti->addNoti($this->requestNoti);
             }
             //end
             DB::commit();
@@ -660,9 +734,9 @@ class TransactionBillController extends AuthController
         $status = $this->request->input('status');
         $noteStatus = $this->request->input('note');
 
-        $transaction = Transaction::with('customer')->find($transaction_id);
-        $index = getValueStatusTransaction($transaction->status,'index');
-        $index_current = getValueStatusTransaction($status,'index');
+        $transaction = TransactionBill::with('customer')->find($transaction_id);
+        $index = getValueStatusTransactionBill($transaction->status,'index');
+        $index_current = getValueStatusTransactionBill($status,'index');
         $status_current = $transaction->status;
         $arr = [Config::get('constant')['status_transaction_cancel']];
         if ($index_current < $index){
@@ -678,18 +752,68 @@ class TransactionBillController extends AuthController
             $data['message'] = 'Trạng thái đã được cập nhật vui lòng kiểm tra lại!';
             return response()->json($data);
         }
+        $payment = $transaction->payment ?? null;
+        $transactionDayItem = $transaction->transaction_day_item ?? null;
         $customer_id = $transaction->customer_id;
+
+        if ($status == Config::get('constant')['status_transaction_bill_approve']) {
+            $arr_object_id = [];
+            $dtCustomer = Clients::select(
+                'tbl_clients.fullname as name',
+                'tbl_clients.id as object_id',
+                'tbl_player_id.player_id as player_id',
+                DB::raw("'customer' as 'object_type'")
+            )
+                ->leftJoin('tbl_player_id', function ($join) {
+                    $join->on('tbl_player_id.object_id', '=', 'tbl_clients.id');
+                    $join->on('tbl_player_id.object_type', '=', DB::raw("'customer'"));
+                })
+                ->where('tbl_clients.id', $customer_id)
+                ->get()->toArray();
+            if (!empty($dtCustomer)) {
+                $arr_object_id = array_merge($arr_object_id, $dtCustomer);
+            }
+            $arr_object_id = array_values($arr_object_id);
+        }
+
         DB::beginTransaction();
         try
         {
-            if ($status == Config::get('constant')['status_transaction_cancel']){
-                $transaction->cancel_end = $this->request->input('cancel_end') ?? 0;
-            }
             $transaction->status = $status;
-            $transaction->note_status = !empty($noteStatus) ? $noteStatus : null;
             $transaction->date_status = date('Y-m-d H:i:s');
             $transaction->staff_status = $this->request->input('staff_status');
             $transaction->save();
+
+            if ($status == Config::get('constant')['status_transaction_bill_approve']) {
+                if (!empty($payment)) {
+                    $payment->status = 2;
+                    $payment->save();
+
+                    //gửi thông báo
+                    $payment->data_customer = [
+                        'id' => $payment->customer->id,
+                        'fullname' => $payment->customer->fullname,
+                        'phone' => $payment->customer->phone,
+                        'email' => $payment->customer->email,
+                    ];
+                    $payment->makeHidden(['customer']);
+                    $this->requestNoti = clone $this->request;
+                    $this->requestNoti->merge(['type_noti' => 'change_status_payment']);
+                    $this->requestNoti->merge(['arr_object_id' => $arr_object_id]);
+                    $this->requestNoti->merge(['dtData' => $payment]);
+                    $this->requestNoti->merge(['customer_id' => $customer_id]);
+                    $this->requestNoti->merge(['type' => 'staff']);
+                    $this->requestNoti->merge(['staff_id' => $this->request->input('staff_status')]);
+//                    $this->fnbNoti->addNoti($this->requestNoti);
+                }
+
+                if (!empty($transactionDayItem)){
+                    $transactionDayItem->status = Config::get('constant')['status_transaction_item_finish'];
+                    $transactionDayItem->staff_status = $this->request->input('staff_status');
+                    $transactionDayItem->date_status = date('Y-m-d H:i:s');
+                    $transactionDayItem->save();
+                }
+            }
             DB::commit();
             $data['result'] = true;
             $data['data'] = $transaction;
@@ -774,5 +898,89 @@ class TransactionBillController extends AuthController
             'result' => true,
             'message' => 'Lấy danh sách thành công'
         ]);
+    }
+
+    public function getListService(){
+        $customer_id = $this->request->input('customer_id') ?? 0;
+        $partner_id = $this->request->client->id ?? 0;
+        $this->requestService = clone $this->request;
+        $this->requestService->merge(['partner_id' => $partner_id]);
+        $this->requestService->merge(['search' => null]);
+        $responseService = $this->fnbServiceService->getListDataByTransaction($this->requestService);
+        $dataService = $responseService->getData(true);
+        $services = collect($dataService['data']['data'] ?? []);
+
+        $dtTransactionDayItem = TransactionDayItem::where(function ($query) use ($partner_id){
+            $query->where('partner_id',$partner_id);
+            $query->whereNotIn('status', [
+                Config::get('constant')['status_transaction_item_cancel'],
+                Config::get('constant')['status_transaction_item_finish'],
+            ]);
+        })
+            ->whereHas('transaction_day', function ($q) {
+                $q->whereDate('date', date('Y-m-d'));
+            })
+            ->whereHas('transaction', function ($q) use ($customer_id) {
+                $q->where('customer_id', $customer_id);
+                $q->whereNotIn('status', [
+                    Config::get('constant')['status_transaction_cancel'],
+                    Config::get('constant')['status_transaction_finish'],
+                ]);
+            })
+            ->first();
+        if (!empty($dtTransactionDayItem)){
+            $this->requestService->merge(['id' => $dtTransactionDayItem->service_id]);
+            $responseService = $this->fnbServiceService->getDetail($this->requestService);
+            $dataService = $responseService->getData(true);
+            $dataService = collect($dataService['dtData'] ?? []);
+            if (!empty($dataService)){
+                $dtServiceSelect = [
+                    'id' => $dataService['id'],
+                    'name' => $dataService['name'],
+                    'image' => $dataService['image'],
+                ];
+            } else {
+                $dtServiceSelect = null;
+            }
+        } else {
+            if (count($services) > 0){
+                $dtServiceSelect = [
+                    'id' => $services[0]['id'],
+                    'name' => $services[0]['name'],
+                    'image' => $services[0]['image'],
+                ];
+            } else {
+                $dtServiceSelect = null;
+            }
+        }
+        return response()->json([
+            'data' => $services,
+            'dataSelected' => $dtServiceSelect,
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
+    }
+
+    public function checkService(){
+        $service_id = $this->request->input('service_id') ?? 0;
+        $dtCheck = TransactionBill::where('service_id',$service_id)->first();
+        $data['result'] = true;
+        $data['data'] = $dtCheck;
+        $data['message'] = 'Lấy thông tin thành công';
+        return response()->json($data);
+    }
+
+    public function getListMonthTransaction(){
+        $customer_id = $this->request->client->id ?? 0;
+        $query = TransactionBill::where('id','!=',0);
+        $query->where('customer_id', $customer_id);
+        $query->select(DB::raw("DATE_FORMAT(date, '%m-%Y') as month_year"));
+        $query->groupBy(DB::raw("DATE_FORMAT(date, '%m-%Y')"));
+        $query->orderByRaw("DATE_FORMAT(date, '%m-%Y') desc");
+        $dtData = $query->get();
+        $data['result'] = true;
+        $data['data'] = $dtData;
+        $data['message'] = 'Lấy thông tin thành công';
+        return response()->json($data);
     }
 }

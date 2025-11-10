@@ -40,11 +40,13 @@ class AresController extends Controller
     {
         $search = $this->request->input('search.value') ?? null;
         if (!has_permission('ares','view') && has_permission('ares','viewown')){
-            $user_ares = UserAres::where('id_user', '=', get_staff_user_id())->get();
+            $user_ids = getUserIdByRole();
+            $user_ares = UserAres::whereIn('id_user', $user_ids)->get();
             $listAres = [];
             foreach($user_ares as $dataAres) {
                 $listAres[] = $dataAres->id_ares;
             }
+            $listAres = array_unique($listAres);
             $this->request->merge(['aresPer' => $listAres]);
             $this->request->merge(['ares_permission' => 1]);
         }

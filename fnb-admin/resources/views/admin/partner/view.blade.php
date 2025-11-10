@@ -4,6 +4,104 @@
         .card-box {
             min-height: 180px;
         }
+        .tree ul {
+            padding-top: 20px;
+            position: relative;
+            transition: all 0.5s;
+            -webkit-transition: all 0.5s;
+            -moz-transition: all 0.5s;
+        }
+
+        .tree li {
+            float: left;
+            text-align: center;
+            list-style-type: none;
+            position: relative;
+            padding: 20px 5px 0 5px;
+            transition: all 0.5s;
+            -webkit-transition: all 0.5s;
+            -moz-transition: all 0.5s;
+        }
+
+        .tree li::before, .tree li::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 50%;
+            border-top: 1px solid #ccc;
+            width: 50%;
+            height: 20px;
+        }
+
+        .tree li::after {
+            right: auto;
+            left: 50%;
+            border-left: 1px solid #ccc;
+        }
+
+        .tree li:only-child::before, .tree li:only-child::after {
+            display: none;
+        }
+
+        .tree li:only-child {
+            padding-top: 0;
+        }
+
+        .tree li:first-child::before, .tree li:last-child::after {
+            border: 0 none;
+        }
+
+        .tree li:last-child::before {
+            border-right: 1px solid #ccc;
+            border-radius: 0 5px 0 0;
+        }
+
+        .tree li:first-child::after {
+            border-radius: 5px 0 0 0;
+        }
+        .tree ul ul::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            border-left: 1px solid #ccc;
+            width: 0;
+            height: 20px;
+        }
+        .irs-min, .irs-max {
+            background: #EDCD68;
+            color: white;
+            font-size: 25px;
+        }
+        .irs-from, .irs-to, .irs-single{
+            top: 18px;
+            font-size: 15px;
+            background: #EDCD68;
+        }
+        .irs-slider {
+            width: 16px;
+            height: 18px;
+            top: 46px;
+            background-position: 0 -120px;
+        }
+        .irs-line {
+            height: 12px; top: 50px;
+            background-color: #e2dede;
+        }
+        .irs-bar {
+            height: 12px; top: 50px;
+            background-position: 0 -60px;
+            background-color: #EDCD68 !important;
+            background-image: none;
+
+        }
+        .irs-bar-edge {
+            background-color: #EDCD68 !important;
+            background-image: none;
+            top: 50px;
+            height: 12px; width: 9px;
+            background-position: 0 -90px;
+        }
     </style>
     <div class="row">
         <div class="col-sm-12">
@@ -27,7 +125,7 @@
                 <li class="">
                     <a href="#representative" data-toggle="tab" aria-expanded="false">
                         <span class="visible-xs"></span>
-                        <span class="hidden-xs">Thông tin người đại diện</span>
+                        <span class="hidden-xs">Thông tin cơ sở kinh doanh</span>
                     </a>
                 </li>
                 <li class="">
@@ -65,6 +163,29 @@
                                         $content = $client['active'] == 1 ? "Hoạt động" : "Khoá";
                                         $strStatus = "<a class='dt-update text-center btn btn-xs $classes'>$content</a>";
 
+                                        $strReferral = '';
+                                        $referral_level = $client['referral_level'];
+                                        if (!empty($referral_level)) {
+                                            if ($referral_level['parent']['type_client'] == 1) {
+                                                $strReferral = "<a class='text-center label label-danger' target='_blank' href='admin/clients/view/" . $referral_level['parent_id'] . "'>" . $referral_level['referral_code'] . "</a>";
+                                            } else {
+                                                $strReferral = "<a class='text-center label label-danger' target='_blank' href='admin/partner/view/" . $referral_level['parent_id'] . "'>" . $referral_level['referral_code'] . "</a>";
+                                            }
+                                        }
+                                        $staff = $client['staff'] ?? null;
+                                        $hmtlStaff = '';
+                                         if (!empty($staff)){
+                                            $dtImage = $staff['image'];
+                                            $image = '<div style="display: flex;justify-content:center;margin-top: 5px"
+                                             class="show_image">
+                                            <img src="' . $dtImage . '" alt="avatar"
+                                                 class="img-responsive img-circle"
+                                                 style="width: 35px;height: 35px">
+
+                                            </div>';
+                                            $str = '<div style="margin-left: 5px;text-align: center">' . $staff['name'] .' ('.$staff['code'].')</div>';
+                                            $hmtlStaff = '<div style="display: flex;align-items: center;flex-wrap: wrap;justify-content: center">'.$image.$str.'</div>';
+                                         }
                                     @endphp
                                     <div class="member-img"
                                          style="display: flex;flex-direction: column;align-items: center">
@@ -91,11 +212,36 @@
                                         <p class="text-dark member-info-detail">
                                             <span>Địa chỉ : </span><span>{{$client['address']}}</span>
                                         </p>
+                                        <div class="text-dark member-info-detail" style="align-items: center">
+                                            <span>Nhân viên phụ trách : </span><span>{!! $hmtlStaff !!}</span>
+                                        </div>
+                                        <p class="text-dark member-info-detail">
+                                            <span>Mã giới thiệu : </span><span class="label label-default">{{$client['referral_code']}}</span>
+                                        </p>
+                                        <p class="text-dark member-info-detail">
+                                            <span>Người giới thiệu : </span>{!! $strReferral !!}</span>
+                                        </p>
                                         <p class="text-dark member-info-detail">
                                             <span>{{lang('c_active_client')}}: </span><span>{!! $strStatus !!}</span>
                                         </p>
                                     </div>
 
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="card-box">
+                                <div class="title_driving_liscense">
+                                    <h5 class="text-muted text-uppercase m-t-0 m-b-20" style="color: black"><b>Sơ đồ
+                                            nhánh các cấp</b></h5>
+                                </div>
+                                <div>Tổng số thành viên: {{$countMember}}</div>
+                                <div class="hide">Tổng số cấp: {{$level}}</div>
+                                <div class="tree" style="overflow-x: auto;overflow-y: hidden; white-space: nowrap;">
+                                    @php
+                                        $html = get_parent_id_referral_level_html($dataReferralLevel)
+                                    @endphp
+                                    {!! $html !!}
                                 </div>
                             </div>
                         </div>
@@ -106,7 +252,7 @@
                         <div class="col-md-12">
                             <div class="card-box">
                                 <div class="title_business" style="justify-content:flex-end">
-                                    <h5 class="text-muted text-uppercase m-t-0 m-b-20 hide" style="color: black"><b>Thông tin người đại diện</b></h5>
+                                    <h5 class="text-muted text-uppercase m-t-0 m-b-20 hide" style="color: black"><b>Thông tin cở sở kinh doanh</b></h5>
                                     <div class="edit_business edit_button">Chỉnh sửa <i style="margin-left: 5px"
                                                                                         class="fa fa-pencil"></i></div>
                                 </div>
@@ -117,8 +263,8 @@
                                             <ul class="nav nav-tabs" id="tab_partner">
                                                 <li class="active">
                                                     <a href="#info_representative" data-toggle="tab" aria-expanded="false">
-                                                        <span class="visible-xs">Thông tin người đại diện</span>
-                                                        <span class="hidden-xs">Thông tin người đại diện</span>
+                                                        <span class="visible-xs">Thông tin cở sở kinh doanh</span>
+                                                        <span class="hidden-xs">Thông tin cở sở kinh doanh</span>
                                                     </a>
                                                 </li>
                                                 <li class="">
@@ -157,7 +303,7 @@
                                                                    class="id"
                                                                    value="{{!empty($client['representative']) ? $client['representative']['id'] : 0}}">
                                                             <label
-                                                                for="name_representative">Người đại diện </label>
+                                                                for="name_representative">Tên cơ sở kinh doanh </label>
                                                             <input type="text" name="name_representative" autocomplete="off"
                                                                    readonly
                                                                    value="{{!empty($client['representative']) ? $client['representative']['name'] : ''}}"
@@ -204,6 +350,14 @@
                                                                            class="form-control mst_representative">
                                                                 </div>
                                                             </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="staff_id_representative">{{lang('Nhân viên phụ trách')}}</label>
+                                                            <select class="form-control" name="staff_id_representative" id="staff_id_representative" required style="width: 100%;height: 35px">
+                                                                @if(!empty($client['staff']))
+                                                                    <option value="{{$client['staff']['id']}}">{{$client['staff']['name'] }} ({{$client['staff']['code']}})</option>
+                                                                @endif
+                                                            </select>
                                                         </div>
                                                         <div class="form-group">
                                                             <label
@@ -442,6 +596,9 @@
             }
         });
 
+        $(document).ready(function() {
+            searchAjaxSelect2('#staff_id_representative', 'api/category/getListStaff', 0, {select2: true})
+        });
         $("#business_form").validate({
             rules: {
                 name_representative: {
@@ -462,10 +619,16 @@
                 number_cccd_representative: {
                     required: true,
                 },
+                date_cccd_representative: {
+                    required: true,
+                },
                 date_end_cccd_representative: {
                     required: true,
                 },
                 issued_cccd_representative: {
+                    required: true,
+                },
+                staff_id_representative: {
                     required: true,
                 },
             },
@@ -488,10 +651,16 @@
                 number_cccd_representative: {
                     required: "{{lang('dt_required')}}",
                 },
+                date_cccd_representative: {
+                    required: "{{lang('dt_required')}}",
+                },
                 date_end_cccd_representative: {
                     required: "{{lang('dt_required')}}",
                 },
                 issued_cccd_representative: {
+                    required: "{{lang('dt_required')}}",
+                },
+                staff_id_representative: {
                     required: "{{lang('dt_required')}}",
                 },
             },

@@ -3,7 +3,9 @@
 use App\Libraries\App;
 use App\Libraries\Alepay;
 use App\Models\Clients;
+use App\Models\ReferralLevel;
 use App\Models\User;
+use App\Models\Payment;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -1787,3 +1789,589 @@ function createQrBank($data = array())
     return $response;
 }
 
+function getDataTreeReferralLevel($id,$type = 'partner')
+{
+    $arrId = array();
+
+    $arrID_child = array();
+    get_childs_id_helper($id, $arrID_child,0,$type);
+    array_push($arrID_child, $id);
+
+    if($arrID_child) {
+        $arrId = array_unique($arrID_child);
+    }
+
+    return $arrId;
+}
+
+function get_childs_id_helper($parent_id = '', &$result = array(),$dem = 0,$type = 'partner'){
+    $dem++;
+    $items = \App\Models\ReferralLevel::where('parent_id',$parent_id)->get();
+
+    if ($type == 'client'){
+        //chỉ lấy tới cấp 1
+        if ($dem > 1) {
+            return;
+        }
+    } elseif ($type == 'all'){
+        if ($dem > 15) {
+            return;
+        }
+    } else {
+        //chỉ lấy tới cấp 2
+        if ($dem > 2) {
+            return;
+        }
+    }
+
+    foreach($items as $value) {
+        array_push($result, $value->customer_id);
+        get_childs_id_helper($value->customer_id, $result,$dem,$type);
+    }
+}
+
+function get_parent_id_referral_level_new($data, $parentId = 0,$level = 0,$branch = 0)
+{
+    $array = array();
+    foreach ($data as $key => $value) {
+        if ($value->parent_id == $parentId) {
+            $value->level = $level;
+            if($level == 1){
+                $branch++;
+                $value->branch = $branch;
+            } elseif ($level > 1){
+                $value->branch = $branch;
+            } elseif ($level == 0){
+                $value->branch = 0;
+            }
+            $array[] = ($value);
+            $children = get_parent_id_referral_level_new($data, $value->customer_id,$level+1,$branch);
+            $array = array_merge($array,$children);
+        }
+    }
+
+    return $array;
+}
+
+function get_parent_customer($customer_id)
+{
+    $arrStaffId = [];
+    $arrID_child = [];
+    get_parent_customer_id_helper($customer_id, $arrID_child);
+
+    if ($arrID_child) {
+        $arrStaffId = array_unique($arrID_child);
+    }
+
+    return $arrStaffId;
+}
+
+function get_parent_customer_id_helper($child_id = 0, &$result = array(),$dem = 0)
+{
+    $dem++;
+    $items = \App\Models\ReferralLevel::where('customer_id',$child_id)->get();
+    if ($dem > 3) {
+        return;
+    }
+    if($dem == 25){
+        return $items;
+    }
+    foreach ($items as $value) {
+        array_push($result, $value->parent_id);
+        get_parent_customer_id_helper($value->parent_id, $result,$dem);
+    }
+}
+
+function changePoint($id = 0, $type = '',$staff_id = 0,$customer_id = 0,$point = 0,$date = null)
+{
+    $dtObject = [];
+    $title_point = '';
+    if ($type == 'payment') {
+        $dtObject = Payment::select(
+            'tbl_payment.id',
+            'tbl_payment.date as date',
+            'tbl_payment.customer_id as customer_id'
+        )
+            ->where('status', 2)
+            ->where('tbl_payment.id', $id)
+            ->first();
+        if (empty($customer_id)) {
+            $title_point = 'Thanh toán hóa đơn';
+        } else {
+            $title_point = 'Giới thiệu thành viên';
+        }
+    } elseif ($type == 'point_payment'){
+        $dtObject = collect([[
+            'id' => 0,
+            'date' => $date,
+            'customer_id' => $customer_id,
+        ]])->first();
+        $dtObject = (object)$dtObject;
+        $title_point = 'Chi tiêu trong quý';
+    } elseif ($type == 'point_purchase'){
+        $dtObject = collect([[
+            'id' => 0,
+            'date' => $date,
+            'customer_id' => $customer_id,
+        ]])->first();
+        $dtObject = (object)$dtObject;
+        $title_point = 'Số lần mua hàng trong quý';
+    } elseif ($type == 'point_long_term'){
+        $dtObject = collect([[
+            'id' => 0,
+            'date' => $date,
+            'customer_id' => $customer_id,
+        ]])->first();
+        $dtObject = (object)$dtObject;
+        $title_point = 'Thời gian gắn bó';
+    } elseif ($type == 'reset_point'){
+        $dtObject = collect([[
+            'id' => 0,
+            'date' => $date,
+            'customer_id' => $customer_id,
+        ]])->first();
+        $dtObject = (object)$dtObject;
+        $title_point = 'Reset điểm mỗi quý';
+    }
+    if (!empty($dtObject)) {
+        $date = _dthuan($dtObject->date);
+        $date_point = to_sql_date(($date));
+        $date = explode('/', $date);
+        $month = $date[1];
+        $year = $date[2];
+        $type_check = 1;
+        $object_type = '';
+        $child_id = 0;
+        $child_name = null;
+        if ($type == 'payment') {
+            $fnbAdminService = new \App\Services\AdminService();
+            $point = $fnbAdminService->get_option('point_referral') ?? 30;
+            if (empty($customer_id)) {
+                $customer_id = $dtObject->customer_id;
+            } else {
+                $customer_id = $customer_id;
+            }
+            $dtClientChild = Clients::find($dtObject->customer_id);
+            if (!empty($dtClientChild)){
+                $child_id = $dtClientChild->id;
+                $child_name = $dtClientChild->fullname;
+            }
+            $type_check = 1;
+            $object_type = 'payment';
+        } elseif ($type == 'point_payment') {
+            $type_check = 1;
+            $object_type = 'point_payment';
+        } elseif ($type == 'point_purchase'){
+            $type_check = 1;
+            $object_type = 'point_purchase';
+        } elseif ($type == 'point_long_term'){
+            $type_check = 1;
+            $object_type = 'point_long_term';
+        } elseif ($type == 'reset_point'){
+            $type_check = 2;
+            $point = -$point;
+            $object_type = 'reset_point';
+        }
+        $dtClient = Clients::find($customer_id);
+        $point_client = $dtClient->point_membership + $point;
+        Clients::where('id', $dtClient->id)->update([
+            'point_membership' => $point_client,
+        ]);
+        $clientPoint = DB::table('tbl_client_point_month')
+            ->where('customer_id', $customer_id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+        if (!empty($clientPoint)) {
+            $pointNew = $clientPoint->point + $point;
+            DB::table('tbl_client_point_month')->where('id', $clientPoint->id)
+                ->update([
+                    'point' => $pointNew
+                ]);
+        } else {
+            DB::table('tbl_client_point_month')->insert([
+                'customer_id' => $customer_id,
+                'month' => $month,
+                'year' => $year,
+                'point' => $point,
+                'created_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+        DB::table('tbl_client_point_history')->insert([
+            'customer_id' => $customer_id,
+            'object_id' => $id,
+            'object_type' => $object_type,
+            'point' => $point,
+            'type_check' => $type_check,
+            'child_id' => $child_id ?? 0,
+            'child_name' => $child_name ?? null,
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        if (!empty($point)) {
+            $arr_object_id = [];
+            $dtCustomer = Clients::select(
+                'tbl_clients.fullname as name',
+                'tbl_clients.id as object_id',
+                'tbl_player_id.player_id as player_id',
+                DB::raw("'customer' as 'object_type'")
+            )
+                ->leftJoin('tbl_player_id', function ($join) {
+                    $join->on('tbl_player_id.object_id', '=', 'tbl_clients.id');
+                    $join->on('tbl_player_id.object_type', '=', DB::raw("'customer'"));
+                })
+                ->where('tbl_clients.id', $customer_id)
+                ->get()->toArray();
+            if (!empty($dtCustomer)) {
+                $arr_object_id = array_merge($arr_object_id, $dtCustomer);
+            }
+            $fnbNoti = new \App\Services\NotiService();
+            $request_noti = new Request([
+                'type_noti' => 'change_point',
+                'arr_object_id' => $arr_object_id,
+                'dtData' => $dtObject,
+                'customer_id' => $customer_id,
+                'point' => $point,
+                'point_client' => $point_client,
+                'title_point' => $title_point,
+                'type' => 'staff',
+                'staff_id' => $staff_id
+            ]);
+            $fnbNoti->addNoti($request_noti);
+        }
+        return true;
+    }
+    return false;
+}
+
+function changeBalance($id = 0, $type = '', $type_increase = false,$typeF = '',$staff_id = 0,$customer_id = 0)
+{
+    $dtObject = [];
+    if ($type == 'reward_commission') {
+        $dtObject = Payment::select(
+            'tbl_payment.id',
+            'tbl_payment.date as date',
+            'tbl_payment.payment as total',
+            'tbl_payment.customer_id as customer_id',
+        )
+            ->where('check_balance', 0)
+            ->where('tbl_payment.id', $id)
+            ->first();
+        $title_balance = 'Thanh toán hóa đơn';
+    }
+    if (!empty($dtObject)) {
+        $type_check = 1;
+        $revenue = 0;
+        $date = _dthuan($dtObject->date);
+        $date = explode('/', $date);
+        $month = $date[1];
+        $year = $date[2];
+        $total = $dtObject->total;
+        $child_id = $dtObject->customer_id;
+        $percent = 0;
+        if ($type == 'reward_commission') {
+            $fnbAdminService = new \App\Services\AdminService();
+            if ($typeF == 'F'){
+                $percent = $fnbAdminService->get_option('percent_referral') ?? 5;
+            } elseif($typeF == 'F1') {
+                $percent = $fnbAdminService->get_option('percent_referral_f1') ?? 3;
+            } elseif ($typeF == 'F0'){
+                $percent = $fnbAdminService->get_option('percent_referral_f0') ?? 2;
+            }
+            $grand_total = ($total * $percent) / 100;
+            if (!empty($type_increase)) {
+                $revenue = -$grand_total;
+            } else {
+                $revenue = $grand_total;
+            }
+            if (empty($customer_id)) {
+                $customer_id = $dtObject->customer_id;
+            } else {
+                $customer_id = $customer_id;
+            }
+            $object_type = 'payment';
+        }
+        $dtClient = Clients::find($customer_id);
+        $account_balance_client = $dtClient->account_balance + $revenue;
+        Clients::where('id', $dtClient->id)->update([
+            'account_balance' => $account_balance_client
+        ]);
+        if ($type == 'payment') {
+            if (!empty($type_increase)) {
+                Payment::where('id', $dtObject->id)->update([
+                    'check_balance' => 0
+                ]);
+            } else {
+                Payment::where('id', $dtObject->id)->update([
+                    'check_balance' => 1
+                ]);
+            }
+        }
+        $clientBalance = DB::table('tbl_client_balance_month')
+            ->where('customer_id', $customer_id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+        if (!empty($clientBalance)) {
+            $balance = $clientBalance->balance + $revenue;
+            DB::table('tbl_client_balance_month')->where('id', $clientBalance->id)
+                ->update([
+                    'balance' => $balance
+                ]);
+        } else {
+            DB::table('tbl_client_balance_month')->insert([
+                'customer_id' => $customer_id,
+                'month' => $month,
+                'year' => $year,
+                'balance' => $revenue,
+                'created_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        $clientBalanceChild = DB::table('tbl_client_balance_month_child')
+            ->where('customer_id', $customer_id)
+            ->where('child_id', $child_id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+        if (!empty($clientBalanceChild)) {
+            $balance = $clientBalanceChild->balance + $revenue;
+            DB::table('tbl_client_balance_month_child')->where('id', $clientBalanceChild->id)
+                ->update([
+                    'balance' => $balance
+                ]);
+        } else {
+            DB::table('tbl_client_balance_month_child')->insert([
+                'customer_id' => $customer_id,
+                'child_id' => $child_id,
+                'month' => $month,
+                'year' => $year,
+                'balance' => $revenue,
+                'created_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        if ($revenue < 0){
+            $type_check = 2;
+        } else {
+            $type_check = 1;
+        }
+        $object_id = $dtObject->id;
+        DB::table('tbl_client_balance_history')->insert([
+            'customer_id' => $customer_id,
+            'object_id' => $object_id,
+            'object_type' => $object_type,
+            'balance' => $revenue,
+            'type_check' => $type_check,
+            'child_id' => $child_id,
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        if (!empty($revenue)) {
+            $arr_object_id = [];
+            $dtCustomer = Clients::select(
+                'tbl_clients.fullname as name',
+                'tbl_clients.id as object_id',
+                'tbl_player_id.player_id as player_id',
+                DB::raw("'customer' as 'object_type'")
+            )
+                ->leftJoin('tbl_player_id', function ($join) {
+                    $join->on('tbl_player_id.object_id', '=', 'tbl_clients.id');
+                    $join->on('tbl_player_id.object_type', '=', DB::raw("'customer'"));
+                })
+                ->where('tbl_clients.id', $customer_id)
+                ->get()->toArray();
+            if (!empty($dtCustomer)) {
+                $arr_object_id = array_merge($arr_object_id, $dtCustomer);
+            }
+            $fnbNoti = new \App\Services\NotiService();
+            $request_noti = new Request([
+                'type_noti' => 'change_balance',
+                'arr_object_id' => $arr_object_id,
+                'dtData' => $dtObject,
+                'customer_id' => $customer_id,
+                'point' => $revenue,
+                'point_client' => $account_balance_client,
+                'title_point' => $title_balance,
+                'type' => 'staff',
+                'staff_id' => $staff_id
+            ]);
+            $fnbNoti->addNoti($request_noti);
+        }
+        return true;
+    }
+    return false;
+}
+
+function checkRewardCustomerCommission($customer_id,$payment_id = 0,$staff_id = 0){
+    $parent_id = get_parent_customer($customer_id);
+
+    if (!empty($parent_id)){
+        $customer_id_f1 = !empty($parent_id[0]) ? $parent_id[0] : 0;
+        $customer_id_f0 = !empty($parent_id[1]) ? $parent_id[1] : 0;
+        $customer_id_f = !empty($parent_id[2]) ? $parent_id[2] : 0;
+        //chi lấy tới cấp 2
+        if(empty($customer_id_f)) {
+            if (!empty($customer_id_f0)) {
+                $dtCustomer = Clients::find($customer_id_f0);
+                if ($dtCustomer->type_client == 2){
+                    // đối tác thì mới dc hưởng 2 % của người thứ 51 của f1
+                    $arrId = array_diff(getDataTreeReferralLevel($customer_id_f1), [$customer_id_f1]);
+                    $countMember = Payment::where(function ($query) use ($arrId) {
+                        $query->whereIn('customer_id', $arrId);
+                        $query->where('status', 2);
+                    })->count();
+                    if ($countMember > 50 && $countMember <= 250) {
+                        changeBalance($payment_id, 'reward_commission', false, 'F1', $staff_id, $customer_id_f1);
+                        changeBalance($payment_id, 'reward_commission', false, 'F0', $staff_id, $customer_id_f0);
+                    }
+                }
+            } else {
+                $dtCustomer = Clients::find($customer_id_f1);
+                if ($dtCustomer->type_client == 2){
+                    // cấp trên là đối tác thì mới được 5 %
+                    changeBalance($payment_id, 'reward_commission', false, 'F', $staff_id, $customer_id_f1);
+                } else {
+                    // thành viên thì phải đủ 50 người trở lên mơi dc 3 %
+                    $arrId = array_diff(getDataTreeReferralLevel($customer_id_f1,'client'), [$customer_id_f1]);
+                    $countMember = Payment::where(function ($query) use ($arrId) {
+                        $query->whereIn('customer_id', $arrId);
+                        $query->where('status', 2);
+                    })->count();
+                    if ($countMember > 50 && $countMember <= 250) {
+                        changeBalance($payment_id, 'reward_commission', false, 'F1', $staff_id, $customer_id_f1);
+                    }
+                }
+            }
+        }
+    }
+}
+
+function checkCustomerCommission($customer_id,$payment_id = 0){
+    $fnbAdminService = new \App\Services\AdminService();
+    $percent = $fnbAdminService->get_option('percent') ?? 5;
+    $percent_partner = $fnbAdminService->get_option('percent_partner') ?? 2;
+    $percent_f1 = $fnbAdminService->get_option('percent_f1') ?? 3;
+
+    $parent_id = get_parent_customer($customer_id);
+
+    $dtPayment = Payment::find($payment_id);
+    if (!empty($parent_id)){
+        $customer_id_f1 = !empty($parent_id[0]) ? $parent_id[0] : 0;
+        $customer_id_f0 = !empty($parent_id[1]) ? $parent_id[1] : 0;
+        $customer_id_f = !empty($parent_id[2]) ? $parent_id[2] : 0;
+        //chi lấy tới cấp 2
+        if(empty($customer_id_f)) {
+            if (!empty($customer_id_f0)) {
+                $dtCustomer = Clients::find($customer_id_f0);
+                if ($dtCustomer->type_client == 2){
+                    // đối tác thì mới dc hưởng 2 % của người thứ 51 của f1
+                    $arrId = array_diff(getDataTreeReferralLevel($customer_id_f1), [$customer_id_f1]);
+                    $countMember = count($arrId);
+                    $dtCustomerNew = Clients::find($customer_id_f1);
+                    if ($countMember >= 50){
+                        $dtCustomerNew->date_50 = date('Y-m-d H:i:s');
+                    }
+                    if ($countMember >= 250){
+                        $dtCustomerNew->date_250 = date('Y-m-d H:i:s');
+                    }
+
+                    if ($countMember > 50 && $countMember <= 250) {
+                        $dtPayment->percent_f1 = $percent_f1;
+                        $dtPayment->revenue_f1 = ($dtPayment->payment * $percent_f1) / 100;
+                        $dtPayment->percent_partner = $percent_partner;
+                        $dtPayment->revenue_partner = ($dtPayment->payment * $percent_partner) / 100;
+                        $dtPayment->save();
+                    } elseif ($countMember <= 50){
+                        $dtPayment->percent_f1 = 0;
+                        $dtPayment->revenue_f1 = 0;
+                        $dtPayment->percent_partner = $percent;
+                        $dtPayment->revenue_partner = ($dtPayment->payment * $percent) / 100;
+                        $dtPayment->save();
+                    }
+                }
+            } else {
+                $dtCustomer = Clients::find($customer_id_f1);
+                if ($dtCustomer->type_client == 2){
+                    // cấp trên là đối tác thì mới được 5 %
+                    $dtPayment->percent_partner = $percent;
+                    $dtPayment->revenue_partner = ($dtPayment->payment * $percent) / 100;
+                    $dtPayment->percent_f1 = 0;
+                    $dtPayment->revenue_f1 = 0;
+                    $dtPayment->save();
+                } else {
+                    // thành viên thì phải đủ 50 người trở lên mơi dc 3 %
+                    $arrId = array_diff(getDataTreeReferralLevel($customer_id_f1,'client'), [$customer_id_f1]);
+                    $countMember = count($arrId);
+                    if ($countMember >= 50){
+                        $dtCustomer->date_50 = date('Y-m-d H:i:s');
+                    }
+                    if ($countMember >= 250){
+                        $dtCustomer->date_250 = date('Y-m-d H:i:s');
+                    }
+
+                    if ($countMember > 50 && $countMember <= 250) {
+                        $dtPayment->percent_f1 = $percent_f1;
+                        $dtPayment->revenue_f1 = ($dtPayment->payment * $percent_f1) / 100;
+                        $dtPayment->percent_partner = 0;
+                        $dtPayment->revenue_partner = 0;
+                        $dtPayment->save();
+                    }
+                }
+            }
+        }
+    }
+}
+
+function getQuarterInfoFromDate($date)
+{
+    $month = date('n', strtotime($date));
+    $year  = date('Y', strtotime($date));
+
+    if ($month >= 4 && $month <= 6) {
+        $quarter = 2;
+        $start   = "$year-04-01";
+        $end     = date("Y-m-t", strtotime("$year-06-01"));
+    } elseif ($month >= 7 && $month <= 9) {
+        $quarter = 3;
+        $start   = "$year-07-01";
+        $end     = date("Y-m-t", strtotime("$year-09-01"));
+    } elseif ($month >= 10 && $month <= 12) {
+        $quarter = 4;
+        $start   = "$year-10-01";
+        $end     = date("Y-m-t", strtotime("$year-12-01"));
+    } elseif($month >= 1 && $month <= 3) {
+        $quarter = 1;
+        $start   = "$year-01-01";
+        $end     = date("Y-m-t", strtotime("$year-03-01"));
+    }
+
+    return [
+        'quarter'      => $quarter,
+        'year'         => $year,
+        'start_date'   => $start,
+        'end_date'     => $end,
+    ];
+}
+
+function get_level_role($id = 0)
+{
+    $items = \App\Models\ReferralLevel::where('customer_id',$id)->first();
+    $lever = 0;
+    if (!empty($items)) {
+        if ($items->parent_id == 0) {
+            $lever = 1;
+        } else {
+            $lever = 1;
+            $parent = $items->parent_id;
+            while ($parent > 0) {
+                $ktr = \App\Models\ReferralLevel::where('customer_id',$parent)->first();
+                if (empty($ktr)) {
+                    break;
+                }
+                $parent = $ktr->parent_id;
+                $lever++;
+
+            }
+        }
+    }
+    return $lever;
+}

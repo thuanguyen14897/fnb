@@ -44,6 +44,11 @@ Route::group(['prefix' => 'category'], function () {
     Route::get('getListWardToAres/{id?}', [CategoryController::class, 'getListWardToAres']);
     Route::get('getListWardToUser/{id?}', [CategoryController::class, 'getListWardToUser']);
     Route::get('getListMemberShip/{id?}', [CategoryController::class, 'getListMemberShip']);
+    Route::post('getLisMembershipExpense', [CategoryController::class, 'getLisMembershipExpense']);
+    Route::post('getLisMembershipPurchases', [CategoryController::class, 'getLisMembershipPurchases']);
+    Route::post('getLisMembershipLongTerm', [CategoryController::class, 'getLisMembershipLongTerm']);
+    Route::get('getListStaff/{id?}', [CategoryController::class, 'getListStaff']);
+    Route::get('getListDataKPI', [CategoryController::class, 'getListDataKPI']);
 });
 
 Route::group(['prefix' => 'notification'], function () {
@@ -51,6 +56,7 @@ Route::group(['prefix' => 'notification'], function () {
     Route::post('readAllNotification', [NotificationController::class, 'readAllNotification'])->middleware('App\Http\Middleware\CheckLoginApi::class');
     Route::post('readSingleNotification', [NotificationController::class, 'readSingleNotification'])->middleware('App\Http\Middleware\CheckLoginApi::class');
     Route::get('checkReadNoti', [NotificationController::class, 'checkReadNoti'])->middleware('App\Http\Middleware\CheckLoginApi::class');
+    Route::get('getNotiUpgradeMembership', [NotificationController::class, 'getNotiUpgradeMembership'])->middleware('App\Http\Middleware\CheckLoginApi::class');
     Route::post('addNoti', [NotificationController::class, 'addNoti']);
 });
 

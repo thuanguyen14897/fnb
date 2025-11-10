@@ -4,7 +4,7 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="btn-group pull-right m-t-15">
-                <a type="button" class="btn btn-default dropdown-toggle waves-effect waves-light dt-modal" data-toggle="dropdown"
+                <a type="button" class="btn btn-default dropdown-toggle waves-effect waves-light dt-modal hide" data-toggle="dropdown"
                    aria-expanded="false" href="admin/transaction_package/detail">{{lang('dt_create')}}</a>
             </div>
             <h4 class="page-title">{{lang('Danh sách mua gói')}}</h4>
@@ -59,6 +59,18 @@
                     </thead>
                     <tbody>
                     </tbody>
+                    <tfoot>
+                    <tr>
+                        <td colspan="2" style="text-transform: uppercase;font-weight: bold">Tổng cộng</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="grand_total" style="font-weight: bold;text-align: right"></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -109,7 +121,12 @@
                     {data: 'customer', name: 'customer'},
                     {data: 'package', name: 'package',width: "120px"},
                     {data: 'number_day', name: 'number_day',width: "150px"},
-                    {data: 'grand_total', name: 'grand_total',width: "150px"},
+                    {
+                        "render": function (data, type, row) {
+                            return `<div class="text-right">${data}</div>`;
+                        },
+                        data: 'grand_total', name: 'grand_total',width: "120px"
+                    },
                     {data: 'status', name: 'status',width: "150px"},
                     {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px" },
 
@@ -119,6 +136,13 @@
                 $('' + filterItem).on('change', function() {
                     oTable.draw('page')
                 });
+            });
+
+            $('#table_transaction_package').on('draw.dt', function () {
+                var table = $(this).DataTable();
+                var grand_total = table.column(6).data().sum();
+                console.log(grand_total);
+                $("#table_transaction_package").find('tfoot .grand_total').html(formatNumber(grand_total));
             });
         })
     </script>

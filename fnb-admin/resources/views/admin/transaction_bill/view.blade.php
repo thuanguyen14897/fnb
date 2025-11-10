@@ -95,15 +95,15 @@
                             <div class="title-transaction-price">Thanh toán</div>
                             <div class="detail-transaction-price">
                                 <div class="title-price">Phiếu thu</div>
-                                <div class="value-price">{{$dtData['payment']['reference_no']}}</div>
+                                <div class="value-price">{{$dtData['payment']['reference_no'] ?? ''}}</div>
                             </div>
                             <div class="detail-transaction-price">
                                 <div class="title-price">Tổng tiền</div>
-                                <div class="value-price">{{formatMoney($dtData['payment']['payment'])}}đ</div>
+                                <div class="value-price">{{formatMoney($dtData['payment']['payment'] ?? 0 )}}đ</div>
                             </div>
                             @php
                                 $dtImage = null;
-                                if (count($dtData['payment']) > 0){
+                                if (!empty($dtData['payment'])){
                                    $dtImage = !empty($dtData['payment']['payment_mode']['image']) ? $dtData['payment']['payment_mode']['image'] : null;
                                 }
                                  $htmlStatus = "";
@@ -117,7 +117,7 @@
                             @endphp
                             <div class="detail-transaction-price " style="display: flex;align-items: center">
                                 <div class="title-price">Phương thức thanh toán</div>
-                                <div class="value-price" style="display: flex;align-items: center">{!! count($dtData['payment']) > 0 ? loadImage($dtImage). $dtData['payment']['payment_mode']['name'] : '' !!}</div>
+                                <div class="value-price" style="display: flex;align-items: center">{!! !empty($dtData['payment']) ? loadImage($dtImage). $dtData['payment']['payment_mode']['name'] : '' !!}</div>
                             </div>
                             <div class="detail-transaction-price border_bottom" style="display: flex;align-items: center;padding-bottom: 10px">
                                 <div class="title-price">Trạng thái</div>

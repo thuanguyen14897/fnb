@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Api_app;
 
 use App\Services\AdminService;
+use App\Services\ReportService;
 use App\Traits\UploadFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
@@ -18,11 +19,13 @@ class AresController extends AuthController
 {
     use UploadFile;
     protected $fnbAdmin;
-    public function __construct(Request $request, AdminService $adminService)
+    protected $fnbReport;
+    public function __construct(Request $request, AdminService $adminService,ReportService $reportService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
         $this->fnbAdmin = $adminService;
+        $this->fnbReport = $reportService;
     }
 
     public function getList() {
@@ -310,6 +313,7 @@ class AresController extends AuthController
         }
         $show_short = $this->request->query('show_short');
         $search = $this->request->input('search') ?? null;
+        $are_id = $this->request->input('are_id') ?? null;
         //gian hàng liên quan
         $id = $this->request->input('id') ?? 0;
         //end
@@ -329,6 +333,9 @@ class AresController extends AuthController
         if (!empty($id)){
             $query->where('id','!=',$id);
         }
+        if (!empty($are_id)){
+            $query->whereIn('id',$are_id);
+        }
         $query->orderByRaw($orderBy);
         $dtData = $query->paginate($per_page, ['*'], '', $current_page);
         return response()->json([
@@ -342,10 +349,19 @@ class AresController extends AuthController
     public function getDetailWhere() {
         $province = $this->request->input('province') ?? 0;
         $ward = $this->request->input('ward') ?? 0;
-        $dtData = AresWard::select('tbl_ares.*')
-            ->where('id_province','=',$province)
-            ->where('id_ward','=',$ward)
-            ->LeftJoin('tbl_ares','tbl_ares.id','=','tbl_ares_ward.id_ares')->get();
+        $province = is_array($province) ? $province : [$province];
+        $ward = is_array($ward) ? $ward : [$ward];
+        $dtData = Ares::with(['aresWard' => function($query){
+            $query->select('id_province','id_ward','id_ares');
+        }])
+        ->whereHas('aresWard', function($q) use ($province, $ward) {
+            if(!empty($province)) {
+                $q->whereIn('id_province', $province);
+            }
+            if(!empty($ward)) {
+                $q->whereIn('id_ward', $ward);
+            }
+        })->get();
         $data['result'] = true;
         $data['dtData'] = $dtData;
         $data['message'] = 'Lấy thông tin khu vực kinh doanh thành công';
@@ -515,4 +531,340 @@ class AresController extends AuthController
 //       }
 //    }
 
+
+    public function getListSyntheticFeePartner(){
+        $storageUrl = config('app.storage_url');
+
+        $response = $this->fnbReport->getListSyntheticFeePartner($this->request);
+        $data = $response->getData(true);
+        if ($data['result'] == false) {
+            return response()->json($data);
+        }
+        $dtData = ($data['data']);
+        if(empty($dtData)){
+            $dtData[] = [
+                'province_id' => 0,
+                'wards_id' => 0,
+                'total' => 0,
+            ];
+        }
+
+        $dataQuery = DB::table(DB::raw('(' .
+            collect($dtData)->map(function ($value) {
+                return "(SELECT '{$value['province_id']}' as province_id, '{$value['wards_id']}' as wards_id, '{$value['total']}' as total)";
+            })->implode(' UNION ALL ') . ') AS tb_data'));
+
+        $start = $this->request->input('start', 0);
+        $length = $this->request->input('length', 10);
+        $orderColumnIndex = $this->request->input('order.0.column');
+        $orderBy = $this->request->input("columns.$orderColumnIndex.data", 'id');
+        $orderDir = $this->request->input('order.0.dir', 'asc');
+
+        $ares_search = $this->request->input('ares_search') ?? 0;
+
+        $ares_permission = $this->request->input('ares_permission') ?? 0;
+        if (!empty($ares_permission)) {
+            $user_id = $this->request->input('user_id') ?? 0;
+        }
+
+        $query = Ares::where('tbl_ares.id', '!=',0);
+        $query->join('tbl_ares_ward', 'tbl_ares_ward.id_ares', '=', 'tbl_ares.id');
+        $query->joinSub($dataQuery, 'tb_data', function ($join) {
+            $join->on('tbl_ares_ward.id_province', '=', 'tb_data.province_id');
+            $join->on('tbl_ares_ward.id_ward', '=', 'tb_data.wards_id');
+        });
+        $query->select(
+            'tbl_ares.id as id',
+            'tbl_ares.name as name',
+            DB::raw('SUM(tb_data.total) as total')
+        );
+        if (!empty($ares_permission)) {
+            if (!empty($user_id)) {
+                $ListWard = $this->fnbAdmin->getWardUser($this->request);
+                if (!empty($ListWard['result'])) {
+                    if (!empty($ListWard['data'])) {
+                        $query->whereHas('ares_ward', function ($q) use ($ListWard) {
+                            $q->whereIn('id_ward', $ListWard['data']);
+                        });
+                    } else {
+                        $query->where('tbl_ares.id', 0);
+                    }
+                } else {
+                    $query->where('tbl_ares.id', 0);
+                }
+            }
+        }
+        if (!empty($ares_search)){
+            $query->where('tbl_ares.id','=',$ares_search);
+        }
+        $query->groupBy('tbl_ares.id', 'tbl_ares.name');
+        $filtered = $query->get()->count();
+        $query->orderBy($orderBy, $orderDir);
+        $data = $query->skip($start)->take($length)->get();
+
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
+            }
+        }
+
+        $query = Ares::where('tbl_ares.id', '!=',0);
+        if (!empty($ares_permission)) {
+            if (!empty($user_id)) {
+                $ListWard = $this->fnbAdmin->getWardUser($this->request);
+                if (!empty($ListWard['result'])) {
+                    if (!empty($ListWard['data'])) {
+                        $query->whereHas('ares_ward', function ($q) use ($ListWard) {
+                            $q->whereIn('id_ward', $ListWard['data']);
+                        });
+                    } else {
+                        $query->where('tbl_ares.id', 0);
+                    }
+                } else {
+                    $query->where('tbl_ares.id', 0);
+                }
+            }
+        }
+        $query->select(
+            'tbl_ares.id as id',
+            'tbl_ares.name'
+        );
+        $query->join('tbl_ares_ward', 'tbl_ares_ward.id_ares', '=', 'tbl_ares.id');
+        $query->joinSub($dataQuery, 'tb_data', function ($join) {
+            $join->on('tbl_ares_ward.id_province', '=', 'tb_data.province_id');
+            $join->on('tbl_ares_ward.id_ward', '=', 'tb_data.wards_id');
+        });
+        $query->groupBy('tbl_ares.id', 'tbl_ares.name');
+        $total = $query->get()->count();
+
+        return response()->json([
+            'total' => $total,
+            'filtered' => $filtered,
+            'data' => $data,
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
+    }
+
+    public function getListSyntheticRosePartner(){
+        $storageUrl = config('app.storage_url');
+
+        $response = $this->fnbReport->getListSyntheticRosePartner($this->request);
+        $data = $response->getData(true);
+        if ($data['result'] == false) {
+            return response()->json($data);
+        }
+        $dtData = ($data['data']);
+        if(empty($dtData)){
+            $dtData[] = [
+                'province_id' => 0,
+                'wards_id' => 0,
+                'total' => 0,
+                'total_payment' => 0,
+            ];
+        }
+
+        $dataQuery = DB::table(DB::raw('(' .
+            collect($dtData)->map(function ($value) {
+                return "(SELECT '{$value['province_id']}' as province_id, '{$value['wards_id']}' as wards_id, '{$value['total']}' as total,'{$value['total_payment']}' as total_payment)";
+            })->implode(' UNION ALL ') . ') AS tb_data'));
+
+        $start = $this->request->input('start', 0);
+        $length = $this->request->input('length', 10);
+        $orderColumnIndex = $this->request->input('order.0.column');
+        $orderBy = $this->request->input("columns.$orderColumnIndex.data", 'id');
+        $orderDir = $this->request->input('order.0.dir', 'asc');
+
+        $ares_search = $this->request->input('ares_search') ?? 0;
+
+        $ares_permission = $this->request->input('ares_permission') ?? 0;
+        if (!empty($ares_permission)) {
+            $user_id = $this->request->input('user_id') ?? 0;
+        }
+
+        $query = Ares::where('tbl_ares.id', '!=',0);
+        $query->join('tbl_ares_ward', 'tbl_ares_ward.id_ares', '=', 'tbl_ares.id');
+        $query->joinSub($dataQuery, 'tb_data', function ($join) {
+            $join->on('tbl_ares_ward.id_province', '=', 'tb_data.province_id');
+            $join->on('tbl_ares_ward.id_ward', '=', 'tb_data.wards_id');
+        });
+        $query->select(
+            'tbl_ares.id as id',
+            'tbl_ares.name as name',
+            DB::raw('SUM(tb_data.total) as total'),
+            DB::raw('SUM(tb_data.total_payment) as total_payment')
+        );
+        if (!empty($ares_permission)) {
+            if (!empty($user_id)) {
+                $ListWard = $this->fnbAdmin->getWardUser($this->request);
+                if (!empty($ListWard['result'])) {
+                    if (!empty($ListWard['data'])) {
+                        $query->whereHas('ares_ward', function ($q) use ($ListWard) {
+                            $q->whereIn('id_ward', $ListWard['data']);
+                        });
+                    } else {
+                        $query->where('tbl_ares.id', 0);
+                    }
+                } else {
+                    $query->where('tbl_ares.id', 0);
+                }
+            }
+        }
+        if (!empty($ares_search)){
+            $query->where('tbl_ares.id','=',$ares_search);
+        }
+        $query->groupBy('tbl_ares.id', 'tbl_ares.name');
+        $filtered = $query->get()->count();
+        $query->orderBy($orderBy, $orderDir);
+        $data = $query->skip($start)->take($length)->get();
+
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
+            }
+        }
+
+        $query = Ares::where('tbl_ares.id', '!=',0);
+        if (!empty($ares_permission)) {
+            if (!empty($user_id)) {
+                $ListWard = $this->fnbAdmin->getWardUser($this->request);
+                if (!empty($ListWard['result'])) {
+                    if (!empty($ListWard['data'])) {
+                        $query->whereHas('ares_ward', function ($q) use ($ListWard) {
+                            $q->whereIn('id_ward', $ListWard['data']);
+                        });
+                    } else {
+                        $query->where('tbl_ares.id', 0);
+                    }
+                } else {
+                    $query->where('tbl_ares.id', 0);
+                }
+            }
+        }
+        $query->select(
+            'tbl_ares.id as id',
+            'tbl_ares.name'
+        );
+        $query->join('tbl_ares_ward', 'tbl_ares_ward.id_ares', '=', 'tbl_ares.id');
+        $query->joinSub($dataQuery, 'tb_data', function ($join) {
+            $join->on('tbl_ares_ward.id_province', '=', 'tb_data.province_id');
+            $join->on('tbl_ares_ward.id_ward', '=', 'tb_data.wards_id');
+        });
+        $query->groupBy('tbl_ares.id', 'tbl_ares.name');
+        $total = $query->get()->count();
+
+        return response()->json([
+            'total' => $total,
+            'filtered' => $filtered,
+            'data' => $data,
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
+    }
+
+    public function getListSyntheticKPI(){
+        $storageUrl = config('app.storage_url');
+
+        $response = $this->fnbAdmin->getListDataKPI($this->request);
+        $data = $response->getData(true);
+        if ($data['result'] == false) {
+            return response()->json($data);
+        }
+        $dtData = ($data['data']['data'] ?? []);
+        if(empty($dtData)){
+            $dtData[] = [
+                'name_kpi' => 0,
+                'id_ares' => 0,
+                'total' => 0,
+            ];
+        }
+
+        $dataQuery = DB::table(DB::raw('(' .
+            collect($dtData)->map(function ($value) {
+                return "(SELECT '{$value['name_kpi']}' as name_kpi, '{$value['id_ares']}' as id_ares, '{$value['total']}' as total)";
+            })->implode(' UNION ALL ') . ') AS tb_data'));
+
+        $start = $this->request->input('start', 0);
+        $length = $this->request->input('length', 10);
+        $orderColumnIndex = $this->request->input('order.0.column');
+        $orderBy = $this->request->input("columns.$orderColumnIndex.data", 'id');
+        $orderDir = $this->request->input('order.0.dir', 'asc');
+
+        $ares_search = $this->request->input('ares_search') ?? 0;
+
+        $ares_permission = $this->request->input('ares_permission') ?? 0;
+        if (!empty($ares_permission)) {
+            $user_id = $this->request->input('user_id') ?? 0;
+        }
+
+        $query = Ares::where('tbl_ares.id', '!=',0);
+        $query->joinSub($dataQuery, 'tb_data', function ($join) {
+            $join->on('tbl_ares.id', '=', 'tb_data.id_ares');
+        });
+        $query->select(
+            'tbl_ares.id as id',
+            'tbl_ares.name as name',
+            'tb_data.name_kpi as name_kpi',
+            DB::raw('(tb_data.total) as total'),
+        );
+        if (!empty($ares_permission)) {
+            if (!empty($user_id)) {
+                $ListWard = $this->fnbAdmin->getWardUser($this->request);
+                if (!empty($ListWard['result'])) {
+                    if (!empty($ListWard['data'])) {
+                        $query->whereHas('ares_ward', function ($q) use ($ListWard) {
+                            $q->whereIn('id_ward', $ListWard['data']);
+                        });
+                    } else {
+                        $query->where('tbl_ares.id', 0);
+                    }
+                } else {
+                    $query->where('tbl_ares.id', 0);
+                }
+            }
+        }
+        if (!empty($ares_search)){
+            $query->where('tbl_ares.id','=',$ares_search);
+        }
+        $filtered = $query->get()->count();
+        $query->orderByRaw('id desc,name_kpi asc');
+        $data = $query->skip($start)->take($length)->get();
+
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
+            }
+        }
+
+        $query = Ares::where('tbl_ares.id', '!=',0);
+        if (!empty($ares_permission)) {
+            if (!empty($user_id)) {
+                $ListWard = $this->fnbAdmin->getWardUser($this->request);
+                if (!empty($ListWard['result'])) {
+                    if (!empty($ListWard['data'])) {
+                        $query->whereHas('ares_ward', function ($q) use ($ListWard) {
+                            $q->whereIn('id_ward', $ListWard['data']);
+                        });
+                    } else {
+                        $query->where('tbl_ares.id', 0);
+                    }
+                } else {
+                    $query->where('tbl_ares.id', 0);
+                }
+            }
+        }
+        $query->select(
+            'tbl_ares.id as id',
+            'tbl_ares.name'
+        );
+        $query->joinSub($dataQuery, 'tb_data', function ($join) {
+            $join->on('tbl_ares.id', '=', 'tb_data.id_ares');
+        });
+        $total = $query->get()->count();
+
+        return response()->json([
+            'total' => $total,
+            'filtered' => $filtered,
+            'data' => $data,
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
+    }
 }

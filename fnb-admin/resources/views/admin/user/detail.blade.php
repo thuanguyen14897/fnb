@@ -364,7 +364,7 @@
                                 });
                                 html += `
                                 <div class="col-md-6" style="margin-top: 5px">
-                                    <div style="border: 1px solid #eee;padding: 10px">
+                                    <div style="border: 1px solid #eee;padding: 10px;min-height: 165px">
                                         <h4 class="page-title">${v.name}</h4>
                                         <input type="hidden" name="group_permission[]" value="${v.id}">
                                         <div class="row">

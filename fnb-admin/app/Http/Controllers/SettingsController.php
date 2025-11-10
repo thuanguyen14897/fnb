@@ -32,6 +32,9 @@ class SettingsController extends Controller
     }
 
     public function get_list(){
+        if (!is_admin()){
+            access_denied();
+        }
         $group = $this->request->input('group');
         if(empty($group)) {
             $group = 'info';
@@ -50,8 +53,10 @@ class SettingsController extends Controller
             if(!empty($listData)) {
 
                 unset($listData['check_otp']);
+                unset($listData['is_apple']);
                 foreach ($listData as $key => $value) {
                     $arr = [
+                        'total_member','increase_member','date_number_send_noti_upgrade','fee_customer','fee_partner'
                     ];
                     if (in_array($key,$arr)){
                         $value = number_unformat($value);
@@ -68,23 +73,6 @@ class SettingsController extends Controller
                             'name' => $key,
                             'value' => !empty($value) ? $value : ''
                         ]);
-                    }
-                    if($key == 'contact_link_google_map') {
-                        $keyAppend = 'contact_data_place_google_map';
-                        $ktOptionsAppend = DB::table('tbl_options')->where('name', $keyAppend)->get()->first();
-                        $valueAppend = extractCoordinates(get_option('contact_link_google_map'))['data_place'];
-                        if (empty($ktOptionsAppend)) {
-                            DB::table('tbl_options')->insert([
-                                'name' => $keyAppend,
-                                'value' => !empty($valueAppend) ? $valueAppend : ''
-                            ]);
-                        }
-                        else {
-                            DB::table('tbl_options')->where('id', $ktOptionsAppend->id)->update([
-                                'name' => $keyAppend,
-                                'value' => !empty($valueAppend) ? $valueAppend : ''
-                            ]);
-                        }
                     }
                 }
             }
@@ -393,5 +381,24 @@ class SettingsController extends Controller
         $data['html'] = $html;
         $data['counter'] = $counter;
         echo json_encode($data);
+    }
+
+    public function changeStatusIsApple($type = 1){
+        $status = $this->request->status == 0 ? 1 : 0;
+        try {
+            if ($type == 1) {
+                DB::table('tbl_options')->where('name', 'is_apple')->update([
+                    'name' => 'is_apple',
+                    'value' => $status
+                ]);
+            }
+            $data['result'] = true;
+            $data['message'] = lang('dt_success');
+            return response()->json($data);
+        } catch (\Exception $exception){
+            $data['result'] = false;
+            $data['message'] = $exception;
+            return response()->json($data);
+        }
     }
 }

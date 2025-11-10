@@ -82,9 +82,9 @@
             type_car_id: {
                 required: true,
             },
-            customer_id: {
-                required: true,
-            },
+            // customer_id: {
+            //     required: true,
+            // },
         },
         messages: {
             name: {
@@ -105,9 +105,9 @@
             type_car_id: {
                 required: "{{lang('dt_required')}}",
             },
-            customer_id: {
-                required: "{{lang('dt_required')}}",
-            },
+            {{--customer_id: {--}}
+            {{--    required: "{{lang('dt_required')}}",--}}
+            {{--},--}}
 
         },
         submitHandler: function (form) {

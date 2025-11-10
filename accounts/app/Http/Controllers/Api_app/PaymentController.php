@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api_app;
 
 use App\Models\Clients;
 use App\Models\Payment;
+use App\Models\ReferralLevel;
 use App\Models\Transaction;
 use App\Models\TransactionBill;
 use App\Models\TransactionDayItem;
@@ -41,6 +42,7 @@ class PaymentController extends AuthController
         $orderDir = $this->request->input('order.0.dir', 'asc');
 
         $customer_search = $this->request->input('customer_search') ?? 0;
+        $partner_search = $this->request->input('partner_search') ?? 0;
         $date_search = $this->request->input('date_search') ?? null;
         $status_search = $this->request->input('status_search');
         $transaction_bill_search = $this->request->input('transaction_bill_search') ?? 0;
@@ -59,12 +61,18 @@ class PaymentController extends AuthController
         if (!empty($ares_permission)) {
             $user_id = $this->request->input('user_id') ?? 0;
         }
-
+        $storageUrl = config('app.storage_url');
         $query = Payment::with(['customer' => function ($q) {
                 $q->select('id', 'fullname', 'phone', 'email', 'avatar');
             }])
-            ->with(['transaction_bill' => function ($q) {
-                $q->select('id', 'reference_no', 'date');
+            ->with(['transaction_bill' => function ($q) use ($storageUrl) {
+                $q->select('id', 'reference_no', 'date','partner_id');
+                $q->with([
+                    'partner' => function ($qr) use ($storageUrl) {
+                        $qr->select('id', 'fullname', 'email','phone','type_client');
+                        $qr->selectRaw(DB::raw("IF(avatar IS NOT NULL, CONCAT('$storageUrl/', avatar), NULL) as avatar"));
+                    }
+                ]);
             }])
             ->with(['payment_mode' => function ($q) {
                 $q->select('id', 'name','code');
@@ -110,6 +118,11 @@ class PaymentController extends AuthController
         if (!empty($customer_search)){
             $query->where('customer_id', $customer_search);
         }
+        if (!empty($partner_search)){
+            $query->whereHas('transaction_bill',function ($instance) use ($partner_search) {
+                $instance->where('partner_id', $partner_search);
+            });
+        }
         if (!empty($date_search)){
             $query->whereBetween('date', [$start_date, $end_date]);
         }
@@ -154,17 +167,25 @@ class PaymentController extends AuthController
 
     public function delete(){
         $id = $this->request->input('id') ?? 0;
-        $dtData = Transaction::find($id);
+        $dtData = Payment::find($id);
         if (empty($dtData)){
             $data['result'] = false;
-            $data['message'] = 'Không tồn tại chuyến đi';
+            $data['message'] = 'Không tồn tại phiếu thanh toán';
             return response()->json($data);
         }
+        $transactionBill = TransactionBill::find($dtData->transaction_bill_id);
         DB::beginTransaction();
         try {
             $dtData->delete();
-            $dtData->transaction_day()->delete();
-            $dtData->transaction_day_item()->delete();
+
+            $transactionBill->status = Config::get('constant')['status_transaction_bill_request'];
+            $transactionBill->type_staff_status = 0;
+            $transactionBill->staff_status = 0;
+            $transactionBill->date_status = null;
+            $transactionBill->save();
+
+            $dtData->transaction_bill()->delete();
+
             DB::commit();
             $data['result'] = true;
             $data['message'] = lang('c_delete_true');
@@ -319,45 +340,145 @@ class PaymentController extends AuthController
     }
 
     public function changeStatus(){
-        $transaction_id = $this->request->input('transaction_id');
-        $status = $this->request->input('status');
-        $noteStatus = $this->request->input('note');
-
-        $transaction = Transaction::with('customer')->find($transaction_id);
-        $index = getValueStatusTransaction($transaction->status,'index');
-        $index_current = getValueStatusTransaction($status,'index');
-        $status_current = $transaction->status;
-        $arr = [Config::get('constant')['status_transaction_cancel']];
-        if ($index_current < $index){
-            if (!in_array($status,$arr)) {
+        $id = $this->request->input('payment_id') ?? 0;
+        $app = $this->request->input('app') ?? 0;
+        if ($app == 1){
+            $partner_id = $this->request->client->id ?? 0;
+            if (empty($partner_id)){
                 $data['result'] = false;
-                $data['message'] = 'Không thể thay đổi trạng thái nhỏ hơn trạng thái hiện tại';
+                $data['data'] = [];
+                $data['message'] = 'Vui lòng đăng nhập để sử dụng tính năng!.';
                 return response()->json($data);
             }
+            $type_staff_status = 2;
+            $staff_status = $partner_id;
+            $type = 'customer';
+        } else {
+            $partner_id = 0;
+            $type_staff_status = 1;
+            $staff_status = $this->request->input('staff_status') ?? 0;
+            $type = 'staff';
+        }
+        $payment = Payment::find($id);
+        $transactionBill = TransactionBill::find($payment->transaction_bill_id);
+        $customer_id = $payment->customer_id;
+        if (in_array($transactionBill->status, [
+            Config::get('constant')['status_transaction_bill_cancel'],
+        ])) {
+            $data['result'] = false;
+            $data['data'] = [];
+            $data['message'] = 'Hóa đơn đã hủy không thể thực hiện.';
+            return response()->json($data);
         }
 
-        if ($transaction->status == $this->request->status){
-            $data['result'] = false;
-            $data['message'] = 'Trạng thái đã được cập nhật vui lòng kiểm tra lại!';
-            return response()->json($data);
-        }
-        $customer_id = $transaction->customer_id;
+        $dtParent = ReferralLevel::where('customer_id','=',$customer_id)->first();
+        $parent_id = $dtParent['parent_id'] ?? 0;
+        $dtCheckPayment = Payment::where('customer_id','=',$customer_id)
+            ->where('status','=',2)
+            ->first();
+
+        $transactionDayItem = $transactionBill->transaction_day_item ?? null;
+
         DB::beginTransaction();
+        $arr_object_id = [];
+        $dtCustomer = Clients::select(
+            'tbl_clients.fullname as name',
+            'tbl_clients.id as object_id',
+            'tbl_player_id.player_id as player_id',
+            DB::raw("'customer' as 'object_type'")
+        )
+            ->leftJoin('tbl_player_id', function ($join) {
+                $join->on('tbl_player_id.object_id', '=', 'tbl_clients.id');
+                $join->on('tbl_player_id.object_type', '=', DB::raw("'customer'"));
+            })
+            ->where('tbl_clients.id', $customer_id)
+            ->get()->toArray();
+//        if (!empty($dtCustomer)) {
+//            $arr_object_id = array_merge($arr_object_id, $dtCustomer);
+//        }
+
+        $dtPartner = Clients::select(
+            'tbl_clients.fullname as name',
+            'tbl_clients.id as object_id',
+            'tbl_player_id.player_id as player_id',
+            DB::raw("'owen' as 'object_type'")
+        )
+            ->leftJoin('tbl_player_id', function ($join) {
+                $join->on('tbl_player_id.object_id', '=', 'tbl_clients.id');
+                $join->on('tbl_player_id.object_type', '=', DB::raw("'customer'"));
+            })
+            ->where('tbl_clients.id', $transactionBill->partner_id)
+            ->get()->toArray();
+        if (!empty($dtPartner)) {
+            $arr_object_id = array_merge($arr_object_id, $dtPartner);
+        }
+
+        $arr_object_id = array_values($arr_object_id);
         try
         {
-            if ($status == Config::get('constant')['status_transaction_cancel']){
-                $transaction->cancel_end = $this->request->input('cancel_end') ?? 0;
+            if ($payment->status == 1){
+                $payment->status = 2;
+                $payment->type_staff_status = $type_staff_status;
+                $payment->staff_status = $staff_status;
+                $payment->date_status = date('Y-m-d H:i:s');
+                $payment->save();
+
+                //cập nhật trạng thái thanh toán cho hóa đơn
+                $transactionBill->status = Config::get('constant')['status_transaction_bill_approve'];
+                $transactionBill->type_staff_status = $type_staff_status;
+                $transactionBill->staff_status = $staff_status;
+                $transactionBill->date_status = date('Y-m-d H:i:s');
+                $transactionBill->save();
+
+                if (!empty($transactionDayItem)){
+                    $transactionDayItem->status = Config::get('constant')['status_transaction_item_finish'];
+                    $transactionDayItem->staff_status = $this->request->input('staff_status');
+                    $transactionDayItem->date_status = date('Y-m-d H:i:s');
+                    $transactionDayItem->save();
+                }
+
+                //gửi thông báo
+                $payment->data_customer = [
+                    'id' => $payment->customer->id,
+                    'fullname' => $payment->customer->fullname,
+                    'phone' => $payment->customer->phone,
+                    'email' => $payment->customer->email,
+                ];
+                $payment->makeHidden(['customer']);
+
+                $payment->data_transaction_bill = [
+                    'id' => $payment->transaction_bill->id,
+                    'reference_no' => $payment->transaction_bill->reference_no,
+                ];
+                $payment->makeHidden(['transaction_bill']);
+
+                $this->requestNoti = clone $this->request;
+                $this->requestNoti->merge(['type_noti' => 'change_status_payment']);
+                $this->requestNoti->merge(['arr_object_id' => $arr_object_id]);
+                $this->requestNoti->merge(['dtData' => $payment]);
+                $this->requestNoti->merge(['customer_id' => $partner_id]);
+                $this->requestNoti->merge(['type' => $type]);
+                $this->requestNoti->merge(['staff_id' => $this->request->input('staff_status')]);
+                $this->fnbNoti->addNoti($this->requestNoti);
+
+                //công điểm khi giới thiệu thành công
+                if (!empty($parent_id) && empty($dtCheckPayment)){
+                    changePoint($payment->id, 'payment',$this->request->input('staff_status') ?? 0,$parent_id);
+                }
+
+                checkCustomerCommission($customer_id,$payment->id);
+
+                DB::commit();
+                $data['result'] = true;
+                $data['data'] = $payment;
+                $data['message'] = lang('Thanh toán thành công');
+                return response()->json($data);
+            } else {
+                $data['result'] = false;
+                $data['data'] = [];
+                $data['message'] = 'Phiếu thu đã được thanh toán.';
+                return response()->json($data);
             }
-            $transaction->status = $status;
-            $transaction->note_status = !empty($noteStatus) ? $noteStatus : null;
-            $transaction->date_status = date('Y-m-d H:i:s');
-            $transaction->staff_status = $this->request->input('staff_status');
-            $transaction->save();
-            DB::commit();
-            $data['result'] = true;
-            $data['data'] = $transaction;
-            $data['message'] = lang('dt_success');
-            return response()->json($data);
         } catch (\Exception $exception){
             DB::rollBack();
             $data['result'] = false;

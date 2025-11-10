@@ -14,6 +14,9 @@ use App\Models\ServiceFavourite;
 use App\Models\ServiceImage;
 use App\Models\Ward;
 use App\Services\NotiService;
+use App\Services\PackageService;
+use App\Services\TransactionBillService;
+use App\Services\TransactionService;
 use App\Traits\UploadFile;
 use App\Services\AccountService;
 use App\Services\AdminService;
@@ -21,6 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use PhpParser\Node\Expr\New_;
 
 class ServiceController extends AuthController
 {
@@ -29,14 +33,20 @@ class ServiceController extends AuthController
     public $fnbCustomerService;
     public $fnbAdminService;
     public $fnbNoti;
+    public $fnbTransactionBillService;
+    public $fnbTransactionService;
+    public $fnbPackageService;
 
-    public function __construct(Request $request, AccountService $accountService, AdminService $adminService,NotiService $notiService)
+    public function __construct(Request $request, AccountService $accountService, AdminService $adminService,NotiService $notiService,TransactionBillService $transactionBillService,TransactionService $transactionService,PackageService $packageService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
         $this->fnbCustomerService = $accountService;
         $this->fnbAdminService = $adminService;
         $this->fnbNoti = $notiService;
+        $this->fnbTransactionBillService = $transactionBillService;
+        $this->fnbTransactionService = $transactionService;
+        $this->fnbPackageService = $packageService;
     }
 
     public function getList()
@@ -55,6 +65,9 @@ class ServiceController extends AuthController
         $status_search = isset($status_search) ? $status_search : -1;
         $start = $this->request->input('start', 0);
         $length = $this->request->input('length', 10);
+        if ($length == -1){
+            $length = 100000;
+        }
         $orderColumnIndex = $this->request->input('order.0.column');
         $orderBy = $this->request->input("columns.$orderColumnIndex.data", 'id');
         $orderDir = $this->request->input('order.0.dir', 'desc');
@@ -236,7 +249,9 @@ class ServiceController extends AuthController
         ];
         if (!empty($app)) {
             unset($rules['customer_id']);
+            unset($rules['phone_number']);
         } else {
+            unset($rules['customer_id']);
             unset($rules['phone_number']);
         }
         $validator = Validator::make($this->request->all(), $rules, $messages);
@@ -266,6 +281,7 @@ class ServiceController extends AuthController
             }
         }
 
+        $step = $this->request->input('step') ?? 1;
         if (!empty($app)) {
             $customer_id = !empty($this->request->client) ? $this->request->client->id : 0;
             if (empty($customer_id)) {
@@ -283,16 +299,28 @@ class ServiceController extends AuthController
             $customers = collect($dataCustomer['data']);
             $dtPartner = $customers->where('id', $customer_id)->first();
             if (empty($dtPartner['representative'])) {
-                $responsePartner = $this->fnbCustomerService->detailRepresentativePartner($this->requestCustomer);
-                $dataPartner = $responsePartner->getData(true);
-                $data['result'] = $dataPartner['result'] ?? false;
-                $data['message'] = $dataPartner['message'] ?? 'Lỗi khi thêm người đại diện';
-                if ($data['result'] == false) {
-                    return response()->json($data);
+                if ($step >= 3) {
+                    $this->requestCustomer->merge(['id' => 0]);
+                    $responsePartner = $this->fnbCustomerService->detailRepresentativePartner($this->requestCustomer);
+                    $dataPartner = $responsePartner->getData(true);
+                    $data['result'] = $dataPartner['result'] ?? false;
+                    $data['message'] = $dataPartner['message'] ?? 'Lỗi khi thêm người đại diện';
+                    if ($data['result'] == false) {
+                        return response()->json($data);
+                    }
                 }
             }
         } else {
-            $customer_id = $this->request->input('customer_id');
+            $customer_id = $this->request->input('customer_id') ?? 0;
+            $customer_ids = [$customer_id];
+            $this->requestCustomer = clone $this->request;
+            $this->requestCustomer->merge(['customer_id' => $customer_ids]);
+            $this->requestCustomer->merge(['search' => null]);
+            $this->requestCustomer->merge(['partner_id' => $customer_id]);
+            $responseCustomer = $this->fnbCustomerService->getListData($this->requestCustomer);
+            $dataCustomer = $responseCustomer->getData(true);
+            $customers = collect($dataCustomer['data']);
+            $dtPartner = $customers->where('id', $customer_id)->first();
         }
         if (empty($id)) {
             $dtData = new Service();
@@ -338,7 +366,19 @@ class ServiceController extends AuthController
             $dtData->name_location = $this->request->input('name_location') ?? null;
             $dtData->detail = $this->request->input('detail') ?? null;
             $dtData->rules = $this->request->input('rules') ?? null;
-            $dtData->active = $app == 1 ? 0 : ($this->request->input('active') ?? 1);
+            $dtData->html_percent = $this->request->input('html_percent') ?? null;
+            if ($app == 1) {
+                if (!empty($this->request->input('save'))) {
+                    $dtData->active = 0;
+                } else {
+                    $dtData->active = 4;
+                }
+                $dtData->step = $this->request->input('step') ?? 1;
+            } else {
+                if (empty($id)) {
+                    $dtData->active = 0;
+                }
+            }
             $dtData->type_lunch_break = $type_lunch_break;
             $dtData->hour_start_lunch_break = $hour_start_lunch_break;
             $dtData->hour_end_lunch_break = $hour_end_lunch_break;
@@ -432,16 +472,9 @@ class ServiceController extends AuthController
                 //update thành đối tác
                 if (!empty($dtPartner)) {
                     if ($dtPartner['type_client'] != 2){
-                        $this->requestUpdateCustomer = $this->request->duplicate(
-                            [],
-                            array_merge(
-                                $this->request->only(['client']),
-                                [
-                                    'id' => $dtPartner['id'],
-                                    'type_client' => 2
-                                ]
-                            )
-                        );
+                        $this->requestUpdateCustomer = new Request();
+                        $this->requestUpdateCustomer->merge(['id' => $dtPartner['id']]);
+                        $this->requestUpdateCustomer->merge(['type_client' => 2]);
                         $responsePartnerUpdate = $this->fnbCustomerService->updateTypeClient($this->requestUpdateCustomer);
                         $dataPartnerUpdate = $responsePartnerUpdate->getData(true);
                         $data['result'] = $dataPartnerUpdate['result'] ?? false;
@@ -454,6 +487,7 @@ class ServiceController extends AuthController
 
                 DB::commit();
                 $data['result'] = true;
+                $data['id'] = $dtData->id;
                 if (empty($id)) {
                     $data['message'] = 'Thêm mới thành công';
                 } else {
@@ -461,6 +495,7 @@ class ServiceController extends AuthController
                 }
             } else {
                 $data['result'] = false;
+                $data['id'] = 0;
                 if (empty($id)) {
                     $data['message'] = 'Thêm mới thất bại';
                 } else {
@@ -479,10 +514,39 @@ class ServiceController extends AuthController
     public function delete()
     {
         $id = $this->request->input('id') ?? 0;
+        $admin = $this->request->input('admin') ?? 0;
         $dtData = Service::find($id);
         if (empty($dtData)) {
             $data['result'] = false;
             $data['message'] = 'Không tồn tại data';
+            return response()->json($data);
+        }
+        if (!empty($admin)){
+            $partner_id = $dtData->customer_id;
+        } else {
+            $partner_id = !empty($this->request->client) ? $this->request->client->id : 0;
+            if (empty($partner_id)){
+                $data['result'] = false;
+                $data['message'] = 'Vui lòng đăng nhập để sử dụng tính năng !';
+                return response()->json($data);
+            }
+        }
+
+        $this->request->merge(['service_id' => $id]);
+        $dtCheck = $this->fnbTransactionBillService->checkService($this->request);
+        $dtCheck = $dtCheck->getData(true);
+        $dtCheck = $dtCheck['data'] ?? [];
+        if (!empty($dtCheck['result']) && !empty($dtCheck['data'])){
+            $data['result'] = false;
+            $data['message'] = 'Gian hàng đã tồn tại hóa đơn không thể xóa!';
+            return response()->json($data);
+        }
+        $dtCheck = $this->fnbTransactionService->checkService($this->request);
+        $dtCheck = $dtCheck->getData(true);
+        $dtCheck = $dtCheck['data'] ?? [];
+        if (!empty($dtCheck['result']) && !empty($dtCheck['data'])){
+            $data['result'] = false;
+            $data['message'] = 'Gian hàng đã tồn tại chuyến đi không thể xóa!';
             return response()->json($data);
         }
         DB::beginTransaction();
@@ -506,6 +570,27 @@ class ServiceController extends AuthController
             $dtData->other_amenities()->detach();
             $dtData->day()->delete();
             DB::commit();
+
+            $checkService = Service::where('customer_id', $partner_id)->first();
+            if (empty($checkService)){
+                $this->requestCustomer = clone $this->request;
+                $this->requestCustomer->merge(['customer_id' => [$partner_id]]);
+                $this->requestCustomer->merge(['search' => null]);
+                $responseCustomer = $this->fnbCustomerService->getListData($this->requestCustomer);
+                $dataCustomer = $responseCustomer->getData(true);
+                $customers = collect($dataCustomer['data']);
+                $dtPartner = $customers->where('id', $partner_id)->first();
+                if (!empty($dtPartner)){
+                    if($dtPartner['type_client'] == 2){
+                        $this->requestUpdateCustomer = new Request();
+                        $this->requestUpdateCustomer->merge(['id' => $dtPartner['id']]);
+                        $this->requestUpdateCustomer->merge(['type_client' => 1]);
+                        $this->requestUpdateCustomer->merge(['delete' => true]);
+                        $this->fnbCustomerService->updateTypeClient($this->requestUpdateCustomer);
+                    }
+                }
+            }
+
             $data['result'] = true;
             $data['message'] = lang('c_delete_true');
             return response()->json($data);
@@ -538,10 +623,26 @@ class ServiceController extends AuthController
         if(!empty($client)){
             $arr_object_id = $client['arr_object_id'] ?? [];
         }
+        $checkService = Service::where('customer_id', $customer_id)->whereIn('active', [1,3])->first();
+        $statusCheck = $dtData->active;
         DB::beginTransaction();
         try {
             $dtData->active = $status;
             $dtData->save();
+
+            if (empty($checkService) && $statusCheck == 0){
+                if ($status == 1) {
+                    $this->requestCustomerPackage = new Request();
+                    $this->requestCustomerPackage->merge(['customer_id' => $customer_id]);
+                    $responseCustomerPackage = $this->fnbCustomerService->addCustomerPackage($this->requestCustomerPackage);
+                    $dataCustomerPackage = $responseCustomerPackage->getData(true);
+                    $data['result'] = $dataCustomerPackage['result'] ?? false;
+                    $data['message'] = $dataCustomerPackage['message'] ?? 'Lỗi khi thêm người đại diện';
+                    if ($data['result'] == false) {
+                        return response()->json($data);
+                    }
+                }
+            }
 
             $this->requestNoti = clone $this->request;
             $this->requestNoti->merge(['arr_object_id' => $arr_object_id]);
@@ -646,7 +747,9 @@ class ServiceController extends AuthController
             ->with('ward')
             ->with('other_amenities')
             ->with('image_store')
+            ->with('image_menu')
             ->with('favourite')
+            ->with('day')
             ->where('id', '!=', 0);
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -658,6 +761,11 @@ class ServiceController extends AuthController
                 $query->where('hot', 1);
             } elseif ($hot == 0) {
                 $query->where('hot', 0);
+            }
+        }
+        if (empty($partner)) {
+            if ($customer_id != 22) {
+                $query->where('active', 1);
             }
         }
         if (!empty($id)) {
@@ -845,7 +953,9 @@ class ServiceController extends AuthController
         if ($this->request->client == null) {
             $this->request->client = (object)['token' => Config::get('constant')['token_default']];
         }
-        $service_id = $this->request->input('service_id') ?? [0];
+        $search = $this->request->input('search') ?? null;
+        $partner_id = $this->request->input('partner_id') ?? 0;
+        $service_id = $this->request->input('service_id') ?? [];
         $query = Service::with('category_service')
             ->with('image_store')
             ->with('group_category_service')
@@ -853,6 +963,13 @@ class ServiceController extends AuthController
         if (!empty($service_id)) {
             $service_id = is_array($service_id) ? ($service_id) : [$service_id];
             $query->whereIn('id', $service_id);
+        }
+        if (!empty($partner_id)){
+            $query->where('customer_id', $partner_id);
+//            $query->where('active', '=',1);
+        }
+        if (!empty($search)){
+            $query->where('name','like',"%$search%");
         }
         $dtData = $query->get();
         $dtData->transform(function ($item) {
@@ -975,6 +1092,73 @@ class ServiceController extends AuthController
             $data['result'] = false;
             $data['message'] = $exception->getMessage();
             return response()->json($data);
+        }
+    }
+
+    public function checkServiceRegister(){
+        $customer_id = !empty($this->request->client) ? $this->request->client->id : 0;
+        if (empty($customer_id)) {
+            $data['result'] = false;
+            $data['message'] = 'Vui lòng đăng nhập để sử dụng tính năng này!';
+            return response()->json($data);
+        }
+        $dtData = Service::with('category_service')
+            ->with('group_category_service')
+            ->with('province')
+            ->with('ward')
+            ->with('other_amenities')
+            ->with('image_store')
+            ->with('image_menu')
+            ->with('day')
+            ->with('favourite')
+            ->where('customer_id',$customer_id)->where('active','=',4)->first();
+        if (empty($dtData)){
+            return response()->json([
+                'data' => null,
+                'result' => true,
+                'message' => 'Lấy danh sách thành công'
+            ]);
+        } else {
+            $collection = ServiceResource::make($dtData);
+            return response()->json([
+                'data' => $collection->response()->getData(true),
+                'result' => true,
+                'message' => 'Lấy danh sách thành công'
+            ]);
+        }
+    }
+
+    public function checkServicePartner(){
+        $customer_id = $this->request->input('customer_id') ?? 0;
+        if (empty($customer_id)) {
+            $data['result'] = false;
+            $data['message'] = 'Vui lòng đăng nhập để sử dụng tính năng này!';
+            return response()->json($data);
+        }
+        $dtData = Service::with('category_service')
+            ->with('group_category_service')
+            ->with('province')
+            ->with('ward')
+            ->with('other_amenities')
+            ->with('image_store')
+            ->with('image_menu')
+            ->with('day')
+            ->with('favourite')
+            ->where('customer_id',$customer_id)
+            ->first();
+        if (empty($dtData)){
+            return response()->json([
+                'data' => null,
+                'result' => true,
+                'message' => 'Lấy danh sách thành công'
+            ]);
+        } else {
+            $collection = ServiceResource::make($dtData);
+            return response()->json([
+                'data' => $collection->response()->getData(true),
+                'result' => true,
+                'message' => 'Lấy danh sách thành công'
+            ]);
         }
     }
 }

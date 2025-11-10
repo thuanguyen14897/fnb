@@ -46,6 +46,11 @@ class MemberShipLevelController extends Controller
     }
 
     public function updateMember() {
+        if (!has_permission('membership_level','edit')){
+            $data['result'] = false;
+            $data['message'] = 'Không có quyền sửa!';
+            return response()->json($data);
+        }
         $membership_level = $this->request->get('membership_level');
         $membership_expense = $this->request->get('membership_expense');
         $membership_long_term = $this->request->get('membership_long_term');
@@ -180,7 +185,7 @@ class MemberShipLevelController extends Controller
     }
 
     public function detail($id = '') {
-        if (!has_permission('memership_level','edit')){
+        if (!has_permission('membership_level','edit')){
             access_denied(true);
         }
         $title = lang('c_edit_membership_level');

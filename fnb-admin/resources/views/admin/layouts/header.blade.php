@@ -52,7 +52,7 @@
                             <li><a href="javascript:void(0)"><i
                                         class="ti-user text-custom m-r-10"></i> {{Auth::guard('admin')->user()->name}}
                                 </a></li>
-                            <li id="profile" data-id=""><a href="javascript:void(0)"><i
+                            <li data-id=""><a class="dt-modal" href="admin/user/profile/{{Auth::guard('admin')->user()->id}}"><i
                                         class="ti-user text-custom m-r-10"></i> Profile</a></li>
                             <li class="divider"></li>
                             <li><a href="admin/logout"><i class="ti-power-off text-danger m-r-10"></i> Logout</a></li>

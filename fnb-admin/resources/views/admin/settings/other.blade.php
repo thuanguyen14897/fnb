@@ -1,3 +1,19 @@
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="is_apple">Apple test</label>
+            <div><input type="checkbox" {{get_option('is_apple') == 1 ? 'checked' : ''}}  name="is_apple" class="is_apple dt-active"  data-plugin="switchery" data-color="#5fbeaa" data-href="admin/settings/changeStatusIsApple/1" data-status="{{get_option('is_apple')}}"></div>
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <label for="total_member">Tổng số thành viên toàn hệ thống</label>
+    <input type="text" name="total_member" id="total_member" value="{{formatMoney(get_option('total_member'))}}" onchange="formatNumBerKeyChange(this)" class="form-control">
+</div>
+<div class="form-group">
+    <label for="increase_member">Số thành viên tự tăng mỗi ngày</label>
+    <input type="text" name="increase_member" id="increase_member" value="{{formatMoney(get_option('increase_member'))}}" onchange="formatNumBerKeyChange(this)" class="form-control">
+</div>
 <div class="form-group">
     <label for="title_package">Tiêu đề gói thành viên</label>
     <input type="text" name="title_package" id="title_package" value="{{get_option('title_package')}}" class="form-control">
@@ -8,8 +24,28 @@
               name="content_package">{{get_option('content_package')}}</textarea>
 </div>
 <div class="form-group">
+    <label for="fee_partner">Phí sử dụng ứng dụng 1 tháng đối tác</label>
+    <input type="text" name="fee_partner" id="fee_partner" value="{{formatMoney(get_option('fee_partner'))}}" onkeyup="formatNumBerKeyChange(this)" class="form-control">
+</div>
+<div class="form-group">
+    <label for="fee_customer">Phí sử dụng ứng dụng 1 tháng thành viên</label>
+    <input type="text" name="fee_customer" id="fee_customer" value="{{formatMoney(get_option('fee_customer'))}}" onkeyup="formatNumBerKeyChange(this)" class="form-control">
+</div>
+<div class="form-group">
+    <label for="number_date_remind_payment_due">Số này nhắc hạn thanh toán thành viên</label>
+    <input type="number" name="number_date_remind_payment_due" id="number_date_remind_payment_due" value="{{get_option('number_date_remind_payment_due')}}" min="0" max="100" onkeyup="formatNumBerKeyChange(this)" class="form-control">
+</div>
+<div class="form-group">
     <label for="percent">Chiết khấu</label>
     <input type="number" name="percent" id="percent" value="{{get_option('percent')}}" min="0" max="100" onkeyup="formatNumBerKeyChange(this)" class="form-control">
+</div>
+<div class="form-group">
+    <label for="percent_partner">Chiết khấu đối tác khi f1 có trên 50(TV)</label>
+    <input type="number" name="percent_partner" id="percent_partner" value="{{get_option('percent_partner')}}" min="0" max="100" onkeyup="formatNumBerKeyChange(this)" class="form-control">
+</div>
+<div class="form-group">
+    <label for="percent_f1">Chiết khấu f1 có trên 50(TV)</label>
+    <input type="number" name="percent_f1" id="percent_f1" value="{{get_option('percent_f1')}}" min="0" max="100" onkeyup="formatNumBerKeyChange(this)" class="form-control">
 </div>
 <div class="form-group">
     <label for="intro_one">Nội dung intro 1</label>
@@ -35,6 +71,20 @@
     <label for="note_version_app">Ghi chú version app</label>
     <textarea class="note_version_app form-control"
               name="note_version_app">{{get_option('note_version_app')}}</textarea>
+</div>
+<div class="form-group">
+    <label for="date_number_send_noti_upgrade">Số ngày gửi thông báo khi rớt hạng hoặc giữ hạng thành viên</label>
+    <input type="text" name="date_number_send_noti_upgrade" id="date_number_send_noti_upgrade" value="{{formatMoney(get_option('date_number_send_noti_upgrade'))}}" onchange="formatNumBerKeyChange(this)" class="form-control">
+</div>
+<div class="form-group">
+    <label for="content_send_noti_upgrade">Nội dung gửi thông báo khi giữ hạng thành viên</label>
+    <textarea class="content_send_noti_upgrade form-control"
+              name="content_send_noti_upgrade">{{get_option('content_send_noti_upgrade')}}</textarea>
+</div>
+<div class="form-group">
+    <label for="content_send_noti_upgrade_fall">Nội dung gửi thông báo khi rớt hạng thành viên</label>
+    <textarea class="content_send_noti_upgrade_fall form-control"
+              name="content_send_noti_upgrade_fall">{{get_option('content_send_noti_upgrade_fall')}}</textarea>
 </div>
 <div class="form-group">
     <label for="rule_register_partner">Điều khoản đăng ký trở thành đối tác </label>

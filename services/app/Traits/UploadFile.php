@@ -62,15 +62,20 @@ trait UploadFile
                 if (!Storage::disk($disk)->exists($folder)) {
                     Storage::disk($disk)->makeDirectory($folder);
                 }
-                $file = Img::make($file)->orientate();
-                if (!empty($resize)){
-                    $path = $file->resize($with,$height, function ($const) {
-                        $const->aspectRatio();
-                    })->save(storage_path('app/' . $fileName));
+                if (!empty($resize)) {
+                    $file = Img::make($file)->orientate();
+                    if (!empty($resize)) {
+                        $path = $file->resize($with, $height, function ($const) {
+                            $const->aspectRatio();
+                        })->save(storage_path('app/' . $fileName));
+                    } else {
+                        $path = $file->save(storage_path('app/' . $fileName));
+                    }
+                    return $folder . '/' . $path->basename;
                 } else {
-                    $path = $file->save(storage_path('app/' . $fileName));
+                    $path = $file->storeAs($folder, $file_name, $disk);
+                    return $path;
                 }
-                return $folder.'/'.$path->basename;
             } else {
                 if (in_array($filetype,$arrFile)) {
                     $path = $file->storeAs($folder, $file_name, $disk);

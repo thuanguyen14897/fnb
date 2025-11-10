@@ -1695,6 +1695,12 @@ function getListStatusService($id = -1,$type = 'name')
             'color' => '#64646D',
             'background' => '#EBEBF0'
         ],
+        [
+            'id' => 4,
+            'name' => lang('Đang khởi tạo'),
+            'color' => '#0B74E5',
+            'background' => '#DBEEFF'
+        ],
     ];
     if ($id != -1) {
         $data = array_filter($data, function ($item) use ($id) {

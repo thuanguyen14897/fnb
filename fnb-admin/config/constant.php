@@ -86,6 +86,8 @@ return [
     'noti_remind_use_point' => 402,
     'noti_reset_use_point' => 403,
 
+    'noti_upgrade_membership' => 666,
+
     'noti_approve_request_money' => 500,
 
     'noti_add_transaction' => 702,
@@ -108,6 +110,9 @@ return [
     'noti_transaction_start' => 1,
 
     'noti_remind_payment' => 333,
+
+
+    'noti_remind_log_upgrade' => 444,
 
     'noti_transaction_package_payment' => 222,
 

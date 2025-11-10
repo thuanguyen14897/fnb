@@ -146,7 +146,7 @@ function InitDataTable(selector, url, initParams, notsearchable = [0], notsortab
         return a - b;
     });
 
-    length_options.push(-1);
+    length_options.push(100000);
     length_options_names.push(lang.dt_length_menu_all);
     var width_document = $(document).width();
     if (Number(width_document) <= 768) {
@@ -737,6 +737,9 @@ $(document).on('click', '.dt-delete', function(e) {
                     if (typeof oTable != 'undefined') {
                         oTable.draw('page');
                     }
+                    if (typeof oTablePayment != 'undefined') {
+                        oTablePayment.draw('page');
+                    }
                     alert_float('success',data.message);
                 } else {
                     alert_float('error',data.message);
@@ -1167,5 +1170,52 @@ $(document).ajaxError(function(event, xhr) {
         }, 100);
     }
 });
+$("body").on('change', '#mass_select_all', function() {
+    var to, rows, checked;
+    to = $(this).data('to-table');
+
+    rows = $('.table-' + to).find('tbody tr');
+    checked = $(this).prop('checked');
+    $.each(rows, function() {
+        $($(this).find('td').eq(0)).find('input').prop('checked', checked);
+    });
+});
 
 
+function bodauTiengViet(str) {
+    str = str.toLowerCase();
+    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+    str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+    str = str.replace(/đ/g, 'd');
+    return str;
+}
+
+
+function tpanigation(elTable, pageCurrent, iCall = 0,numberPage = 50)
+{
+    if (iCall == 0) {
+        $(''+elTable+' tbody tr').attr('tsearch','ok');
+    }
+    $(''+elTable+' tbody tr[tsearch="notok"]').css('display','none');
+    $(''+elTable+' tbody tr[tsearch="ok"]').css('display','block');
+    sum = $(''+elTable+' tbody tr[tsearch="ok"]').length;
+    numPages = Math.ceil(sum/numberPage);
+    start = (pageCurrent - 1) * numberPage;
+    end   = numberPage * pageCurrent - 1;
+    listRows = $(''+elTable+' tbody tr[tsearch="ok"]');
+    for (i = 0; i<listRows.length; i++)
+    {
+        if(i >= start && i <= end)
+        {
+            listRows[i].style.display='';
+        }
+        else{
+            listRows[i].style.display = 'none';
+        }
+    }
+    soNut = numPages;
+}

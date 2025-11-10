@@ -96,6 +96,16 @@ class PaymentController extends Controller
                 $transaction = $dtData['transaction_bill'] ?? [];
                 return '<div><a class="dt-modal" href="admin/transaction_bill/view/'.$transaction['id'].'">'.($transaction['reference_no'] ?? '').'</a></div>';
             })
+            ->editColumn('partner', function ($dtData) {
+                $partner = $dtData['transaction_bill']['partner'] ?? [];
+                if (!empty($partner)) {
+                    $url = !empty($partner['avatar']) ? $partner['avatar'] : asset('admin/assets/images/users/avatar-1.jpg');
+                    return '<div style="display: flex;align-items: center;flex-wrap: wrap">' . loadImageAvatar($url,
+                            '40px') . '<div>' . (!empty($partner['fullname']) ? $partner['fullname'] : '') . '</div></div><div style="color:#337ab7">'.(!empty($partner['phone']) ? $partner['phone'] : 'Chưa có sdt').'</div>';
+                } else {
+                    return '<div></div>';
+                }
+            })
             ->editColumn('payment_mode', function ($dtData) {
                 $payment_mode = $dtData['payment_mode'] ?? [];
                 return '<div>'.($payment_mode['name'] ?? '').'</div>';
@@ -117,7 +127,19 @@ class PaymentController extends Controller
             ->editColumn('grand_total', function ($dtData) {
                 return '<div>'.(!empty($dtData['payment']) ? formatMoney($dtData['payment']) : 0).'</div>';
             })
-            ->rawColumns(['options', 'reference_no', 'date', 'status','id','status','customer','transaction_bill','grand_total','payment_mode'])
+            ->editColumn('percent_partner', function ($dtData) {
+                return '<div>'.(!empty($dtData['percent_partner']) ? ($dtData['percent_partner']) : '-').'</div>';
+            })
+            ->editColumn('revenue_partner', function ($dtData) {
+                return '<div>'.(!empty($dtData['revenue_partner']) ? formatMoney($dtData['revenue_partner']) : 0).'</div>';
+            })
+            ->editColumn('percent_customer', function ($dtData) {
+                return '<div>'.(!empty($dtData['percent_f1']) ? ($dtData['percent_f1']) : '-').'</div>';
+            })
+            ->editColumn('revenue_customer', function ($dtData) {
+                return '<div>'.(!empty($dtData['revenue_f1']) ? formatMoney($dtData['revenue_f1']) : 0).'</div>';
+            })
+            ->rawColumns(['options', 'reference_no', 'date', 'status','id','status','customer','transaction_bill','grand_total','payment_mode','percent_partner','revenue_partner','percent_customer','revenue_customer','partner'])
             ->setTotalRecords($data['recordsTotal'])
             ->setFilteredRecords($data['recordsFiltered'])
             ->with([
@@ -221,18 +243,16 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function changeStatus(){
-        if (!has_permission('transaction_bill','approve')){
+    public function changeStatus($id = 0){
+        if (!has_permission('payment','approve')){
             $data['result'] = false;
             $data['message'] = lang('dt_access');
             return response()->json($data);
         }
-        $transaction_id = $this->request->input('transaction_id') ?? 0;
-        $status = $this->request->input('status') ?? 0;
-        $this->request->merge(['status' => $status]);
+        $payment_id = $id;
         $this->request->merge(['staff_status' => Config::get('constant')['user_admin']]);
-        $this->request->merge(['transaction_id' => $transaction_id]);
-        $responseUpdate =  $this->fnbTransactionService->changeStatus($this->request);
+        $this->request->merge(['payment_id' => $payment_id]);
+        $responseUpdate =  $this->fnbPaymentService->changeStatus($this->request);
         $dtUpdate = $responseUpdate->getData(true);
         $data = $dtUpdate['data'] ?? [];
         return response()->json($data);

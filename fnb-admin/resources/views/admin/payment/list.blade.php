@@ -16,6 +16,13 @@
             <div class="card-box table-responsive">
                 <div class="row m-b-10">
                     <div class="col-md-2">
+                        <label for="partner_search">Đối tác</label>
+                        <select class="partner_search select2" id="partner_search"
+                                data-placeholder="Chọn ..." name="partner_search">
+                            <option></option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <label for="customer_search">Khách hàng</label>
                         <select class="customer_search select2" id="customer_search"
                                 data-placeholder="Chọn ..." name="customer_search">
@@ -51,17 +58,35 @@
                         <th class="text-center">{{lang('dt_date')}}</th>
                         <th class="text-center">{{lang('Khách hàng')}}</th>
                         <th class="text-center">{{lang('Hóa đơn')}}</th>
+                        <th class="text-center">{{lang('Đối tác')}}</th>
                         <th class="text-center">{{lang('Trạng thái')}}</th>
                         <th class="text-center">{{lang('Phương thức thanh toán')}}</th>
                         <th class="text-center">{{lang('Tổng tiền')}}</th>
+                        <th class="text-center">{{lang('% đối tác')}}</th>
+                        <th class="text-center">{{lang('HH đối tác')}}</th>
+                        <th class="text-center">{{lang('% thành viên')}}</th>
+                        <th class="text-center">{{lang('HH thành viên')}}</th>
                         <th class="text-center">{{lang('dt_actions')}}</th>
                     </tr>
                     </thead>
                     <tbody>
                     </tbody>
                     <tfoot>
-                    <tr>
-                    </tr>
+                        <tr>
+                            <td colspan="2" style="text-transform: uppercase;font-weight: bold">Tổng cộng</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td class="grand_total" style="font-weight: bold;text-align: right"></td>
+                            <td></td>
+                            <td class="revenue_partner" style="font-weight: bold;text-align: right"></td>
+                            <td></td>
+                            <td class="revenue_customer" style="font-weight: bold;text-align: right"></td>
+                            <td></td>
+                        </tr>
                     </tfoot>
                 </table>
             </div>
@@ -73,12 +98,14 @@
         $(document).ready(function (){
             searchAjaxSelect2('#transaction_bill_search','admin/category/searchTransactionBill')
             searchAjaxSelect2('#customer_search','admin/category/searchCustomer')
+            searchAjaxSelect2('#partner_search','admin/category/searchCustomer')
             search_daterangetimepicker('date_search');
         })
         var fnserverparams = {
             'status_search': '#status_search',
             'transaction_bill_search': '#transaction_bill_search',
             'customer_search': '#customer_search',
+            'partner_search': '#partner_search',
             'date_search': '#date_search',
         };
         var oTablePayment;
@@ -113,6 +140,7 @@
                 {data: 'date', name: 'date',width: "120px" },
                 {data: 'customer', name: 'customer',width: "140px",orderable: false},
                 {data: 'transaction_bill', name: 'transaction_bill',width: "140px"},
+                {data: 'partner', name: 'partner',width: "130px"},
                 {data: 'status', name: 'status',width: "120px"},
                 {data: 'payment_mode', name: 'payment_mode',width: "150px"},
                 {
@@ -120,6 +148,30 @@
                         return `<div class="text-right">${data}</div>`;
                     },
                     data: 'grand_total', name: 'grand_total',width: "120px"
+                },
+                {
+                    "render": function (data, type, row) {
+                        return `<div class="text-right">${data}</div>`;
+                    },
+                    data: 'percent_partner', name: 'percent_partner',width: "120px"
+                },
+                {
+                    "render": function (data, type, row) {
+                        return `<div class="text-right">${data}</div>`;
+                    },
+                    data: 'revenue_partner', name: 'revenue_partner',width: "120px"
+                },
+                {
+                    "render": function (data, type, row) {
+                        return `<div class="text-right">${data}</div>`;
+                    },
+                    data: 'percent_customer', name: 'percent_customer',width: "120px"
+                },
+                {
+                    "render": function (data, type, row) {
+                        return `<div class="text-right">${data}</div>`;
+                    },
+                    data: 'revenue_customer', name: 'revenue_customer',width: "120px"
                 },
                 {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px" },
 
@@ -131,6 +183,16 @@
             $('' + filterItem).on('change', function() {
                 oTablePayment.draw('page')
             });
+        });
+
+        $('#table_payment').on('draw.dt', function () {
+            var table = $(this).DataTable();
+            var grand_total = table.column(8).data().sum();
+            var revenue_partner = table.column(10).data().sum();
+            var revenue_customer = table.column(12).data().sum();
+            $("#table_payment").find('tfoot .grand_total').html(formatNumber(grand_total));
+            $("#table_payment").find('tfoot .revenue_partner').html(formatNumber(revenue_partner));
+            $("#table_payment").find('tfoot .revenue_customer').html(formatNumber(revenue_customer));
         });
 
         function changeStatus(transaction_id,status){
@@ -150,7 +212,7 @@
                     } else {
                         alert_float('error', data.message);
                     }
-                    oTable.draw('page');
+                    oTablePayment.draw('page');
                 })
                 .fail(function () {
 

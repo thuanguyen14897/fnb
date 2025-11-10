@@ -73,6 +73,18 @@
                     </tbody>
                     <tfoot>
                     <tr>
+                        <td colspan="2" style="text-transform: uppercase;font-weight: bold">Tổng cộng</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="total" style="font-weight: bold;text-align: right"></td>
+                        <td class="discount" style="font-weight: bold;text-align: right"></td>
+                        <td class="grand_total" style="font-weight: bold;text-align: right"></td>
+                        <td></td>
+                        <td></td>
                     </tr>
                     </tfoot>
                 </table>
@@ -173,6 +185,13 @@
 
         $('#table_transaction_bill').on('draw.dt', function () {
             getCountAll();
+            var table = $(this).DataTable();
+            var total =  table.column(8).data().sum();
+            var discount =  table.column(9).data().sum();
+            var grand_total =  table.column(10).data().sum();
+            $("#table_transaction_bill").find('tfoot .total').html(formatNumber(total));
+            $("#table_transaction_bill").find('tfoot .discount').html(formatNumber(discount));
+            $("#table_transaction_bill").find('tfoot .grand_total').html(formatNumber(grand_total));
         });
 
         function getCountAll() {
@@ -206,7 +225,7 @@
 
         function changeStatus(transaction_id,status){
             $.ajax({
-                url: 'admin/transaction/changeStatus',
+                url: 'admin/transaction_bill/changeStatus',
                 type: 'POST',
                 dataType: 'JSON',
                 cache: false,

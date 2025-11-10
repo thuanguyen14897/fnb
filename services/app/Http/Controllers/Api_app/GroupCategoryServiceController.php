@@ -246,7 +246,7 @@ class GroupCategoryServiceController extends AuthController
         ]);
     }
 
-    public function getListDataHomePage(){
+    public function getListDataHomePageOld(){
         $lat = !empty($this->request->input('lat')) ? $this->request->input('lat') : 0;
         $lon = !empty($this->request->input('lon')) ? $this->request->input('lon') : 0;
 
@@ -276,7 +276,7 @@ class GroupCategoryServiceController extends AuthController
         }
 
         $query = GroupCategoryService::where('id','!=',0);
-        $query->with(['service' => function ($q) use($lat,$lon,$checkProvince,$checkWard,$province_id,$ward_id) {
+        $query->with(['service' => function ($q) use($lat,$lon,$checkProvince,$checkWard,$province_id,$ward_id,$customer_id) {
             $q->select('*',DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL,fnCalcDistanceKM($lat,latitude,$lon,longitude),null) as distance"));
             $q->with('other_amenities');
             $q->with('favourite');
@@ -296,10 +296,116 @@ class GroupCategoryServiceController extends AuthController
                     }
                 });
             }
-            $q->limit(30);
+            if ($customer_id != 22) {
+                $q->where('active', 1);
+            }
+            $q->latest();
+            $q->limit(5);
         }]);
         $query->where('active',1);
         $data = $query->get();
+
+        $arrLatLng = $data->flatMap(function ($item) {
+            return $item->service->map(function ($it){
+                return [
+                    'lat' => $it->latitude,
+                    'lng' => $it->longitude,
+                    'service_id' => $it->id,
+                ];
+            });
+        })->toArray();
+        $distances = getDistancesToMultipleDestinations($lat, $lon, $arrLatLng, $google_api_key);
+        if (!empty($data)){
+            foreach ($data as $key => $value){
+                $dtIcon = !empty($value->icon) ? env('STORAGE_URL').'/'.$value->icon : null;
+                $data[$key]['icon'] = $dtIcon;
+                $dtImage = !empty($value->image) ? env('STORAGE_URL').'/'.$value->image : null;
+                $data[$key]['image'] = $dtImage;
+                $background = !empty($value->background) ? env('STORAGE_URL').'/'.$value->background : null;
+                $data[$key]['background'] = $background;
+                $service = $value->service;
+                unset($value->service);
+                $service = $service->map(function ($item) use ($distances,$lat,$lon,$customer_id){
+                    $duration_text = $item->distance > 0 ? round(($item->distance / 40) * 60) : 0;
+                    $dtDataInstance = $distances[$item->id] ?? [];
+                    $item->distance = $customer_id == 22 ? ['distance_km' => $item->distance,'duration_text' => $duration_text] : $dtDataInstance;
+                    $item->homepage = true;
+                    $item->location_address = [
+                        'lat' => $lat,
+                        'lon' => $lon,
+                    ];
+                    return $item;
+                });
+                $value->list_service = Service::collection($service);
+            }
+        }
+        return response()->json([
+            'data' => $data,
+            'result' => true,
+            'message' => 'Lấy danh sách thành công'
+        ]);
+    }
+
+    public function getListDataHomePage(){
+        $lat = !empty($this->request->input('lat')) ? $this->request->input('lat') : 0;
+        $lon = !empty($this->request->input('lon')) ? $this->request->input('lon') : 0;
+
+        $customer_id = $this->request->client->id ?? 0;
+
+        $ward_id = $this->request->input('ward_id') ?? 0;
+        $province_id = $this->request->input('province_id') ?? 0;
+
+        $google_api_key = $this->fnbAdminService->get_option('google_api_key');
+
+        $checkWard = false;
+        $checkProvince = false;
+        if (empty($lat) && empty($lon)){
+            $dtWard = Ward::where('Id',$ward_id)->first();
+            if (!empty($dtWard)){
+                $lat = $dtWard->lat ?? 0;
+                $lon = $dtWard->lon ?? 0;
+                $checkWard = true;
+            } else {
+                $dtProvince = Province::where('Id',$province_id)->first();
+                if (!empty($dtProvince)){
+                    $lat = $dtProvince->lat ?? 0;
+                    $lon = $dtProvince->lon ?? 0;
+                    $checkProvince = true;
+                }
+            }
+        }
+
+        $data = GroupCategoryService::where('active', 1)
+            ->where('id', '!=', 0)
+            ->get();
+        foreach ($data as $group) {
+            $group->load(['service' => function ($q) use ($lat, $lon, $checkProvince, $checkWard, $province_id, $ward_id, $customer_id) {
+                $q->select('*', DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL, fnCalcDistanceKM($lat, latitude, $lon, longitude), null) as distance"));
+                $q->with(['other_amenities', 'favourite']);
+                $q->where('hot', 1);
+
+                if (!empty($lat) && !empty($lon)) {
+                    $q->whereNotNull(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL, fnCalcDistanceKM($lat, latitude, $lon, longitude), null)"));
+                    $q->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL, fnCalcDistanceKM($lat, latitude, $lon, longitude), 10000)"), '>=', 0);
+                    $q->where(function ($inst) use ($lat, $lon, $ward_id, $province_id, $checkWard, $checkProvince) {
+                        $inst->where(DB::raw("IF($lat != 0 AND $lon != 0 AND latitude IS NOT NULL AND longitude IS NOT NULL, fnCalcDistanceKM($lat, latitude, $lon, longitude), 10000)"), '<=', 50);
+                        if (!empty($checkWard)) {
+                            $inst->orWhere('wards_id', $ward_id);
+                        }
+                        if (!empty($checkProvince)) {
+                            $inst->orWhere('province_id', $province_id);
+                        }
+                    });
+                }
+
+                if ($customer_id != 22) {
+                    $q->where('active', 1);
+                }
+
+                $q->latest();
+                $q->take(10);
+            }]);
+        }
         $arrLatLng = $data->flatMap(function ($item) {
             return $item->service->map(function ($it){
                 return [

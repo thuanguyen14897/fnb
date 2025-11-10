@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api_app;
 use App\Helpers\FilesHelpers;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
+use App\Models\SampleMessage;
+use App\Services\AccountService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -14,11 +16,13 @@ use DateTime;
 
 class Api_info extends AuthController
 {
-    public function __construct(Request $request)
+    protected $fnbCustomerService;
+    public function __construct(Request $request,AccountService $accountService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
         $this->SaveSession = true;
+        $this->fnbCustomerService = $accountService;
     }
 
     //(1)
@@ -55,18 +59,37 @@ class Api_info extends AuthController
                 'content_package',
                 'rule_register_partner',
                 'terms_guide',
+                'is_apple',
+                'total_member',
+                'phone_company',
+                'link_contact_facebook',
+                'link_contact_zalo',
             ]);
         })->get();
         $data = [];
+        $total_member = 0;
         foreach ($dataField as $key => $value) {
             if ($value->name == 'rule_delete_account') {
                 $value->value = str_replace('src="/storage', 'src="' . asset('/storage') . '', $value->value);
             }
             $data[$value->name] = $value->value;
+            if ($value->name == 'total_member') {
+                $total_member += $value->value ?? 0;
+            }
         }
         $data['db_name'] = config('database.connections.mysql.database');
         $data['dtTypeRepresentative'] = getListTypeBusiness();
         $data['dtDay'] = getListDay();
+        $data['dtSampleMessage'] = SampleMessage::get()->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->message,
+            ];
+        })->toArray();
+        $response = $this->fnbCustomerService->countAll($this->request);
+        $dataRes = $response->getData(true);
+        $total_member  += $dataRes['total'] ?? 0;
+        $data['total_member'] = $total_member;
         return response()->json($data, 200);
     }
 

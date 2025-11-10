@@ -1598,6 +1598,9 @@ if (!function_exists('getReference')) {
                 case 'transaction_bill':
                     $prefix = 'HD';
                     break;
+                case 'violation_ticket':
+                    $prefix = 'VP';
+                    break;
                 default:
                     $prefix = '';
             }
@@ -1716,12 +1719,6 @@ if (!function_exists('menuHelper')) {
                         'link' => 'admin/admin_website/homepage',
                         'image' => '',
                     ]
-//                    [
-//                        'id' => 'kpi_user',
-//                        'name' => lang('KPI Nhân viên'),
-//                        'link' => 'admin/kpi/kpi_user',
-//                        'image' => '',
-//                    ],
                 ]
             ],
             [
@@ -1870,7 +1867,38 @@ if (!function_exists('menuHelper')) {
                 'link' => '',
                 'class' => 'kpi',
                 'image' => 'admin/assets/images/icon_menu/kpi.png',
-                'child' => [],
+                'child' => [
+                    [
+                        'id' => 'violation_ticket',
+                        'name' => lang('Phiếu vi phạm'),
+                        'link' => 'admin/kpi/violation_ticket',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'kpi_user',
+                        'name' => lang('KPI Nhân viên'),
+                        'link' => 'admin/kpi/kpi_user',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'kpi_manager',
+                        'name' => lang('KPI GDKD'),
+                        'link' => 'admin/kpi/kpi_manager',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_kpi_user',
+                        'name' => lang('Thống kê KPI nhân viên'),
+                        'link' => 'admin/kpi/report_synthetic_kpi_user?type=1',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_kpi_manager',
+                        'name' => lang('Thống kê KPI giám đốc kinh doanh'),
+                        'link' => 'admin/kpi/report_synthetic_kpi_user?type=2',
+                        'image' => '',
+                    ],
+                ],
             ],
             [
                 'id' => 'blog',
@@ -1879,6 +1907,99 @@ if (!function_exists('menuHelper')) {
                 'class' => 'bai_viet',
                 'image' => 'admin/assets/images/icon_menu/bai_viet.png',
                 'child' => [
+                ],
+            ],
+            [
+                'id' => 'report',
+                'name' => 'Thống kê',
+                'link' => '',
+                'class' => 'report',
+                'image' => 'admin/assets/images/icon_menu/danh_muc.png',
+                'child' => [
+                    [
+                        'id' => 'report_referral_by_partner',
+                        'name' => lang('Báo cáo thành viên được giới thiệu bởi đối tác (F0)'),
+                        'link' => 'admin/report/report_referral_by_partner',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_referral_by_customer',
+                        'name' => lang('Báo cáo thành viên được giới thiệu bởi thành viên (F1)'),
+                        'link' => 'admin/report/report_referral_by_customer',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_payment',
+                        'name' => lang('Báo cáo Tổng quan chi tiêu'),
+                        'link' => 'admin/report/report_synthetic_payment',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_customer',
+                        'name' => lang('Thống kê thành viên đang hoạt động'),
+                        'link' => 'admin/report/report_synthetic_customer',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_customer_locked',
+                        'name' => lang('Thống kê thành viên đang bị khóa'),
+                        'link' => 'admin/report/report_synthetic_customer_locked',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_customer_payment_due',
+                        'name' => lang('Thống kê thành viên gần đến hạn thanh toán'),
+                        'link' => 'admin/report/report_synthetic_customer_payment_due',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_partner',
+                        'name' => lang('Thống kê doanh thu từ đối tác (CSKD)'),
+                        'link' => 'admin/report/report_synthetic_partner',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_spending_customer',
+                        'name' => lang('Thống kê doanh số chi tiêu thành viên'),
+                        'link' => 'admin/report/report_synthetic_spending_customer',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_discount_partner',
+                        'name' => lang('Thống kê doanh số giảm giá của đối tác (CSKD)'),
+                        'link' => 'admin/report/report_synthetic_discount_partner',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_kpi',
+                        'name' => lang('Báo cáo tỉ lệ KPI hoàn thành từng cấp'),
+                        'link' => 'admin/report/report_synthetic_kpi',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_upgrade_membership',
+                        'name' => lang('Báo cáo nâng hạng thành viên vượt cấp'),
+                        'link' => 'admin/report/report_synthetic_upgrade_membership',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_fee_partner',
+                        'name' => lang('Thống kê thu phí dịch vụ từ đối tác (CSKD)'),
+                        'link' => 'admin/report/report_synthetic_fee_partner',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_fee_customer',
+                        'name' => lang('Thống kê thu phí dịch vụ từ thành viên'),
+                        'link' => 'admin/report/report_synthetic_fee_customer',
+                        'image' => '',
+                    ],
+                    [
+                        'id' => 'report_synthetic_rose_partner',
+                        'name' => lang('Báo cáo hoa hồng từ đối tác (CSKD)'),
+                        'link' => 'admin/report/report_synthetic_rose_partner',
+                        'image' => '',
+                    ],
                 ],
             ],
             [
@@ -2013,6 +2134,12 @@ function getListStatusService($id = -1,$type = 'name')
             'name' => lang('Đang tạm ngưng'),
             'color' => '#64646D',
             'background' => '#EBEBF0'
+        ],
+        [
+            'id' => 4,
+            'name' => lang('Đang khởi tạo'),
+            'color' => '#0B74E5',
+            'background' => '#DBEEFF'
         ],
     ];
     if ($id != -1) {
@@ -2164,31 +2291,47 @@ function get_parent_role_id_helper($child_id = [0], &$result = array(),$dem = 0)
 }
 
 
-function getUserIdByRole($role_id = [],$staff_id = 0)
+function getUserIdByRole($role_id = [],$staff_id = 0,$permission = true)
 {
-   if (empty($role_id)) {
-       if (!empty($staff_id)) {
-           $role_id = get_role_by_user($staff_id);
-       } else {
-           $role_id = get_role_by_user();
-           $staff_id = get_staff_user_id();
-       }
-   }
-   if (empty($staff_id)){
-       $staff_id = get_staff_user_id();
-   }
-   $derpartment_id = get_department_by_user($staff_id);
-   $derpartment_id = is_array($derpartment_id) ? $derpartment_id : [0];
+    if($permission){
+        if(empty($staff_id)){
+            return [get_staff_user_id()];
+        } else {
+            return [$staff_id];
+        }
+    }
+    if (empty($role_id)) {
+        if (!empty($staff_id)) {
+            $role_id = get_role_by_user($staff_id);
+        } else {
+            $role_id = get_role_by_user();
+            $staff_id = get_staff_user_id();
+        }
+    }
+    if (empty($staff_id)){
+        $staff_id = get_staff_user_id();
+    }
+    $derpartment_id = get_department_by_user($staff_id);
+    $derpartment_id = is_array($derpartment_id) ? $derpartment_id : [0];
 
     $arrRole = getRoleChild($role_id);
     if (empty($arrRole)) {
         return [0];
     }
+
+    $arr_ward_id = DB::table('tbl_user_ares_ward')->where('id_user','=', $staff_id)->pluck('id_ward')->toArray();
+
     $user_ids = DB::table('tbl_role_user')
-        ->whereExists(function ($query) use ($derpartment_id) {
+        ->whereExists(function ($query) use ($derpartment_id,$arr_ward_id) {
             $query->select(DB::raw(1))
                 ->from('tbl_users')
                 ->join('tbl_user_department','tbl_user_department.user_id','=','tbl_users.id')
+                ->whereExists(function ($query_ward) use ($arr_ward_id) {
+                    $query_ward->select(DB::raw(1))
+                        ->from('tbl_user_ares_ward')
+                        ->whereIn('tbl_user_ares_ward.id_ward', $arr_ward_id)
+                        ->whereRaw('tbl_users.id = tbl_user_ares_ward.id_user');
+                })
                 ->whereRaw('tbl_users.id = tbl_role_user.user_id')
                 ->whereIn('tbl_user_department.department_id', $derpartment_id);
         })
@@ -2255,3 +2398,62 @@ function getListTypePackage($id = 0)
         return $data;
     }
 }
+
+function count_all_children($data, $parentId)
+{
+    $count = 0;
+    foreach ($data as $value) {
+        if ($value['parent_id'] == $parentId) {
+            $count++;
+            $count += count_all_children($data, $value['customer_id']);
+        }
+    }
+    return $count;
+}
+
+
+function get_parent_id_referral_level_html($data, $parentId = 0,&$html = '',$dem = 0)
+{
+    $array = [];
+    foreach ($data as $key => $value) {
+        if ($value['parent_id'] == $parentId) {
+            $array[] = ($value);
+        }
+    }
+
+    $dem ++;
+    if ($dem > 2){
+        return ;
+    }
+    if ($array) {
+        $html.= '<ul class="data-tree" style="display: flex;">';
+        foreach ($array as $item)
+        {
+            if ($item['parent_id'] == 0){
+
+            }
+            $customer = $item['customer'] ?? [];
+            if (empty($customer)){
+                continue;
+            }
+            if ($customer['type_client'] == 1){
+                $object = 'clients';
+            } else {
+                $object = 'partner';
+            }
+            $totalChildren = count_all_children($data, $item['customer_id']);
+            $image = !empty($item['customer']['avatar']) ? $item['customer']['avatar'] : 'admin/assets/images/avatar.jpg';
+            $html.= '<li>';
+            $html.= '<a target="_blank" href="admin/'.$object.'/view/'.$item['customer']['id'].'"><img style="width: 50px; border-radius: 50%;height:50px" src="'.$image.'" /></a>';
+            $html.= '<div>'.$item['customer']['fullname'].'</div>';
+            if ($dem <= 2) {
+                $html .= '<div style="color: #FF5A1F">' . ' (TV: ' . $totalChildren . ')</div>';
+            }
+            get_parent_id_referral_level_html($data, $item['customer_id'],$html,$dem);
+            $html.= '</li>';
+        }
+        $html.= '</ul>';
+    }
+    return $html;
+}
+

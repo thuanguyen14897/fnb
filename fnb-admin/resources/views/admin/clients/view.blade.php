@@ -4,6 +4,70 @@
         .card-box {
             min-height: 180px;
         }
+        .tree ul {
+            padding-top: 20px;
+            position: relative;
+            transition: all 0.5s;
+            -webkit-transition: all 0.5s;
+            -moz-transition: all 0.5s;
+        }
+
+        .tree li {
+            float: left;
+            text-align: center;
+            list-style-type: none;
+            position: relative;
+            padding: 20px 5px 0 5px;
+            transition: all 0.5s;
+            -webkit-transition: all 0.5s;
+            -moz-transition: all 0.5s;
+        }
+
+        .tree li::before, .tree li::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 50%;
+            border-top: 1px solid #ccc;
+            width: 50%;
+            height: 20px;
+        }
+
+        .tree li::after {
+            right: auto;
+            left: 50%;
+            border-left: 1px solid #ccc;
+        }
+
+        .tree li:only-child::before, .tree li:only-child::after {
+            display: none;
+        }
+
+        .tree li:only-child {
+            padding-top: 0;
+        }
+
+        .tree li:first-child::before, .tree li:last-child::after {
+            border: 0 none;
+        }
+
+        .tree li:last-child::before {
+            border-right: 1px solid #ccc;
+            border-radius: 0 5px 0 0;
+        }
+
+        .tree li:first-child::after {
+            border-radius: 5px 0 0 0;
+        }
+        .tree ul ul::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            border-left: 1px solid #ccc;
+            width: 0;
+            height: 20px;
+        }
     </style>
     <div class="row">
         <div class="col-sm-12">
@@ -53,6 +117,15 @@
                                         $content = $client['active'] == 1 ? "Hoạt động" : "Khoá";
                                         $strStatus = "<a class='dt-update text-center btn btn-xs $classes'>$content</a>";
 
+                                        $strReferral = '';
+                                        $referral_level = $client['referral_level'];
+                                        if (!empty($referral_level)) {
+                                            if ($referral_level['parent']['type_client'] == 1) {
+                                                $strReferral = "<a class='text-center label label-danger' target='_blank' href='admin/clients/view/" . $referral_level['parent_id'] . "'>" . $referral_level['referral_code'] . "</a>";
+                                            } else {
+                                                $strReferral = "<a class='text-center label label-danger' target='_blank' href='admin/partner/view/" . $referral_level['parent_id'] . "'>" . $referral_level['referral_code'] . "</a>";
+                                            }
+                                        }
                                     @endphp
                                     <div class="member-img"
                                          style="display: flex;flex-direction: column;align-items: center">
@@ -85,21 +158,17 @@
                                             <span>Nơi cấp cccd: </span><span>{{($client['issued_cccd'])}}</span>
                                         </p>
                                         <p class="text-dark member-info-detail">
-                                            <span>Số passport: </span><span>{{($client['number_passport'])}}</span>
-                                        </p>
-                                        <p class="text-dark member-info-detail">
-                                            <span>Ngày cấp passport: </span><span>{{!empty($client['date_passport']) ? _dthuan(($client['date_passport'])) : ''}}</span>
-                                        </p>
-                                        <p class="text-dark member-info-detail">
-                                            <span>Nơi cấp passport: </span><span>{{($client['issued_passport'])}}</span>
-                                        </p>
-                                        <p class="text-dark member-info-detail">
                                             <span>{{lang('dt_province')}}: </span><span>{{($client['province']['Name'] ?? '')}}</span>
                                         </p>
                                         <p class="text-dark member-info-detail">
                                             <span>{{lang('dt_wards')}}: </span><span>{{($client['wards']['Name'] ?? '')}}</span>
                                         </p>
-
+                                        <p class="text-dark member-info-detail">
+                                            <span>Mã giới thiệu : </span><span class="label label-default">{{$client['referral_code']}}</span>
+                                        </p>
+                                        <p class="text-dark member-info-detail">
+                                            <span>Người giới thiệu : </span>{!! $strReferral !!}</span>
+                                        </p>
                                         <p class="text-dark member-info-detail">
                                             <span>{{lang('Hạng mức hóa đơn')}}: </span><span>{!!(empty($client['active_limit_private']) ? '<a class="btn btn-xs btn-info">Chiết khấu theo hạng thành viên</a>' : '<a class="btn btn-xs btn-warning">Chiết khấu riêng</a>')!!}</span>
                                         </p>
@@ -111,6 +180,22 @@
                                         </p>
                                     </div>
 
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="card-box">
+                                <div class="title_driving_liscense">
+                                    <h5 class="text-muted text-uppercase m-t-0 m-b-20" style="color: black"><b>Sơ đồ
+                                            nhánh các cấp</b></h5>
+                                </div>
+                                <div>Tổng số thành viên: {{$countMember}}</div>
+                                <div class="hide">Tổng số cấp: {{$level}}</div>
+                                <div class="tree" style="overflow-x: auto;overflow-y: hidden; white-space: nowrap;">
+                                    @php
+                                        $html = get_parent_id_referral_level_html($dataReferralLevel)
+                                    @endphp
+                                    {!! $html !!}
                                 </div>
                             </div>
                         </div>

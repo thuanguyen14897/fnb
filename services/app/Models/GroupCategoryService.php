@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Staudenmeir\EloquentEagerLimit\HasEagerLimit;
 
 class GroupCategoryService extends Model
 {
@@ -21,8 +22,8 @@ class GroupCategoryService extends Model
         return $this->hasMany('App\Models\Service', 'group_category_service_id', 'id');
     }
 
-    public function topServices()
+    function topServices()
     {
-        return $this->hasMany('App\Models\Service', 'group_category_service_id', 'id')->where('hot', 1)->latest()->take(5);
+        return $this->hasMany('App\Models\Service', 'group_category_service_id', 'id')->where('hot', 1)->latest();
     }
 }

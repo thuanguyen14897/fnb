@@ -289,10 +289,10 @@
                                     @if(!empty($value['transaction_day_item']))
                                         @foreach($value['transaction_day_item'] as $kk => $vv)
                                             @php
-                                                $image_service = !empty($vv['service']['image_store']) ? $vv['service']['image_store'] : null;
+                                                $image_service = !empty($vv['service']['image']) ? $vv['service']['image'] : null;
                                                 $dtImage = null;
                                                 if (!empty($image_service)){
-                                                    $dtImage = !empty($image_service[0]) ? $image_service[0]['image'] : null;
+                                                    $dtImage = $image_service;
                                                 }
 
                                                 $optionStatus = '<div class="btn-group">

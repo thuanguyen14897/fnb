@@ -9,6 +9,7 @@ use App\Http\Controllers\Api_app\ServiceController;
 use App\Http\Controllers\Api_app\CategoryController;
 use App\Http\Controllers\Api_app\AresController;
 use App\Http\Controllers\Api_app\QuestionOftenController;
+use App\Http\Controllers\Api_app\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,6 +67,8 @@ Route::group(['prefix' => 'service','middleware' => App\Http\Middleware\CheckLog
     Route::post('addService', [ServiceController::class, 'addService']);
     Route::get('getReviewService', [ServiceController::class, 'getReviewService']);
     Route::post('changeFavouriteService', [ServiceController::class, 'changeFavouriteService']);
+    Route::get('checkServiceRegister', [ServiceController::class, 'checkServiceRegister']);
+    Route::get('checkServicePartner', [ServiceController::class, 'checkServicePartner']);
 });
 
 Route::group(['prefix' => 'category'], function () {
@@ -91,6 +94,9 @@ Route::group(['prefix' => 'ares'], function () {
     Route::get('getWardsWhereAres', [AresController::class, 'getWardsWhereAres']);
     Route::get('getListDataWhereName', [AresController::class, 'getListDataWhereName']);
     Route::get('create_auto_ares', [AresController::class, 'create_auto_ares']);
+    Route::get('getListSyntheticFeePartner', [AresController::class, 'getListSyntheticFeePartner']);
+    Route::get('getListSyntheticRosePartner', [AresController::class, 'getListSyntheticRosePartner']);
+    Route::get('getListSyntheticKPI', [AresController::class, 'getListSyntheticKPI']);
 });
 
 Route::group(['prefix' => 'question_often'], function () {
@@ -100,4 +106,8 @@ Route::group(['prefix' => 'question_often'], function () {
     Route::post('delete', [QuestionOftenController::class, 'delete']);
     Route::get('ChangeStatus', [QuestionOftenController::class, 'ChangeStatus']);
     Route::post('order_by', [QuestionOftenController::class, 'order_by']);
+});
+
+Route::group(['prefix' => 'report'], function () {
+    Route::get('getListRegisterServiceKPI', [ReportController::class, 'getListRegisterServiceKPI']);
 });

@@ -32,6 +32,7 @@ class TransactionBillResource extends JsonResource
                     'email' => $this->customer->email,
                     'phone' => $this->customer->phone,
                     'avatar_new' => !empty($this->customer->avatar) ? env('STORAGE_URL').'/'.$this->customer->avatar : null,
+                    'membership' => $this->customer->membership
                 ];
             }),
             'partner' => $this->whenLoaded('partner', function () {

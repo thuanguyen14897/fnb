@@ -48,6 +48,22 @@
                         <div class="title-payment">{{lang('dt_total')}}</div>
                         <div class="value-payment">{{formatMoney($dtData['payment'])}}</div>
                     </div>
+                    <div class="wrap-payment">
+                        <div class="title-payment">{{lang('% đối tác')}}</div>
+                        <div class="value-payment">{{!empty($dtData['percent_partner']) ? $dtData['percent_partner'] : '-'}}</div>
+                    </div>
+                    <div class="wrap-payment">
+                        <div class="title-payment">{{lang('HH đối tác')}}</div>
+                        <div class="value-payment">{{formatMoney($dtData['revenue_partner'])}}</div>
+                    </div>
+                    <div class="wrap-payment">
+                        <div class="title-payment">{{lang('% thành viên')}}</div>
+                        <div class="value-payment">{{!empty($dtData['percent_f1']) ? $dtData['percent_f1'] : '-'}}</div>
+                    </div>
+                    <div class="wrap-payment">
+                        <div class="title-payment">{{lang('HH thành viên')}}</div>
+                        <div class="value-payment">{{formatMoney($dtData['revenue_f1'])}}</div>
+                    </div>
                 </div>
             </div>
         </div>

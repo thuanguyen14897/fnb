@@ -62,11 +62,14 @@
                         <th class="text-center">{{lang('c_phone_client')}}</th>
                         <th class="text-center">{{lang('c_email_client')}}</th>
                         <th class="text-center">{{lang('c_point_membership')}}</th>
+                        <th class="text-center">{{lang('Số dư tài khoản')}}</th>
                         <th class="text-center">{{lang('c_ranking_date')}}</th>
-                        <th class="text-center">{{lang('c_invoice_limit')}}</th>
                         <th class="text-center">{{lang('dt_date_created_customer')}}</th>
                         <th class="text-center">{{lang('Ngày hết hạn sử dụng')}}</th>
                         <th class="text-center">{{lang('c_ares')}}</th>
+                        <th class="text-center">{{lang('Nhân viên phụ trách')}}</th>
+                        <th class="text-center">{{lang('Số thành viên')}}</th>
+                        <th class="text-center">{{lang('Người giới thiệu')}}</th>
                         <th class="text-center">{{lang('Mã giới thiệu')}}</th>
                         <th class="text-center">{{lang('c_active_client')}}</th>
                         <th class="text-center">{{lang('dt_actions')}}</th>
@@ -97,7 +100,7 @@
             search_daterangepicker('date_search');
             oTable = InitDataTable('#table_client', 'admin/clients/getListCustomer', {
                 'order': [
-                    [5, 'desc']
+                    [9, 'desc']
                 ],
                 'responsive': false,
                 "ajax": {
@@ -128,11 +131,19 @@
                     },
                     {data: 'email', name: 'email'},
                     {data: 'point_membership', name: 'point_membership', orderable: false},
+                    {data: 'account_balance', name: 'account_balance',visible : false},
                     {data: 'ranking_date', name: 'ranking_date', orderable: false},
-                    {data: 'invoice_limit', name: 'invoice_limit', orderable: false},
                     {data: 'created_at', name: 'created_at'},
-                    {data: 'date_active', name: 'date_active'},
+                    {data: 'date_active', name: 'date_active',width: "80px"},
                     {data: 'ares', name: 'ares', orderable: false, searchable: false},
+                    {data: 'staff_id', name: 'staff_id', orderable: false, searchable: false,width: "110px" },
+                    {data: 'count_number', name: 'count_number', orderable: false},
+                    {
+                        data: 'referral_code_customer', name: 'referral_code_customer',width: "120px",orderable: false,
+                        "render": function (data, type, row) {
+                            return `<div class="text-center">${data}</div>`;
+                        },
+                    },
                     {data: 'referral_code', name: 'referral_code',width: "110px",},
                     {
                         "render": function (data, type, row) {

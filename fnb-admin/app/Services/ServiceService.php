@@ -92,6 +92,7 @@ class ServiceService
                 ]
             );
             $data = $response->json();
+
             return response()->json([
                 'data' => $data,
                 'result' => $data['result'] ?? false,
@@ -228,6 +229,37 @@ class ServiceService
                 'recordsFiltered' => $data['filtered'], // tổng user sau khi lọc
                 'data' => $data['data'], // danh sách user hiện tại
                 'customer_ids' => array_column($data['data'], 'customer_id'),
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'result' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getListDataByTransaction($request)
+    {
+        try {
+            $response = $this->sendRequestToService(
+                'POST',
+                "{$this->baseUrl}/api/service/getListDataByTransaction",
+                $request,
+            );
+            if (!$response->successful()) {
+                return response()->json([
+                    'result' => false,
+                    'status' => $response->status(),
+                    'message' => $response->json()['error'] ?? ( $response->json()['message'] ?? 'Unknown error'),
+                    'data' => []
+                ], $response->status());
+            }
+
+            $data = $response->json();
+            return response()->json([
+                'result' => $data['result'],
+                'data' => $data['data'],
                 'message' => $data['message']
             ]);
         } catch (\Exception $e) {

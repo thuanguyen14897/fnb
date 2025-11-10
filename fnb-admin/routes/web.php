@@ -33,6 +33,8 @@ use App\Http\Controllers\TransactionPackageController;
 use App\Http\Controllers\SocketController;
 use App\Http\Controllers\TransactionBillController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SampleMessageController;
+use App\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,7 +56,10 @@ Route::group(['prefix' => 'cron'], function () {
     Route::get('updateCodeClient', [CronController::class, 'updateCodeClient']);
     Route::get('addGroupPermistionByPermission', [CronController::class, 'addGroupPermistionByPermission']);
     Route::get('sendNotificationModule', [CronController::class, 'sendNotificationModule']);
+    Route::get('cronUpgradeMemberShip', [CronController::class, 'cronUpgradeMemberShip']);
+    Route::get('autoIncreaseMember', [CronController::class, 'autoIncreaseMember']);
     Route::post('webhookPay2s', [CronController::class, 'webhookPay2s']);
+    Route::get('getListLogUpgradeClient', [CronController::class, 'getListLogUpgradeClient']);
 });
 
 Route::get('/clear', function () {
@@ -103,6 +108,10 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('view_user_parent/{id?}', [UserController::class, 'view_user_parent']);
         Route::post('getUserParent/{id?}', [UserController::class, 'getUserParent']);
         Route::post('getUserChild/{id?}', [UserController::class, 'getUserChild']);
+        Route::get('profile/{id?}', [UserController::class, 'profile']);
+        Route::post('profile/{id?}', [UserController::class, 'profile']);
+        Route::get('changeStatusNVKD/{id}', [UserController::class, 'changeStatusNVKD']);
+        Route::get('changeStatusManager/{id}', [UserController::class, 'changeStatusManager']);
     });
     Route::group(['prefix' => 'department'], function () {
         Route::get('list', [DepartmentController::class, 'get_list']);
@@ -146,6 +155,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::post('detail', [ClientsController::class, 'detail']);
         Route::get('delete/{id}', [ClientsController::class, 'delete']);
         Route::get('active/{id}', [ClientsController::class, 'active']);
+        Route::get('updateDateActive/{id}', [ClientsController::class, 'updateDateActive']);
+        Route::post('updateDateActive/{id}', [ClientsController::class, 'updateDateActive']);
     });
 
 
@@ -169,11 +180,13 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('changeTypeTransferAddress', [SettingsController::class, 'changeTypeTransferAddress']);
         Route::post('loadCustomerClass', [SettingsController::class, 'loadCustomerClass']);
         Route::post('loadCustomerLeaderShip', [SettingsController::class, 'loadCustomerLeaderShip']);
+        Route::get('changeStatusIsApple/{id}', [SettingsController::class, 'changeStatusIsApple']);
     });
 
 
     Route::group(['prefix' => 'category'], function () {
         Route::get('searchCustomer/{id?}', [CategoryController::class, 'searchCustomer']);
+        Route::get('searchRepresentativer/{id?}', [CategoryController::class, 'searchRepresentativer']);
         Route::get('searchDriver/{id?}', [CategoryController::class, 'searchDriver']);
         Route::get('searchTransaction/{id?}', [CategoryController::class, 'searchTransaction']);
         Route::get('searchTransactionDriver/{id?}', [CategoryController::class, 'searchTransactionDriver']);
@@ -311,6 +324,9 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('delete/{id}', [PartnerController::class, 'delete']);
         Route::get('active/{id}', [PartnerController::class, 'active']);
         Route::post('detailRepresentativePartner/{id}', [PartnerController::class, 'detailRepresentativePartner']);
+        Route::get('createQr/{id}', [PartnerController::class, 'createQr']);
+        Route::get('updateDateActive/{id}', [PartnerController::class, 'updateDateActive']);
+        Route::post('updateDateActive/{id}', [PartnerController::class, 'updateDateActive']);
     });
 
     Route::group(['prefix' => 'membership_level'], function () {
@@ -324,7 +340,22 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
     });
 
     Route::group(['prefix' => 'kpi'], function () {
+        Route::get('violation_ticket', [KPIController::class, 'violation_ticket']);
+        Route::post('getViolationTicket', [KPIController::class, 'getViolationTicket']);
+        Route::get('detail_violation_ticket/{id?}', [KPIController::class, 'detail_violation_ticket']);
+        Route::post('detail_violation_ticket/{id?}', [KPIController::class, 'detail_violation_ticket']);
+        Route::get('delete_violation_ticket/{id?}', [KPIController::class, 'delete_violation_ticket']);
         Route::get('kpi_user', [KPIController::class, 'kpi_user']);
+        Route::post('submitKPI', [KPIController::class, 'submitKPI']);
+        Route::get('kpi_manager', [KPIController::class, 'kpi_manager']);
+        Route::post('submitKPIManager', [KPIController::class, 'submitKPIManager']);
+        Route::get('report_synthetic_kpi_user', [KPIController::class, 'report_synthetic_kpi_user']);
+        Route::post('getReportSyntheticKpiUser', [KPIController::class, 'getReportSyntheticKpiUser']);
+        Route::get('detail_report_synthetic_kpi_user', [KPIController::class, 'detail_report_synthetic_kpi_user']);
+        Route::post('detail_report_synthetic_kpi_user', [KPIController::class, 'detail_report_synthetic_kpi_user']);
+        Route::get('load_add_report_synthetic_kpi_user', [KPIController::class, 'load_add_report_synthetic_kpi_user']);
+        Route::get('load_add_report_synthetic_kpi_manager', [KPIController::class, 'load_add_report_synthetic_kpi_manager']);
+        Route::post('deleteKPI', [KPIController::class, 'deleteKPI']);
     });
 
     Route::group(['prefix' => 'question_often'], function () {
@@ -377,7 +408,47 @@ Route::group(['prefix' => 'admin', 'middleware' => 'checkLogin:admin'], function
         Route::get('detail/{id?}', [PaymentController::class, 'get_detail']);
         Route::get('delete/{id}', [PaymentController::class, 'delete']);
         Route::get('view/{id}', [PaymentController::class, 'view']);
-        Route::post('changeStatus', [PaymentController::class, 'changeStatus']);
+        Route::get('changeStatus/{id}', [PaymentController::class, 'changeStatus']);
+    });
+
+
+    Route::group(['prefix' => 'sample_message'], function () {
+        Route::post('getSampleMessage', [SampleMessageController::class, 'getSampleMessage']);
+        Route::get('detail/{id?}', [SampleMessageController::class, 'get_detail']);
+        Route::post('submit/{id}', [SampleMessageController::class, 'submit']);
+        Route::get('delete/{id}', [SampleMessageController::class, 'delete']);
+    });
+
+    Route::group(['prefix' => 'report'], function () {
+        Route::get('report_referral_by_partner', [ReportController::class, 'report_referral_by_partner']);
+        Route::post('getReportReferralByPartner', [ReportController::class, 'getReportReferralByPartner']);
+        Route::get('report_referral_by_customer', [ReportController::class, 'report_referral_by_customer']);
+        Route::post('getReportReferralByCustomer', [ReportController::class, 'getReportReferralByCustomer']);
+        Route::get('report_synthetic_payment', [ReportController::class, 'report_synthetic_payment']);
+        Route::post('getReportSyntheticPayment', [ReportController::class, 'getReportSyntheticPayment']);
+        Route::get('detailReportSyntheticPayment/{month?}/{year?}/{parent_id?}/{customer_id?}', [ReportController::class, 'detailReportSyntheticPayment']);
+        Route::post('getDetailReportSyntheticPayment', [ReportController::class, 'getDetailReportSyntheticPayment']);
+        Route::get('getReportKPIUser', [ReportController::class, 'getReportKPIUser']);
+        Route::get('report_synthetic_partner', [ReportController::class, 'report_synthetic_partner']);
+        Route::post('getListSyntheticRevenuePartner', [ReportController::class, 'getListSyntheticRevenuePartner']);
+        Route::get('report_synthetic_customer', [ReportController::class, 'report_synthetic_customer']);
+        Route::get('report_synthetic_customer_locked', [ReportController::class, 'report_synthetic_customer_locked']);
+        Route::get('report_synthetic_customer_payment_due', [ReportController::class, 'report_synthetic_customer_payment_due']);
+        Route::post('getListSyntheticCustomer', [ReportController::class, 'getListSyntheticCustomer']);
+        Route::get('report_synthetic_spending_customer', [ReportController::class, 'report_synthetic_spending_customer']);
+        Route::post('getListSyntheticSpendingCustomer', [ReportController::class, 'getListSyntheticSpendingCustomer']);
+        Route::get('report_synthetic_discount_partner', [ReportController::class, 'report_synthetic_discount_partner']);
+        Route::post('getListSyntheticDiscountPartner', [ReportController::class, 'getListSyntheticDiscountPartner']);
+        Route::get('report_synthetic_upgrade_membership', [ReportController::class, 'report_synthetic_upgrade_membership']);
+        Route::post('getListSyntheticUpgradeMembership', [ReportController::class, 'getListSyntheticUpgradeMembership']);
+        Route::get('report_synthetic_fee_partner', [ReportController::class, 'report_synthetic_fee_partner']);
+        Route::post('getListSyntheticFeePartner', [ReportController::class, 'getListSyntheticFeePartner']);
+        Route::get('report_synthetic_fee_customer', [ReportController::class, 'report_synthetic_fee_customer']);
+        Route::post('getListSyntheticFeeCustomer', [ReportController::class, 'getListSyntheticFeeCustomer']);
+        Route::get('report_synthetic_rose_partner', [ReportController::class, 'report_synthetic_rose_partner']);
+        Route::post('getListSyntheticRosePartner', [ReportController::class, 'getListSyntheticRosePartner']);
+        Route::get('report_synthetic_kpi', [ReportController::class, 'report_synthetic_kpi']);
+        Route::post('getListSyntheticKPI', [ReportController::class, 'getListSyntheticKPI']);
     });
 
 });

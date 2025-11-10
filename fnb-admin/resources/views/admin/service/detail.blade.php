@@ -128,6 +128,13 @@
                                            value="{{!empty($dtData) ? formatMoney($dtData['price']) : 0}}"
                                            class="form-control name">
                                 </div>
+                                <div class="form-group">
+                                    <label for="html_percent">{{lang('Chương trình khuyến mãi')}}</label>
+                                    <input type="text" name="html_percent" parsley-trigger="change" id="html_percent"
+                                           autocomplete="off"
+                                           value="{{!empty($dtData) ? ($dtData['html_percent']) : null}}"
+                                           class="form-control html_percent">
+                                </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">

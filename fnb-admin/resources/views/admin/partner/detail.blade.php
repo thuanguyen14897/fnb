@@ -84,6 +84,15 @@
                                                 </select>
                                             </div>
 
+                                            <div class="form-group">
+                                                <label for="staff_id">{{lang('Nhân viên phụ trách')}}</label>
+                                                <select class="form-control" name="staff_id" id="staff_id" required style="width: 100%;height: 35px">
+                                                    @if(!empty($client['staff']))
+                                                        <option value="{{$client['staff']['id']}}">{{$client['staff']['name'] }} ({{$client['staff']['code']}})</option>
+                                                    @endif
+                                                </select>
+                                            </div>
+
 
                                             <div class="form-group" style="position: relative;">
                                                 <label for="password">{{lang('dt_password_user')}}</label>
@@ -138,6 +147,51 @@
                                                     </select>
                                                 </div>
                                             </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="membership_level">{{lang('Hạng thành viên')}}</label>
+                                                    <select class="form-control" name="membership_level" id="membership_level"  style="width: 100%;height: 35px">
+                                                        @if(!empty($client['membership_level']))
+                                                            <option value="{{$client['membership_level']['id']}}">{{$client['membership_level']['name'] ?? ''}}</option>
+                                                        @endif
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="">Hạng mức hóa đơn</label>
+                                                    <div class="radio radio-custom radio-inline">
+                                                        <input type="radio"
+                                                               @if(!empty($client) && $client['active_limit_private'] == 1 )
+                                                                   checked
+                                                               @else
+                                                                   checked
+                                                               @endif
+                                                               id="active_limit_private1"
+                                                               value="1" name="active_limit_private">
+                                                        <label for="active_limit_private1">Chiết khấu riêng</label>
+                                                    </div>
+                                                    <div class="radio radio-custom radio-inline">
+                                                        <input type="radio"
+                                                               @if(!empty($client) && $client['active_limit_private'] == 0)
+                                                                   checked
+                                                               @endif
+                                                               id="active_limit_private2"
+                                                               value="0" name="active_limit_private">
+                                                        <label for="active_limit_private2"> Chiết khấu theo hạng thành viên </label>
+                                                    </div>
+                                                </div>
+                                                <div class="div-active_limit_private {{empty($client['active_limit_private']) ? 'hide' : ''}}">
+                                                    <div class="form-group">
+                                                        <label for="radio_discount_private">% Chiết khấu</label>
+                                                        <input type="text" name="radio_discount_private" id="radio_discount_private" value="{{!empty($client['radio_discount_private']) ? $client['radio_discount_private'] : ''}}" class="form-control radio_discount">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="invoice_limit_private">Hạn mức hóa đơn mỗi lần thanh toán</label>
+                                                        <input type="text" name="invoice_limit_private" id="invoice_limit_private" onchange="formatNumBerKeyChange(this)" value="{{!empty($client['invoice_limit_private']) ? number_format($client['invoice_limit_private']) : ''}}" class="form-control invoice_limit_private">
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -156,6 +210,14 @@
 @endsection
 @section('script')
     <script>
+        $('input[name="active_limit_private"]').change(function() {
+            if($(this).val() == 0) {
+                $('.div-active_limit_private').addClass('hide');
+            }
+            else {
+                $('.div-active_limit_private').removeClass('hide');
+            }
+        })
         //function changeProvince(_this){
             //var province_id = $(_this).val();
             //searchAjaxSelect2('#wards_id','api/category/getListWard',0,{
@@ -178,6 +240,8 @@
             provinceNow = province_id;
         }
         $(document).ready(function(){
+            searchAjaxSelect2('#staff_id', 'api/category/getListStaff',0,{select2:true})
+            searchAjaxSelect2('#membership_level', 'admin/category/getListMemberShip')
             searchAjaxSelect2('#province_id','api/category/getListProvince',0,{
                 'select2':true
             })

@@ -48,6 +48,7 @@ class Service extends JsonResource
                     'latitude' => $this->latitude,
                     'longitude' => $this->longitude,
                 ],
+                'html_percent' => $this->html_percent,
                 'location_address' => [
                     'lat' => $this->location_address['lat'] ?? null,
                     'lon' => $this->location_address['lon'] ?? null,
@@ -71,10 +72,10 @@ class Service extends JsonResource
                         ];
                     });
 
-                    $collection->push([
-                        'id' => 0,
-                        'image' => !empty($this->image) ? env('STORAGE_URL').'/'.$this->image : null,
-                    ]);
+//                    $collection->push([
+//                        'id' => 0,
+//                        'image' => !empty($this->image) ? env('STORAGE_URL').'/'.$this->image : null,
+//                    ]);
 
                     return $collection;
                 }),
@@ -94,6 +95,7 @@ class Service extends JsonResource
                     'lat' => $this->location_address['lat'] ?? null,
                     'lon' => $this->location_address['lon'] ?? null,
                 ],
+                'html_percent' => $this->html_percent,
                 'category_service' => CategoryService::make($this->whenLoaded('category_service')),
                 'group_category_service' => GroupCategoryService::make($this->whenLoaded('group_category_service')),
             ];
@@ -132,13 +134,14 @@ class Service extends JsonResource
                         return [
                             'id' => $item->id,
                             'image' => $image,
+                            'image_new' => $item->image,
                         ];
                     });
 
-                    $collection->push([
-                        'id' => 0,
-                        'image' => !empty($this->image) ? env('STORAGE_URL').'/'.$this->image : null,
-                    ]);
+//                    $collection->push([
+//                        'id' => 0,
+//                        'image' => !empty($this->image) ? env('STORAGE_URL').'/'.$this->image : null,
+//                    ]);
 
                     return $collection;
                 }),
@@ -148,6 +151,7 @@ class Service extends JsonResource
                         return [
                             'id' => $item->id,
                             'image' => $dtImage,
+                            'image_new' => $item->image,
                         ];
                     });
                 }),
@@ -180,6 +184,11 @@ class Service extends JsonResource
                     'hour_start' => $this->hour_start,
                     'hour_end' => $this->hour_end,
                 ],
+                'lunch_break' => [
+                    'type_lunch_break' => $this->type_lunch_break,
+                    'hour_start_lunch_break' => $this->hour_start_lunch_break,
+                    'hour_end_lunch_break' => $this->hour_end_lunch_break,
+                ],
                 'tag_review' => $dtReview,
                 'image_review' => $dtReviewImage,
                 'star' => $star,
@@ -195,6 +204,8 @@ class Service extends JsonResource
                 'rules' => $this->rules,
                 'active' => $this->active,
                 'hot' => $this->hot,
+                'step' => $this->step,
+                'html_percent' => $this->html_percent,
                 'category_service' => CategoryService::make($this->whenLoaded('category_service')),
                 'group_category_service' => GroupCategoryService::make($this->whenLoaded('group_category_service')),
                 'other_amenities' => OtherAmenitis::collection($this->whenLoaded('other_amenities')),

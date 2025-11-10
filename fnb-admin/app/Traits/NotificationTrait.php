@@ -4,11 +4,12 @@ namespace App\Traits;
 
 use App\Models\Clients;
 use App\Models\Transaction;
-use App\Models\TransactionDriver;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Notification;
+use App\Services\AccountService;
 
 trait NotificationTrait
 {
@@ -254,6 +255,14 @@ trait NotificationTrait
                     $arrStaffNoti = array_values($arrStaffNoti);
                     DB::table('tbl_notification_staff')->insert($arrStaffNoti);
                 }
+
+                if ($type == Config::get('constant')['noti_remind_log_upgrade']){
+                    $accountService = new AccountService();
+                    $request = new Request();
+                    $request->merge(['id' => $data['object_id']]);
+                    $accountService->updateLogUpgradeClient($request);
+                }
+
                 $notification->created_at_new = _dt_new($notification->created_at);
                 $data['notification_id'] = $notification_id;
             }

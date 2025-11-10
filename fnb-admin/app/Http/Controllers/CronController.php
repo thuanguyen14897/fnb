@@ -6,6 +6,7 @@ use App\Models\ModuleNoti;
 use App\Models\Notification;
 use App\Models\Permission;
 use App\Models\User;
+use App\Services\AccountService;
 use App\Services\TransactionService;
 use App\Services\TransactionPackageService;
 use App\Traits\NotificationTrait;
@@ -30,12 +31,14 @@ class CronController extends Controller
 
     public $fnbTransactionService;
     public $fnbTransactionPackageService;
-    public function __construct(Request $request,TransactionService $transactionService,TransactionPackageService $transactionPackageService)
+    public $fnbCustomerService;
+    public function __construct(Request $request,TransactionService $transactionService,TransactionPackageService $transactionPackageService,AccountService $accountService)
     {
         parent::__construct($request);
         DB::enableQueryLog();
         $this->fnbTransactionService = $transactionService;
         $this->fnbTransactionPackageService = $transactionPackageService;
+        $this->fnbCustomerService = $accountService;
     }
 
     public function startTransactionTrip()
@@ -122,7 +125,7 @@ class CronController extends Controller
                 }
             }
             $this->sendNotiOnesignalMutile($dataNoti, Config::get('constant')['noti_transaction_start']);
-            dd($dataNoti);
+//            dd($dataNoti);
         } else {
             die(123);
         }
@@ -152,7 +155,7 @@ class CronController extends Controller
                 $this->requestTransaction->merge(['cancel_end' => $cancel_end]);
                 $this->requestTransaction->merge(['staff_status' => Config::get('constant')['user_admin']]);
                 $this->requestTransaction->merge(['transaction_id' => $transaction['id']]);
-                $responseUpdate =  $this->fnbTransactionService->changeStatus($this->requestTransaction);
+                $responseUpdate = $this->fnbTransactionService->changeStatus($this->requestTransaction);
                 $dtUpdate = $responseUpdate->getData(true);
                 $dtUpdate = $dtUpdate['data'] ?? [];
                 if (!empty($dtUpdate)) {
@@ -186,6 +189,70 @@ class CronController extends Controller
             }
         }
         echo $count;
+    }
+
+    public function cronUpgradeMemberShip(){
+        $response = $this->fnbCustomerService->cronUpgradeMemberShip($this->request);
+        $response = $response->getData(true);
+        $count = $response['count'] ?? 0;
+        return $count;
+    }
+
+    public function autoIncreaseMember(){
+        $increase_member = get_option('increase_member');
+        $total_member = get_option('total_member');
+        $total_member += $increase_member;
+        DB::table('tbl_options')->where('name', '=','total_member')->update([
+            'name' => 'total_member',
+            'value' => $total_member
+        ]);
+    }
+
+    public function getListLogUpgradeClient(){
+        $response = $this->fnbCustomerService->getListLogUpgradeClient($this->request);
+        $dtData = $response->getData(true);
+        $dtData = $dtData['data'] ?? [];
+        $dataNoti = [];
+        if (!empty($dtData)){
+            foreach ($dtData as $key => $value){
+                $arr_object_id = $value['arr_object_id'] ?? [];
+                $customer_id = $value['customer_id'] ?? 0;
+                $type_check = $value['type'];
+                if (!empty($arr_object_id)) {
+                    $playerId = array_unique(array_column($arr_object_id, 'player_id'));
+                    $content = '';
+                    $json_data = json_encode([
+                        'customer' => $customer_id,
+                        'object' => 'clients',
+                        'type_check' => $type_check,
+                        'status' => 'log_upgrade_membership',
+                    ], JSON_UNESCAPED_UNICODE);
+                    if ($type_check == 1){
+                        $content = get_option('content_send_noti_upgrade_fall');
+                    } elseif ($type_check == 3){
+                        $content = get_option('content_send_noti_upgrade');
+                    }
+                    $title = 'Nhắc nhở hạng thành viên';
+                    $title_owen = 'Nhắc nhở hạng thành viên';
+                    $data = [
+                        'arr_object_id' => $arr_object_id,
+                        'player_id' => $playerId,
+                        'json_data' => $json_data,
+                        'object_id' => $value['id'],
+                        'content' => $content,
+                        'created_by' => 0,
+                        'title' => $title,
+                        'title_owen' => $title_owen,
+                        'type' => 1,
+                    ];
+                    $dataNoti[] = $data;
+                }
+            }
+        }
+        if (!empty($dataNoti)){
+            $this->sendNotiOnesignalMutile($dataNoti, Config::get('constant')['noti_remind_log_upgrade']);
+        }
+
     }
 
     public function addGroupPermistionByPermission()

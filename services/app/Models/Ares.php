@@ -19,5 +19,10 @@ class Ares extends Model
     {
         return $this->belongstoMany('App\Models\Province', 'tbl_ares_detail', 'id_ares', 'id_province');
     }
+
+    function aresWard()
+    {
+        return $this->hasMany('App\Models\AresWard', 'id_ares', 'id');
+    }
 }
 

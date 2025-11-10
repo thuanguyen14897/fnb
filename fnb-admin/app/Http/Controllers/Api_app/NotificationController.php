@@ -133,6 +133,26 @@ class NotificationController extends AuthController
         return response()->json($data);
     }
 
+    public function getNotiUpgradeMembership(){
+        $customer_id = !empty($this->request->client) ? $this->request->client->id : 0;
+        $dtNoti = Notification::whereHas('notification_staff',function ($query) use ($customer_id){
+            $query->where('is_read',0);
+            $query->where('object_id',$customer_id);
+            $query->where(function ($q){
+                $q->where('tbl_notification_staff.object_type','customer');
+                $q->orWhere('tbl_notification_staff.object_type','owen');
+            });
+        })
+            ->where('object_type','=',Config::get('constant')['noti_upgrade_membership'])
+            ->orderByRaw('tbl_notification.created_at desc')
+            ->first();
+        if (empty($dtNoti)){
+            return response()->json(['data' => null]);
+        } else {
+            return NotificationResource::make($dtNoti);
+        }
+    }
+
     public function addNoti(){
         $type_noti = $this->request->input('type_noti') ?? null;
         $arr_object_id = $this->request->input('arr_object_id');
@@ -140,6 +160,11 @@ class NotificationController extends AuthController
         $customer_id = $this->request->input('customer_id');
         $type = $this->request->input('type');
         $staff_id = $this->request->input('staff_id');
+        $point = $this->request->input('point') ?? 0;
+        $point_client = $this->request->input('point_client') ?? 0;
+        $title_point = $this->request->input('title_point') ?? null;
+        $type_check = $this->request->input('type_check') ?? 1;
+        $customer_id_new = $customer_id;
         if ($type == 'staff'){
             $check = 1;
             $customer_id = get_staff_user_id() ?? $staff_id;
@@ -147,6 +172,8 @@ class NotificationController extends AuthController
             $check = 2;
             $customer_id = $customer_id;
         }
+
+        $arrType = ['change_point','change_balance'];
         $dtStaffAdmin = User::select(
             'tbl_users.name',
             'tbl_users.id as object_id',
@@ -160,8 +187,10 @@ class NotificationController extends AuthController
             ->where('admin', 1)
             ->where('active', 1)
             ->get()->toArray();
-        if (!empty($dtStaffAdmin)) {
-            $arr_object_id = array_merge($arr_object_id, $dtStaffAdmin);
+        if (!in_array($type_noti,$arrType)) {
+            if (!empty($dtStaffAdmin)) {
+                $arr_object_id = array_merge($arr_object_id, $dtStaffAdmin);
+            }
         }
         if ($type_noti == 'change_status_transaction'){
             Notification::notiCancelTransaction($dtData,
@@ -169,6 +198,21 @@ class NotificationController extends AuthController
         } elseif ($type_noti == 'remind_payment'){
             Notification::notiRemindPaymentTransaction($dtData,
                 Config::get('constant')['noti_remind_payment'], $customer_id, $check, $arr_object_id);
+        } elseif ($type_noti == 'change_point'){
+            Notification::notiChangePointClient($customer_id_new,$arr_object_id,$point,$point_client,$title_point);
+        } elseif ($type_noti == 'change_balance'){
+            Notification::notiChangeBalance($customer_id_new,$arr_object_id,$point,$point_client,$title_point);
+        } elseif ($type_noti == 'noti_upgrade_membership'){
+            Notification::notiUpgradeMembership($customer_id_new,$dtData, $type_check, $arr_object_id);
+        } elseif ($type_noti == 'change_status_payment'){
+            $this->sendNotificationSocket([
+                'channels' => $arr_object_id,
+                'event' => 'check-payment-bill',
+                'data' => $dtData,
+                'db_name' => config('database.connections.mysql.database')
+            ], 'change-status');
+            Notification::notiPaymentTransactionBill($dtData,
+                Config::get('constant')['noti_transaction_package_payment'], $customer_id, $check, $arr_object_id);
         } elseif ($type_noti == 'change_status_service'){
             if ($dtData['active'] == 1){
                 Notification::notiApproveService($dtData,

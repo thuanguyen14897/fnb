@@ -87,6 +87,11 @@
                                             {{lang('c_info_contact')}}
                                         </a>
                                     </li>
+                                    <li class="{{(!empty($group) && $group == 'sample_message') ? 'active' : ''}}">
+                                        <a href="admin/settings?group=sample_message" data-group="sample_message">
+                                            {{lang('Ghi chú mẫu hóa đơn')}}
+                                        </a>
+                                    </li>
                                     <li class="{{(!empty($group) && $group == 'other') ? 'active' : ''}}">
                                         <a href="admin/settings?group=other" data-group="other">
                                             {{lang('c_setting_other')}}

@@ -128,7 +128,11 @@ class ServiceController extends Controller
                                  <span class="caret"></span> </button>
                                  <ul class="dropdown-menu">';
                 foreach (getListStatusService() as $key => $value) {
-                    $optionStatus .= '<li style="cursor: pointer"><a onclick="changeStatus(' . $dtData['id'] . ',' . $value['id'] . ')" data-id="' . $value['id'] . '">' . $value['name'] . '</a></li>';
+                    $classes = '';
+                    if ($value['id'] == 0){
+                        $classes = 'pointer-events';
+                    }
+                    $optionStatus .= '<li class="'.$classes.'" style="cursor: pointer"><a onclick="changeStatus(' . $dtData['id'] . ',' . $value['id'] . ')" data-id="' . $value['id'] . '">' . $value['name'] . '</a></li>';
                 }
                 $optionStatus .= '</ul></div>';
                 return $optionStatus;
@@ -241,6 +245,7 @@ class ServiceController extends Controller
             return response()->json($data);
         }
         $this->request->merge(['id' => $id]);
+        $this->request->merge(['admin' => true]);
         $response = $this->fnbService->delete($this->request);
         $dataRes = $response->getData(true);
         $data = $dataRes['data'];

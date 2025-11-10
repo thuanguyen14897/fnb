@@ -6,7 +6,9 @@ use App\Helpers\FilesHelpers;
 use App\Models\Clients;
 use App\Models\CustomerPackage;
 use App\Models\Package;
+use App\Models\ReferralLevel;
 use App\Services\AdminService;
+use App\Services\ServiceService;
 use App\Traits\UploadFile;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
@@ -19,11 +21,13 @@ class LoginApi extends AuthController
     use UploadFile;
 
     protected $fnbAdmin;
+    protected $fnbService;
 
-    public function __construct(Request $request, AdminService $adminService)
+    public function __construct(Request $request, AdminService $adminService,ServiceService $serviceService)
     {
         parent::__construct($request);
         $this->fnbAdmin = $adminService;
+        $this->fnbService = $serviceService;
         DB::enableQueryLog();
     }
 
@@ -45,8 +49,6 @@ class LoginApi extends AuthController
                     return response()->json($dataResult);
                 }
             }
-
-
             if (empty($data['fullname'])) {
                 $dataResult['message'] = lang('c_pls_input_fullname');
                 return response()->json($dataResult);
@@ -59,6 +61,17 @@ class LoginApi extends AuthController
             if (empty($data['password']) && empty($data['id_sign_up'])) {
                 $dataResult['message'] = lang('c_pls_input_password');
                 return response()->json($dataResult);
+            }
+
+            $referral_code = !empty($data['referral_code']) ? $data['referral_code'] : null;
+
+            if (!empty($referral_code)){
+                $checkExists = Clients::where('referral_code',$referral_code)->first();
+                if (empty($checkExists)){
+                    $dataResult['result'] = false;
+                    $dataResult['message'] = lang('Mã giới thiệu không đúng. Vui lòng kiểm tra lại hoặc bỏ trống!');
+                    return response()->json($dataResult);
+                }
             }
 
             if (!empty($data['email'])) {
@@ -113,6 +126,8 @@ class LoginApi extends AuthController
                     'verify_phone' => 1,
                     'email' => !empty($data['email']) ? $data['email'] : null,
                     'fullname' => !empty($data['fullname']) ? $data['fullname'] : null,
+                    'type_client' => $data['type_client'] ?? 1,
+                    'date_active' => date('Y-m-d'),
                 ];
                 if (!empty($data['password'])) {
                     $dataInsert['password'] = encrypt($data['password']);
@@ -167,31 +182,61 @@ class LoginApi extends AuthController
 
                 $dtClient = Clients::find($id);
 
-                //thêm gói mặc định
-                $dtPackage = Package::where('check_default',1)->first();
-                if (!empty($dtPackage)){
-                    $customerPackage = new CustomerPackage();
-                    $customerPackage->transaction_package_id = 0;
-                    $customerPackage->package_id = $dtPackage->id;
-                    $customerPackage->customer_id = $id;
-                    $customerPackage->name = $dtPackage->name;
-                    $customerPackage->total = $dtPackage->total;
-                    $customerPackage->percent = $dtPackage->percent;
-                    $customerPackage->grand_total = $dtPackage->total - ($dtPackage->total * $dtPackage->percent / 100);
-                    $customerPackage->number_day = $dtPackage->number_day;
-                    $customerPackage->check_default = $dtPackage->check_default;
-                    $customerPackage->save();
+                if ($dtClient->type_client == 1) {
+                    // thành viên mới chạy
+                    //thêm gói mặc định
+                    $dtPackage = Package::where('check_default', 1)->where('type', -1)->first();
+                    if (!empty($dtPackage)) {
+                        $customerPackage = new CustomerPackage();
+                        $customerPackage->transaction_package_id = 0;
+                        $customerPackage->package_id = $dtPackage->id;
+                        $customerPackage->customer_id = $id;
+                        $customerPackage->name = $dtPackage->name;
+                        $customerPackage->total = $dtPackage->total;
+                        $customerPackage->percent = $dtPackage->percent;
+                        $customerPackage->grand_total = $dtPackage->total - ($dtPackage->total * $dtPackage->percent / 100);
+                        $customerPackage->number_day = $dtPackage->number_day;
+                        $customerPackage->check_default = $dtPackage->check_default;
+                        $customerPackage->save();
+                    }
+
+                    $number_day = $dtPackage->number_day ?? 0;
+                    $data_active_new = date('Y-m-d', strtotime("+$number_day day", strtotime($dtClient->created_at)));
+                    $dtClient->date_active = $data_active_new;
                 }
 
-                $number_day = $dtPackage->number_day ?? 0;
-                $data_active_new = date('Y-m-d',strtotime("+$number_day day",strtotime($dtClient->created_at)));
-                $dtClient->date_active = $data_active_new;
+                $dtClient->membership_level = 1;
+                $dtClient->ranking_date = date('Y-m-d H:i:s');
                 //end
 
                 //update mã giới thiệu
                 $dtClient->referral_code = generateRandomString($id, 6);
                 $dtClient->save();
                 //end
+
+
+                if (!empty($referral_code)) {
+                    $dtCustomer = Clients::where('referral_code',$referral_code)->first();
+                    if (!empty($dtCustomer)) {
+
+                        $dtStt = ReferralLevel::where('parent_id', $dtCustomer->id)->max('stt');
+
+                        $level = get_level_role($dtCustomer->id);
+                        $referralLevel = new ReferralLevel();
+                        $referralLevel->customer_id = $id;
+                        $referralLevel->parent_id = $dtCustomer->id;
+                        $referralLevel->referral_code = $dtCustomer->referral_code;
+                        $referralLevel->level = $level;
+                        $referralLevel->stt = $dtStt + 1;
+                        $referralLevel->save();
+
+
+                        $dtClient->province_id = $dtCustomer->province_id;
+                        $dtClient->wards_id = $dtCustomer->wards_id;
+                        $dtClient->staff_id = $dtCustomer->staff_id;
+                        $dtClient->save();
+                    }
+                }
 
                 $dataResult['result'] = true;
                 $dataResult['id'] = $id;
@@ -832,8 +877,12 @@ class LoginApi extends AuthController
                 'invoice_limit_private',
                 'radio_discount_private',
                 'type_client',
+                'referral_code',
                 'date_active',
+                'wards_id',
+                'staff_id',
             )->where('id', $id)->first();
+
             if (!empty($data)) {
                 if (!empty($data->password)) {
                     $data->password = true;
@@ -842,11 +891,24 @@ class LoginApi extends AuthController
                 }
                 $data->avatar = !empty($data->avatar) ? env('STORAGE_URL') . '/' . $data->avatar : env('APP_URL') . '/images/avatar_default.png';
 
+                $referral_level = $data->referral_level ?? [];
+                $checkModalProvince = false;
+
+                if (empty($referral_level)) {
+                   if (empty($data->wards_id)){
+                       $checkModalProvince = true;
+                   }
+                }
+                $data->checkModalProvince = $checkModalProvince;
+                $count_member = count(array_diff(getDataTreeReferralLevel($data->id), [$data->id]));
+
+                $data->count_member = $count_member;
 
                 $dataLevelData = $this->fnbAdmin->getMemberShipLevel($data->membership_level);
                 if (!empty($dataLevelData['result'])) {
                     if (!empty($dataLevelData['data_next'])) {
                         $membership_level_next = [
+                            'id' => $dataLevelData['data_next']['id'] ?? 0,
                             'icon' => $dataLevelData['data_next']['icon'] ?? '',
                             'image' => $dataLevelData['data_next']['image'] ?? '',
                             'background_header' => $dataLevelData['data_next']['background_header'] ?? '',
@@ -856,12 +918,14 @@ class LoginApi extends AuthController
                             'point_start' => $dataLevelData['data_next']['point_start'] ?? null,
                             'color_background' => $dataLevelData['data_next']['color_background'] ?? null,
                             'color' => $dataLevelData['data_next']['color'] ?? null,
+                            'name_radio_discount' => $dataLevelData['data_next']['name_radio_discount'] ?? null,
                         ];
                         $data->data_membership_level_next = $membership_level_next;
                     }
                     $dataLevel = $dataLevelData['data'][0];
                 }
                 $membership_level = [
+                    'id' => $dataLevel['id'] ?? 0,
                     'icon' => $dataLevel['icon'] ?? '',
                     'image' => $dataLevel['image'] ?? '',
                     'background_header' => $dataLevel['background_header'] ?? '',
@@ -871,6 +935,7 @@ class LoginApi extends AuthController
                     'point_start' => $dataLevel['point_start'] ?? null,
                     'color_background' => $dataLevel['color_background'] ?? null,
                     'color' => $dataLevel['color'] ?? null,
+                    'name_radio_discount' => $dataLevel['name_radio_discount'] ?? null,
                 ];
                 $data->data_membership_level = $membership_level;
                 if ($data->active_limit_private == 0) {
@@ -910,8 +975,51 @@ class LoginApi extends AuthController
                 $data->data_representative = $data->representative;
                 if (!empty($data->data_representative)) {
                     $data->data_representative->image = !empty($data->representative->image) ? env('STORAGE_URL') . '/' . $data->representative->image : null;
+                    $data->data_representative->account_image = !empty($data->representative->account_image) ? env('STORAGE_URL') . '/' . $data->representative->account_image : null;
                 }
                 $data->makeHidden(['representative']);
+                if (!empty($data->staff_id)){
+                    $this->requestStaff = new Request();
+                    $this->requestStaff->merge(['id' => $data->staff_id]);
+                    $dtStaff = $this->fnbAdmin->getListStaff($this->requestStaff);
+                    $dtStaff = $dtStaff['data'][0] ?? [];
+                    if (!empty($dtStaff)){
+                        $data->staff = $dtStaff;
+                    }
+                } else {
+                    $data->staff = null;
+                }
+
+                //bổ sung nếu là đối tác mà chưa có gian hàng
+                $checkModalService = false;
+                $checkScreenService = false;
+                $checkScreenModalService = false;
+                if ($data->type_client == 2){
+//                    if (strtotime($data->date_active) < strtotime(date('Y-m-d'))){
+                        $requestFnbService = new Request();
+                        $requestFnbService->merge(['customer_id' => $data->id]);
+                        $dtServiceResponse = $this->fnbService->checkServicePartner($requestFnbService);
+                        $dtServiceResponse = $dtServiceResponse->getData('true');
+                        $dtService = $dtServiceResponse['data']['data'] ?? null;
+                        if (empty($dtService)){
+                            $checkScreenService = true;
+                            $checkScreenModalService = true;
+                        } else {
+                            if ($dtService['active'] == 0){
+                                $checkModalService = true;
+                                $checkScreenModalService = true;
+                            } elseif ($dtService['active'] == 4){
+                                $checkScreenService = true;
+                                $checkScreenModalService = true;
+                            }
+                        }
+//                    }
+                }
+                $data->checkScreenService = $checkScreenService;
+                $data->checkModalService = $checkModalService;
+                $data->checkScreenModalService = $checkScreenModalService;
+                //end
+
                 $dataResult['result'] = true;
                 $dataResult['info'] = $data;
                 $dataResult['message'] = lang('c_get_info_success');
@@ -967,6 +1075,9 @@ class LoginApi extends AuthController
         ];
 
         $token = JWT::encode($payload, $privateKey, 'RS256');
+
+        //đăng xuất hết tài khoản
+        DB::table('tbl_session_login')->where('id_client', $customer_id)->delete();
 
         $ktToken = DB::table('tbl_session_login')
             ->where('id_client', $customer_id)
@@ -1091,6 +1202,108 @@ class LoginApi extends AuthController
                 $dataResult['result'] = false;
                 $dataResult['message'] = $exception->getMessage();
                 return response()->json($dataResult);
+            }
+        } else {
+            $dataResult['result'] = false;
+            $dataResult['message'] = lang('c_code_token_fail');
+            return response()->json($dataResult, 503);
+        }
+    }
+
+    public function checkReferralCode(){
+        $referral_code = $this->request->input('referral_code') ?? null;
+        if (!empty($referral_code)){
+            $checkExists = Clients::where('referral_code',$referral_code)->first();
+            if (empty($checkExists)){
+                $dataResult['result'] = false;
+                $dataResult['message'] = lang('Mã giới thiệu không đúng. Vui lòng kiểm tra lại hoặc bỏ trống!');
+                return response()->json($dataResult);
+            } else {
+
+                $parent_id = get_parent_customer($checkExists->id);
+                $customer_id_f1 = !empty($parent_id[0]) ? $parent_id[0] : 0;
+                $customer_id_f0 = !empty($parent_id[1]) ? $parent_id[1] : 0;
+                if(empty($customer_id_f1)){
+                    $arrId = array_diff(getDataTreeReferralLevel($checkExists->id), [$checkExists->id]);
+                    if (count($arrId) > 500){
+                        $dataResult['result'] = false;
+                        $dataResult['message'] = lang('Mã giới thiệu này đã đạt số lượng thành viên tối đa! Vui lòng liên hệ admin để được hỗ trợ!');
+                        return response()->json($dataResult);
+                    }
+                } else {
+                    $arrId = array_diff(getDataTreeReferralLevel($customer_id_f1), [$customer_id_f1]);
+                    if (count($arrId) > 500){
+                        $dataResult['result'] = false;
+                        $dataResult['message'] = lang('Mã giới thiệu này đã đạt số lượng thành viên tối đa! Vui lòng liên hệ admin để được hỗ trợ!');
+                        return response()->json($dataResult);
+                    }
+
+                    $arrId = array_diff(getDataTreeReferralLevel($checkExists->id), [$checkExists->id]);
+                    if (count($arrId) > 250){
+                        $dataResult['result'] = false;
+                        $dataResult['message'] = lang('Mã giới thiệu này đã đạt số lượng thành viên tối đa! Vui lòng liên hệ admin để được hỗ trợ!');
+                        return response()->json($dataResult);
+                    }
+                }
+
+
+                $dataResult['result'] = true;
+                $dataResult['message'] = lang('Mã giới thiệu hợp lệ!');
+                return response()->json($dataResult);
+            }
+        } else {
+            $dataResult['result'] = true;
+            $dataResult['message'] = lang('Thành công');
+            return response()->json($dataResult);
+        }
+    }
+
+    public function updateProvinceWard(){
+        $id = !empty($this->request->client) ? $this->request->client->id : 0;
+        $province_id = $this->request->input('province_id');
+        $ward_id = $this->request->input('ward_id');
+        if (!empty($id)) {
+            $dtClient = Clients::find($id);
+            if (empty($province_id)) {
+                $dataResult['result'] = false;
+                $dataResult['message'] = 'Vui lòng chọn tỉnh/thành phố!';
+                return response()->json($dataResult);
+            }
+            if (empty($ward_id)) {
+                $dataResult['result'] = false;
+                $dataResult['message'] = 'Vui lòng chọn phường xã!';
+                return response()->json($dataResult);
+            }
+            $referral_level = $dtClient->referral_level ?? [];
+            $checkModalProvince = false;
+
+            if (empty($referral_level)) {
+                if (empty($data->wards_id)){
+                    $checkModalProvince = true;
+                }
+            }
+            if (!empty($checkModalProvince)) {
+                $arrId = array_diff(getDataTreeReferralLevel($dtClient->id,'all'));
+                DB::beginTransaction();
+                try {
+                    $dtData = Clients::whereIn('id',$arrId)->get();
+                    if (!empty($dtData)){
+                        foreach ($dtData as $item){
+                            $item->province_id = $province_id;
+                            $item->wards_id = $ward_id;
+                            $item->save();
+                        }
+                    }
+                    DB::commit();
+                    $dataResult['result'] = true;
+                    $dataResult['message'] = 'Cập nhật địa chỉ thành công';
+                    return response()->json($dataResult);
+                } catch (\Exception $exception) {
+                    DB::rollBack();
+                    $dataResult['result'] = false;
+                    $dataResult['message'] = $exception->getMessage();
+                    return response()->json($dataResult);
+                }
             }
         } else {
             $dataResult['result'] = false;

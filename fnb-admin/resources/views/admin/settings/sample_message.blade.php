@@ -26,7 +26,6 @@
                     },
                     data: 'DT_RowIndex', name: 'DT_RowIndex',width: "80px" },
                 {data: 'message', name: 'message'},
-                {data: 'type', name: 'type',width: "100px"},
                 {data: 'options', name: 'options', orderable: false, searchable: false,width: "150px" },
 
             ]

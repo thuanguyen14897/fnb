@@ -193,6 +193,7 @@ class PackageController extends AuthController
         $search = $this->request->input('search') ?? null;
         $admin = $this->request->input('admin') ?? 0;
         $type = $this->request->input('type') ?? 1;
+        $checkPartner = $this->request->input('checkPartner') ?? 0;
         $query = Package::select(
                 'id',
                 'name',
@@ -209,8 +210,13 @@ class PackageController extends AuthController
             });
         }
         if (!empty($admin)) {
-            $query->where('type', $type);
-            $query->orWhere('type', '=',-1);
+            if(!empty($checkPartner)){
+                $query->where('check_default', 1);
+                $query->where('type', $type);
+            } else {
+                $query->where('type', $type);
+                $query->orWhere('type', '=', -1);
+            }
         } else {
             $query->where('type', $type_client);
         }

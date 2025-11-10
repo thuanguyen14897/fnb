@@ -108,6 +108,35 @@ class Notification extends Model
         }
     }
 
+    static function notiPaymentTransactionBill($dtData, $type, $created_by, $check = 1, $arr_object_id = [])
+    {
+        if (!empty($dtData)) {
+            $playerId = [];
+            if (!empty($arr_object_id)) {
+                $playerId = array_unique(array_column($arr_object_id, 'player_id'));
+                $json_data = json_encode([
+                    'transaction_bill_id' => $dtData['transaction_bill_id'],
+                    'payment_id' => $dtData['id'],
+                    'object' => 'payment'
+                ], JSON_UNESCAPED_UNICODE);
+                $content = "Hóa đơn " . $dtData['data_transaction_bill']['reference_no'] . ', Khách thuê ' . $dtData['data_customer']['fullname'] .' ' . _dt($dtData['date']) . ' đã thanh toán thành công. Số tiền ' . formatMoney($dtData['payment']) . '';
+                $title = 'Thanh toán hóa đơn';
+                $title_owen = 'Khách hàng thanh toán hóa đơn';
+                $data = [
+                    'arr_object_id' => $arr_object_id,
+                    'player_id' => $playerId,
+                    'json_data' => $json_data,
+                    'content' => $content,
+                    'created_by' => $created_by,
+                    'title' => $title,
+                    'title_owen' => $title_owen,
+                    'type' => null,
+                ];
+                static::addNotification($dtData['id'], $type, $data);
+            }
+        }
+    }
+
     static function notiRemindPaymentTransaction($dtData, $type, $created_by, $check = 1,$arr_object_id = [])
     {
         if (!empty($dtData)) {
@@ -166,6 +195,138 @@ class Notification extends Model
                     'title_owen' => $title_owen,
                 ];
                 static::addNotification($dtData['id'], $type, $data);
+            }
+        }
+    }
+
+    static function notiChangePointClient($customer_id = 0,$dtData = [], $point = 0, $point_client = 0, $title_point = '', $type = 1)
+    {
+        if (!empty($dtData)) {
+            $arr_object_id = array_values($dtData);
+            $playerId = [];
+            if (!empty($arr_object_id)) {
+                $playerId = array_unique(array_column($arr_object_id, 'player_id'));
+                $json_data = json_encode(['customer' => $customer_id, 'object' => 'clients', 'status' => 'change_point'],
+                    JSON_UNESCAPED_UNICODE);
+                $title = '';
+                $title_owen = '';
+                if ($point < 0) {
+                    $prefix = '';
+                } else {
+                    $prefix = '+';
+                }
+                $content = $title_point . '. Số điểm của bạn tại FNBVN ' . $prefix . formatMoney($point) . ' điểm. Số dư điểm khả dụng: ' . formatMoney($point_client) . ' điểm';
+                $title = 'Thay đổi số dư điểm';
+                $title_owen = 'Thay đổi số dư điểm';
+                $data = [
+                    'arr_object_id' => $arr_object_id,
+                    'player_id' => $playerId,
+                    'json_data' => $json_data,
+                    'object_id' => $customer_id,
+                    'content' => $content,
+                    'created_by' => 0,
+                    'title' => $title,
+                    'title_owen' => $title_owen,
+                ];
+                static::addNotification($customer_id, Config::get('constant')['noti_change_point'], $data);
+            }
+        }
+    }
+
+    static function notiChangeBalance(
+        $customer_id = 0,
+        $dtData = [],
+        $revenue = 0,
+        $account_balance_client = 0,
+        $title_balance = '',
+    ) {
+        if (!empty($dtData)) {
+            $arr_object_id = array_values($dtData);
+            $playerId = [];
+            if (!empty($arr_object_id)) {
+                $playerId = array_unique(array_column($arr_object_id, 'player_id'));
+                $json_data = json_encode([
+                    'customer' => $customer_id,
+                    'object' => 'clients',
+                    'status' => 'change_balance'
+                ], JSON_UNESCAPED_UNICODE);
+                $title = '';
+                $title_owen = '';
+                if ($revenue < 0) {
+                    $prefix = '-';
+                } else {
+                    $prefix = '+';
+                }
+                $content = $title_balance . '. TK của bạn tại FNBVN ' . $prefix . formatMoney($revenue) . '. Số dư khả dụng: ' . formatMoney($account_balance_client);
+                $title = 'Thay đổi số dư';
+                $title_owen = 'Thay đổi số dư';
+                $data = [
+                    'arr_object_id' => $arr_object_id,
+                    'player_id' => $playerId,
+                    'json_data' => $json_data,
+                    'object_id' => $customer_id,
+                    'content' => $content,
+                    'created_by' => 0,
+                    'title' => $title,
+                    'title_owen' => $title_owen,
+                ];
+                static::addNotification($customer_id, Config::get('constant')['noti_change_balance'], $data);
+            }
+        }
+    }
+
+    static function notiUpgradeMembership(
+        $customer_id = 0,
+        $dtData = [],
+        $type_check = 1,
+        $arr_object_id = [],
+        $type_run = 0
+    ) {
+        if (!empty($dtData)) {
+            $arr_object_id = array_values($arr_object_id);
+            $playerId = [];
+            if (!empty($arr_object_id)) {
+                $playerId = array_unique(array_column($arr_object_id, 'player_id'));
+                $json_data = json_encode([
+                    'customer' => $customer_id,
+                    'object' => 'clients',
+                    'membership_id' => $dtData['id'] ?? 0,
+                    'membership_name' => $dtData['name'] ?? null,
+                    'type_check' => $type_check,
+                    'status' => 'upgrade_membership',
+                    'type_run' => $type_run,
+                ], JSON_UNESCAPED_UNICODE);
+                $title = '';
+                $title_owen = '';
+                $name_membership = $dtData['name'] ?? null;
+                if ($type_check == 1){
+                    if ($type_run == 1){
+                        $content = get_option('content_send_noti_upgrade_fall');
+                    } else {
+                        $content = 'Rất tiếc, do không đạt yêu cầu cần thiết, bạn đã bị rớt xuống hạng '.$name_membership.'. Hãy cố gắng cải thiện và lấy lại phong độ trong các lần sau!';
+                    }
+                } elseif ($type_check == 2){
+                    $content = 'Chúc mừng! Bạn đã hoàn thành các điều kiện và chính thức nâng hạng '.$name_membership.' thành công. Hãy tiếp tục duy trì vị trí để giữ hàng và đạt được nhiều thành tựu hơn nữa!';
+                } elseif ($type_check == 3){
+                    if ($type_run == 1){
+                        $content = get_option('content_send_noti_upgrade');
+                    } else {
+                        $content = 'Xin chúc mừng bạn đã duy trì thành tích xuất sắc và giữ vững hạng hiện tại ' . $name_membership . '. Hãy tiếp tục nỗ lực để giữ vững phong độ và hướng tới những mục tiêu mới';
+                    }
+                }
+                $title = 'Thay đổi hạng thành viên';
+                $title = 'Thay đổi hạng thành viên';
+                $data = [
+                    'arr_object_id' => $arr_object_id,
+                    'player_id' => $playerId,
+                    'json_data' => $json_data,
+                    'object_id' => $customer_id,
+                    'content' => $content,
+                    'created_by' => 0,
+                    'title' => $title,
+                    'title_owen' => $title_owen,
+                ];
+                static::addNotification($customer_id, Config::get('constant')['noti_upgrade_membership'], $data);
             }
         }
     }
